@@ -79,7 +79,7 @@ model Category {
   // Relations
   parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
   children Category[] @relation("CategoryToCategory")
-  products Product[]
+  products ProductCategory[]
 
   @@index([parentId])
   @@index([slug])
@@ -90,25 +90,41 @@ model Product {
   id           String  @id @default(uuid())
   sku          String  @unique
   name         String
+  slug         String  @unique
   description  String?
   price        Decimal @db.Decimal(10, 2)
   stock        Int     @default(0)
   isActive     Boolean @default(true)
-  categoryId   String
   images       Json    @default("[]") // Array of image URLs
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relations
-  category       Category         @relation(fields: [categoryId], references: [id])
+  categories     ProductCategory[]
   specifications Specification[]
   vehicleLinks   ProductVehicle[]
   cartItems      CartItem[]
   orderItems     OrderItem[]
   favorites      Favorite[]
 
-  @@index([categoryId])
   @@index([sku])
+  @@index([slug])
+}
+
+// Many-to-many relation between products and categories
+model ProductCategory {
+  id         String   @id @default(uuid())
+  productId  String
+  categoryId String
+  createdAt  DateTime @default(now())
+
+  // Relations
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, categoryId])
+  @@index([productId])
+  @@index([categoryId])
 }
 
 // Specification model - product characteristics

@@ -9,6 +9,7 @@ async function main() {
   await prisma.favorite.deleteMany();
   await prisma.productVehicle.deleteMany();
   await prisma.specification.deleteMany();
+  await prisma.productCategory.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
   await prisma.vehicleGeneration.deleteMany();
@@ -313,6 +314,260 @@ async function main() {
         yearFrom: 2015,
         yearTo: null,
       },
+    ],
+  });
+
+  // Create products
+  console.log('Seeding products...');
+  
+  // Get some categories for products
+  const motorOilsCat = await prisma.category.findUnique({
+    where: { slug: 'motornye-masla' },
+  });
+  const oilFiltersCat = await prisma.category.findUnique({
+    where: { slug: 'maslyanye-filtry' },
+  });
+  const airFiltersCat = await prisma.category.findUnique({
+    where: { slug: 'vozdushnye-filtry' },
+  });
+  const brakePadsCat = await prisma.category.findUnique({
+    where: { slug: 'tormoznye-kolodki' },
+  });
+  const sparkPlugsCat = await prisma.category.findUnique({
+    where: { slug: 'dvigatel' },
+  });
+
+  // Create motor oils
+  const mobil1 = await prisma.product.create({
+    data: {
+      sku: 'MOB-152083',
+      name: 'Mobil 1 ESP 5W-30',
+      slug: 'mobil-1-esp-5w-30',
+      description: 'Полностью синтетическое моторное масло Mobil 1 ESP 5W-30 разработано для обеспечения исключительной чистоты двигателя, защиты от износа и общих рабочих характеристик.',
+      price: 3500,
+      stock: 25,
+      isActive: true,
+      images: ['/images/products/mobil-1-esp-5w-30.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: motorOilsCat!.id } } },
+          { category: { connect: { id: oilsCategory.id } } },
+        ],
+      },
+    },
+  });
+
+  const castrol = await prisma.product.create({
+    data: {
+      sku: 'CAS-15669E',
+      name: 'Castrol EDGE 5W-40',
+      slug: 'castrol-edge-5w-40',
+      description: 'Castrol EDGE 5W-40 - полностью синтетическое моторное масло, усиленное титаном для максимальной производительности двигателя.',
+      price: 3200,
+      stock: 30,
+      isActive: true,
+      images: ['/images/products/castrol-edge-5w-40.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: motorOilsCat!.id } } },
+          { category: { connect: { id: oilsCategory.id } } },
+        ],
+      },
+    },
+  });
+
+  const shell = await prisma.product.create({
+    data: {
+      sku: 'SHL-550046270',
+      name: 'Shell Helix Ultra 5W-40',
+      slug: 'shell-helix-ultra-5w-40',
+      description: 'Полностью синтетическое моторное масло Shell Helix Ultra 5W-40 обеспечивает превосходную защиту и очистку двигателя.',
+      price: 2900,
+      stock: 40,
+      isActive: true,
+      images: ['/images/products/shell-helix-ultra-5w-40.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: motorOilsCat!.id } } },
+          { category: { connect: { id: oilsCategory.id } } },
+        ],
+      },
+    },
+  });
+
+  // Create oil filters
+  const mannFilter = await prisma.product.create({
+    data: {
+      sku: 'MAN-W71252',
+      name: 'MANN-FILTER W 712/52',
+      slug: 'mann-filter-w-712-52',
+      description: 'Масляный фильтр MANN-FILTER W 712/52 для автомобилей VAG группы. Высококачественный фильтр для надежной защиты двигателя.',
+      price: 450,
+      stock: 100,
+      isActive: true,
+      images: ['/images/products/mann-filter-w-712-52.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: oilFiltersCat!.id } } },
+          { category: { connect: { id: filtersCategory.id } } },
+        ],
+      },
+    },
+  });
+
+  const boschOilFilter = await prisma.product.create({
+    data: {
+      sku: 'BSH-0451103316',
+      name: 'Bosch 0 451 103 316',
+      slug: 'bosch-0-451-103-316',
+      description: 'Масляный фильтр Bosch для широкого спектра автомобилей. Обеспечивает эффективную фильтрацию моторного масла.',
+      price: 380,
+      stock: 80,
+      isActive: true,
+      images: ['/images/products/bosch-oil-filter.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: oilFiltersCat!.id } } },
+          { category: { connect: { id: filtersCategory.id } } },
+        ],
+      },
+    },
+  });
+
+  // Create air filters
+  const mannAirFilter = await prisma.product.create({
+    data: {
+      sku: 'MAN-C27192',
+      name: 'MANN-FILTER C 27 192/1',
+      slug: 'mann-filter-c-27-192-1',
+      description: 'Воздушный фильтр MANN-FILTER для эффективной очистки воздуха, поступающего в двигатель.',
+      price: 650,
+      stock: 60,
+      isActive: true,
+      images: ['/images/products/mann-air-filter.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: airFiltersCat!.id } } },
+          { category: { connect: { id: filtersCategory.id } } },
+        ],
+      },
+    },
+  });
+
+  // Create brake pads
+  const brembo = await prisma.product.create({
+    data: {
+      sku: 'BRM-P85020',
+      name: 'Brembo P 85 020',
+      slug: 'brembo-p-85-020',
+      description: 'Передние тормозные колодки Brembo для высокой эффективности торможения и долговечности.',
+      price: 3800,
+      stock: 35,
+      isActive: true,
+      images: ['/images/products/brembo-brake-pads.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: brakePadsCat!.id } } },
+          { category: { connect: { id: brakesCategory.id } } },
+        ],
+      },
+    },
+  });
+
+  const ate = await prisma.product.create({
+    data: {
+      sku: 'ATE-13046072192',
+      name: 'ATE 13.0460-7219.2',
+      slug: 'ate-13-0460-7219-2',
+      description: 'Комплект тормозных колодок ATE с высоким коэффициентом трения для безопасного торможения.',
+      price: 2500,
+      stock: 50,
+      isActive: true,
+      images: ['/images/products/ate-brake-pads.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: brakePadsCat!.id } } },
+          { category: { connect: { id: brakesCategory.id } } },
+        ],
+      },
+    },
+  });
+
+  // Create spark plugs
+  const ngk = await prisma.product.create({
+    data: {
+      sku: 'NGK-BKR6EK',
+      name: 'NGK BKR6EK',
+      slug: 'ngk-bkr6ek',
+      description: 'Свечи зажигания NGK с медным электродом для надежного воспламенения топливной смеси.',
+      price: 320,
+      stock: 200,
+      isActive: true,
+      images: ['/images/products/ngk-spark-plugs.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: sparkPlugsCat!.id } } },
+        ],
+      },
+    },
+  });
+
+  const boschSparkPlugs = await prisma.product.create({
+    data: {
+      sku: 'BSH-0242240593',
+      name: 'Bosch FR6KI332S',
+      slug: 'bosch-fr6ki332s',
+      description: 'Иридиевые свечи зажигания Bosch для увеличенного срока службы и стабильной работы двигателя.',
+      price: 850,
+      stock: 120,
+      isActive: true,
+      images: ['/images/products/bosch-spark-plugs.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: sparkPlugsCat!.id } } },
+        ],
+      },
+    },
+  });
+
+  // Create products with multiple categories
+  const universalOil = await prisma.product.create({
+    data: {
+      sku: 'LQM-3707',
+      name: 'Liqui Moly Top Tec 4200 5W-30',
+      slug: 'liqui-moly-top-tec-4200-5w-30',
+      description: 'Универсальное синтетическое масло Liqui Moly для бензиновых и дизельных двигателей.',
+      price: 3300,
+      stock: 45,
+      isActive: true,
+      images: ['/images/products/liqui-moly-5w-30.jpg'],
+      categories: {
+        create: [
+          { category: { connect: { id: motorOilsCat!.id } } },
+          { category: { connect: { id: oilsCategory.id } } },
+          { category: { connect: { id: engineCategory.id } } },
+        ],
+      },
+    },
+  });
+
+  // Add specifications to some products
+  await prisma.specification.createMany({
+    data: [
+      { productId: mobil1.id, name: 'Вязкость', value: '5W-30' },
+      { productId: mobil1.id, name: 'Объем', value: '4л' },
+      { productId: mobil1.id, name: 'Тип', value: 'Синтетическое' },
+      { productId: mobil1.id, name: 'Спецификация API', value: 'SN/CF' },
+      { productId: mobil1.id, name: 'Спецификация ACEA', value: 'C2/C3' },
+      
+      { productId: mannFilter.id, name: 'Высота', value: '65 мм' },
+      { productId: mannFilter.id, name: 'Диаметр', value: '72 мм' },
+      { productId: mannFilter.id, name: 'Резьба', value: 'M20x1.5' },
+      
+      { productId: brembo.id, name: 'Толщина', value: '19.5 мм' },
+      { productId: brembo.id, name: 'Высота', value: '72.9 мм' },
+      { productId: brembo.id, name: 'Ширина', value: '156.4 мм' },
+      { productId: brembo.id, name: 'Система', value: 'ATE' },
     ],
   });
 

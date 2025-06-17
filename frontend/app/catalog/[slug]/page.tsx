@@ -3,14 +3,16 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Metadata } from "next"
 import { categoriesApi } from "@/lib/api/categories"
+import { productsApi } from "@/lib/api/products"
 import { CategoryTree } from "@/components/categories/CategoryTree"
 import { EmptyCategory } from "@/components/categories"
+import { ProductsGrid } from "@/components/products"
 import { ChevronRightIcon } from "@heroicons/react/24/outline"
 
 interface CategoryPageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export async function generateStaticParams() {
@@ -24,8 +26,10 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  
   try {
-    const category = await categoriesApi.getBySlug(params.slug)
+    const category = await categoriesApi.getBySlug(slug)
 
     return {
       title: `${category.name} - Автозапчасти АСО`,
@@ -41,15 +45,23 @@ export async function generateMetadata({
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
+  const { slug } = await params;
   let category
   let breadcrumbs = []
+  let products
 
   try {
     // Fetch category by slug
-    category = await categoriesApi.getBySlug(params.slug)
+    category = await categoriesApi.getBySlug(slug)
 
     // Fetch breadcrumbs
     breadcrumbs = await categoriesApi.getBreadcrumbs(category.id)
+    
+    // Fetch products for this category
+    products = await productsApi.getByCategorySlug(slug, {
+      onlyActive: true,
+      limit: 12,
+    })
   } catch (error) {
     notFound()
   }
@@ -130,11 +142,19 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             </div>
           )}
 
-          {/* Products placeholder */}
-          <EmptyCategory 
-            categoryName={category.name} 
-            productCount={category.productCount} 
-          />
+          {/* Products */}
+          {products && products.items.length > 0 ? (
+            <>
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Найдено товаров: {products.total}
+                </p>
+              </div>
+              <ProductsGrid products={products.items} />
+            </>
+          ) : (
+            <EmptyCategory categoryName={category.name} />
+          )}
         </div>
       </div>
     </div>
