@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -11,41 +10,60 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model - supports both anonymous and authenticated users
+// User model - for authenticated users only
 model User {
   id              String    @id @default(uuid())
-  phone           String?   @unique
-  isAnonymous     Boolean   @default(true)
+  phone           String    @unique
+  firstName       String?
+  lastName        String?
+  middleName      String?
   isPhoneVerified Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   // Relations
-  sessions        Session[]
+  anonymousUsers  AnonymousUser[]
   carts           Cart[]
   orders          Order[]
   favorites       Favorite[]
   chats           Chat[]
   addresses       Address[]
+  otpCodes        OtpCode[]
 }
 
-// Session model - for both anonymous and authenticated sessions
-model Session {
+// AnonymousUser model - for anonymous users
+model AnonymousUser {
   id           String   @id @default(uuid())
   token        String   @unique
-  userId       String
-  deviceInfo   String?
-  ipAddress    String?
-  isActive     Boolean  @default(true)
+  userId       String?  // Will be set when anonymous user registers
   lastActivity DateTime @default(now())
   createdAt    DateTime @default(now())
-  expiresAt    DateTime
+
+  // Relations
+  user         User?      @relation(fields: [userId], references: [id])
+  carts        Cart[]
+  favorites    Favorite[]
+  chats        Chat[]
+
+  @@index([userId])
+  @@index([token])
+}
+
+// OtpCode model - for storing SMS verification codes
+model OtpCode {
+  id        String   @id @default(uuid())
+  userId    String
+  code      String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
 
   // Relations
   user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
-  @@index([token])
+  @@index([code])
 }
 
 // Category model - hierarchical structure
@@ -156,16 +174,21 @@ model ProductVehicle {
 
 // Cart model
 model Cart {
-  id        String   @id @default(uuid())
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  userId          String?
+  anonymousUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
-  user  User       @relation(fields: [userId], references: [id])
-  items CartItem[]
+  user            User?          @relation(fields: [userId], references: [id])
+  anonymousUser   AnonymousUser? @relation(fields: [anonymousUserId], references: [id])
+  items           CartItem[]
 
   @@unique([userId])
+  @@unique([anonymousUserId])
+  @@index([userId])
+  @@index([anonymousUserId])
 }
 
 // Cart items
@@ -189,17 +212,21 @@ model CartItem {
 
 // Favorites
 model Favorite {
-  id        String   @id @default(uuid())
-  userId    String
-  productId String
-  createdAt DateTime @default(now())
+  id              String   @id @default(uuid())
+  userId          String?
+  anonymousUserId String?
+  productId       String
+  createdAt       DateTime @default(now())
 
   // Relations
-  user    User    @relation(fields: [userId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  user          User?          @relation(fields: [userId], references: [id])
+  anonymousUser AnonymousUser? @relation(fields: [anonymousUserId], references: [id])
+  product       Product        @relation(fields: [productId], references: [id])
 
   @@unique([userId, productId])
+  @@unique([anonymousUserId, productId])
   @@index([userId])
+  @@index([anonymousUserId])
   @@index([productId])
 }
 
@@ -301,19 +328,22 @@ model Address {
 
 // Chat model
 model Chat {
-  id        String   @id @default(uuid())
-  userId    String
-  managerId String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  userId          String?
+  anonymousUserId String?
+  managerId       String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
-  user     User          @relation(fields: [userId], references: [id])
-  messages ChatMessage[]
-  offers   ProductOffer[]
+  user          User?          @relation(fields: [userId], references: [id])
+  anonymousUser AnonymousUser? @relation(fields: [anonymousUserId], references: [id])
+  messages      ChatMessage[]
+  offers        ProductOffer[]
 
   @@index([userId])
+  @@index([anonymousUserId])
   @@index([managerId])
 }
 
