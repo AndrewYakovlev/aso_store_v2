@@ -157,7 +157,7 @@ export function Header() {
               {/* Админ панель - только для администраторов */}
               {user && (user.role === 'ADMIN' || user.role === 'MANAGER') && (
                 <Link
-                  href="/admin"
+                  href="/panel"
                   className="hidden lg:flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg text-red-600"
                 >
                   <CogIcon className="w-6 h-6" />

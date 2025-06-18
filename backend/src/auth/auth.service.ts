@@ -11,6 +11,7 @@ import { OtpService } from './services/otp.service';
 import { FavoritesService } from '../favorites/favorites.service';
 import { CartService } from '../cart/cart.service';
 import { AuthTokensDto, UserProfileDto } from './dto';
+import { normalizePhone, formatPhoneForDisplay } from '../common/utils/phone.utils';
 
 @Injectable()
 export class AuthService {
@@ -43,14 +44,17 @@ export class AuthService {
   }
 
   async sendOtp(phone: string) {
+    // Нормализуем номер телефона
+    const normalizedPhone = normalizePhone(phone);
+    
     // Find or create user by phone
     let user = await this.prisma.user.findUnique({
-      where: { phone },
+      where: { phone: normalizedPhone },
     });
 
     if (!user) {
       user = await this.prisma.user.create({
-        data: { phone },
+        data: { phone: normalizedPhone },
       });
     }
 
@@ -59,7 +63,7 @@ export class AuthService {
 
     // In development, return code for testing
     // In production, send SMS
-    console.log(`OTP code for ${phone}: ${code}`);
+    console.log(`OTP code for ${normalizedPhone}: ${code}`);
 
     return {
       message: 'OTP code sent successfully',
@@ -74,9 +78,12 @@ export class AuthService {
     code: string,
     anonymousToken?: string,
   ): Promise<AuthTokensDto> {
+    // Нормализуем номер телефона
+    const normalizedPhone = normalizePhone(phone);
+    
     // Find user by phone
     const user = await this.prisma.user.findUnique({
-      where: { phone },
+      where: { phone: normalizedPhone },
     });
 
     if (!user) {
@@ -118,7 +125,7 @@ export class AuthService {
       refreshToken,
       user: {
         id: user.id,
-        phone: user.phone,
+        phone: formatPhoneForDisplay(user.phone),
         firstName: user.firstName || undefined,
         lastName: user.lastName || undefined,
         middleName: user.middleName || undefined,
@@ -152,7 +159,7 @@ export class AuthService {
         ...tokens,
         user: {
           id: user.id,
-          phone: user.phone,
+          phone: formatPhoneForDisplay(user.phone),
           firstName: user.firstName || undefined,
           lastName: user.lastName || undefined,
           middleName: user.middleName || undefined,
@@ -175,7 +182,7 @@ export class AuthService {
 
     return {
       id: user.id,
-      phone: user.phone,
+      phone: formatPhoneForDisplay(user.phone),
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
       middleName: user.middleName || undefined,
@@ -200,7 +207,7 @@ export class AuthService {
 
     return {
       id: user.id,
-      phone: user.phone,
+      phone: formatPhoneForDisplay(user.phone),
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
       middleName: user.middleName || undefined,

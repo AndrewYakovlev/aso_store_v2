@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PhoneInput } from '@/components/auth/PhoneInput';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
@@ -8,6 +8,7 @@ import { authApi } from '@/lib/api/auth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
 import { ClientAnonymousTokenService } from '@/lib/services/client-token.service';
+import { normalizePhone } from '@/lib/utils/phone';
 
 interface AuthStepProps {
   phone: string;
@@ -32,7 +33,7 @@ export function AuthStep({ phone, onPhoneChange, onAuthSuccess }: AuthStepProps)
     setError('');
     
     try {
-      const response = await authApi.sendOtp(phone);
+      const response = await authApi.sendOtp(normalizePhone(phone));
       
       // In dev mode, show the OTP code
       if (process.env.NODE_ENV === 'development' && response.code) {
@@ -59,7 +60,7 @@ export function AuthStep({ phone, onPhoneChange, onAuthSuccess }: AuthStepProps)
     try {
       // Get anonymous token to merge data
       const anonymousToken = ClientAnonymousTokenService.getToken();
-      const response = await authApi.verifyOtp(phone, otp, anonymousToken || undefined);
+      const response = await authApi.verifyOtp(normalizePhone(phone), otp, anonymousToken || undefined);
       onAuthSuccess(response);
     } catch (err: any) {
       setError(err.message || 'Неверный код подтверждения');
@@ -73,6 +74,28 @@ export function AuthStep({ phone, onPhoneChange, onAuthSuccess }: AuthStepProps)
     setDevOtpCode(null);
     setStep('phone');
   };
+
+  // Auto-focus OTP input when switching to OTP step
+  useEffect(() => {
+    if (step === 'otp') {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        // Try to find the actual input element
+        const otpInput = document.querySelector('input[inputmode="numeric"]') as HTMLInputElement;
+        if (otpInput) {
+          otpInput.focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
+
+  // Auto-submit when OTP is complete
+  useEffect(() => {
+    if (otp && otp.length === 6 && !loading) {
+      handleVerifyOtp();
+    }
+  }, [otp]);
 
   return (
     <div className="space-y-4">
@@ -127,6 +150,7 @@ export function AuthStep({ phone, onPhoneChange, onAuthSuccess }: AuthStepProps)
               onChange={setOtp}
               maxLength={6}
               disabled={loading}
+              autoFocus
             >
               <InputOTPGroup>
                 <InputOTPSlot index={0} />

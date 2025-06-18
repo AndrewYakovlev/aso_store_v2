@@ -20,7 +20,7 @@ export function AdminGuard({
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push('/account?redirect=/admin');
+        router.push('/account?redirect=/panel');
       } else if (!allowedRoles.includes(user.role as any)) {
         router.push('/');
       }

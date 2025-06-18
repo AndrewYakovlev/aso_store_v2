@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import Link from 'next/link';
 import { ArrowLeftIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
+import { formatPhoneForDisplay } from '@/lib/utils/phone';
 
 export function AdminHeader() {
   const { user, logout } = useAuth();
@@ -34,7 +35,7 @@ export function AdminHeader() {
               className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
             >
               <UserCircleIcon className="h-8 w-8 mr-2" />
-              <span>{user?.firstName || user?.phone}</span>
+              <span>{user?.firstName || (user?.phone ? formatPhoneForDisplay(user.phone) : 'Администратор')}</span>
             </button>
             
             {dropdownOpen && (

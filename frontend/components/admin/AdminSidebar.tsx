@@ -17,55 +17,55 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 
 const menuItems = [
   { 
-    href: '/admin', 
+    href: '/panel', 
     label: 'Дашборд', 
     icon: HomeIcon,
     exact: true 
   },
   { 
-    href: '/admin/products', 
+    href: '/panel/products', 
     label: 'Товары', 
     icon: CubeIcon,
     roles: ['ADMIN', 'MANAGER'] 
   },
   { 
-    href: '/admin/categories', 
+    href: '/panel/categories', 
     label: 'Категории', 
     icon: TagIcon,
     roles: ['ADMIN'] 
   },
   { 
-    href: '/admin/orders', 
+    href: '/panel/orders', 
     label: 'Заказы', 
     icon: ShoppingCartIcon,
     roles: ['ADMIN', 'MANAGER'] 
   },
   { 
-    href: '/admin/users', 
+    href: '/panel/users', 
     label: 'Пользователи', 
     icon: UsersIcon,
     roles: ['ADMIN'] 
   },
   { 
-    href: '/admin/chats', 
+    href: '/panel/chats', 
     label: 'Чаты', 
     icon: ChatBubbleLeftRightIcon,
     roles: ['ADMIN', 'MANAGER'] 
   },
   { 
-    href: '/admin/brands', 
+    href: '/panel/brands', 
     label: 'Бренды', 
     icon: TruckIcon,
     roles: ['ADMIN'] 
   },
   { 
-    href: '/admin/stats', 
+    href: '/panel/stats', 
     label: 'Статистика', 
     icon: ChartBarIcon,
     roles: ['ADMIN'] 
   },
   { 
-    href: '/admin/settings', 
+    href: '/panel/settings', 
     label: 'Настройки', 
     icon: CogIcon,
     roles: ['ADMIN'] 
@@ -91,7 +91,7 @@ export function AdminSidebar() {
   return (
     <div className="bg-gray-900 text-white w-64 space-y-6 py-7 px-2">
       <div className="flex items-center justify-center mb-6">
-        <Link href="/admin" className="text-2xl font-semibold">
+        <Link href="/panel" className="text-2xl font-semibold">
           АСО Admin
         </Link>
       </div>

@@ -16,6 +16,7 @@ import {
   DeliveryMethodDto,
   PaymentMethodDto,
 } from './dto';
+import { normalizePhone, formatPhoneForDisplay } from '../common/utils/phone.utils';
 
 @Injectable()
 export class OrdersService {
@@ -85,7 +86,7 @@ export class OrdersService {
         totalAmount,
         deliveryAmount,
         customerName: createOrderDto.customerName,
-        customerPhone: createOrderDto.customerPhone,
+        customerPhone: normalizePhone(createOrderDto.customerPhone),
         customerEmail: createOrderDto.customerEmail,
         deliveryAddress: createOrderDto.deliveryAddress,
         deliveryCity: createOrderDto.deliveryCity,
@@ -433,7 +434,7 @@ export class OrdersService {
       deliveryAmount: order.deliveryAmount.toNumber(),
       grandTotal,
       customerName: order.customerName,
-      customerPhone: order.customerPhone,
+      customerPhone: formatPhoneForDisplay(order.customerPhone),
       customerEmail: order.customerEmail || undefined,
       deliveryAddress: order.deliveryAddress || undefined,
       deliveryCity: order.deliveryCity || undefined,

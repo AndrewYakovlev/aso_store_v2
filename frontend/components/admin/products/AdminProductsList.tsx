@@ -59,13 +59,13 @@ export function AdminProductsList() {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
     params.set('page', '1');
-    router.push(`/admin/products?${params.toString()}`);
+    router.push(`/panel/products?${params.toString()}`);
   };
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
-    router.push(`/admin/products?${params.toString()}`);
+    router.push(`/panel/products?${params.toString()}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -197,7 +197,7 @@ export function AdminProductsList() {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
                     <Link
-                      href={`/admin/products/${product.id}/edit`}
+                      href={`/panel/products/${product.id}/edit`}
                       className="text-blue-600 hover:text-blue-900"
                     >
                       <PencilIcon className="h-5 w-5" />

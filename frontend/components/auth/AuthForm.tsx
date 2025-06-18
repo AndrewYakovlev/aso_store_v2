@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -23,6 +23,7 @@ import { PhoneInput } from './PhoneInput';
 import { authApi } from '@/lib/api/auth';
 import { useAnonymousToken } from '@/lib/hooks/useAnonymousToken';
 import { ApiError } from '@/lib/api/client';
+import { normalizePhone } from '@/lib/utils/phone';
 
 // Phone validation schema
 const phoneSchema = z.object({
@@ -75,7 +76,7 @@ export function AuthForm({ onSuccess, onCancel }: AuthFormProps) {
     setDevCode(null);
     
     try {
-      const response = await authApi.sendOtp(data.phone);
+      const response = await authApi.sendOtp(normalizePhone(data.phone));
       setPhone(data.phone);
       setStep('otp');
       
@@ -99,7 +100,7 @@ export function AuthForm({ onSuccess, onCancel }: AuthFormProps) {
     setError(null);
     
     try {
-      const response = await authApi.verifyOtp(phone, data.code, anonymousToken || undefined);
+      const response = await authApi.verifyOtp(normalizePhone(phone), data.code, anonymousToken || undefined);
       
       // Save tokens
       localStorage.setItem('access_token', response.accessToken);
@@ -134,6 +135,29 @@ export function AuthForm({ onSuccess, onCancel }: AuthFormProps) {
     setDevCode(null);
     setError(null);
   };
+
+  // Auto-focus OTP input when switching to OTP step
+  useEffect(() => {
+    if (step === 'otp') {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        // Try to find the actual input element
+        const otpInput = document.querySelector('input[inputmode="numeric"]') as HTMLInputElement;
+        if (otpInput) {
+          otpInput.focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
+
+  // Auto-submit when OTP is complete
+  const otpCode = otpForm.watch('code');
+  useEffect(() => {
+    if (otpCode && otpCode.length === 6 && !loading) {
+      otpForm.handleSubmit(handleOtpSubmit)();
+    }
+  }, [otpCode, loading, otpForm, handleOtpSubmit]);
 
   if (step === 'phone') {
     return (
@@ -211,6 +235,7 @@ export function AuthForm({ onSuccess, onCancel }: AuthFormProps) {
                   maxLength={6}
                   {...field}
                   disabled={loading}
+                  autoFocus
                 >
                   <InputOTPGroup className="w-full justify-center">
                     <InputOTPSlot index={0} />
