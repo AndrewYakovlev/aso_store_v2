@@ -156,6 +156,7 @@ export class AuthService {
           firstName: user.firstName || undefined,
           lastName: user.lastName || undefined,
           middleName: user.middleName || undefined,
+          role: user.role,
         },
       };
     } catch {

@@ -25,6 +25,7 @@ export interface VerifyOtpResponse {
     firstName?: string;
     lastName?: string;
     middleName?: string;
+    role: 'CUSTOMER' | 'MANAGER' | 'ADMIN';
   };
 }
 
