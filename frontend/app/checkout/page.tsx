@@ -30,7 +30,7 @@ export default function CheckoutPage() {
   const [formData, setFormData] = useState({
     customerName: user?.firstName || '',
     customerPhone: user?.phone || '',
-    customerEmail: user?.email || '',
+    customerEmail: '',
     deliveryMethodId: '',
     paymentMethodId: '',
     deliveryAddress: '',
@@ -75,7 +75,6 @@ export default function CheckoutPage() {
         ...prev,
         customerName: user.firstName || prev.customerName,
         customerPhone: user.phone || prev.customerPhone,
-        customerEmail: user.email || prev.customerEmail,
       }));
     }
   }, [user]);

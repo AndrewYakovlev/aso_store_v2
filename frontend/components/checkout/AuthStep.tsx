@@ -35,8 +35,8 @@ export function AuthStep({ phone, onPhoneChange, onAuthSuccess }: AuthStepProps)
       const response = await authApi.sendOtp(phone);
       
       // In dev mode, show the OTP code
-      if (process.env.NODE_ENV === 'development' && response.devOtpCode) {
-        setDevOtpCode(response.devOtpCode);
+      if (process.env.NODE_ENV === 'development' && response.code) {
+        setDevOtpCode(response.code);
       }
       
       setStep('otp');

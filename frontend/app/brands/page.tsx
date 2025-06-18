@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Metadata } from "next"
 import { Card } from "@/components/ui/card"
 import { ChevronRightIcon } from "@heroicons/react/24/outline"
-import { brandsApi } from "@/lib/api/brands"
+import { brandsApi, BrandWithProductsCount } from "@/lib/api/brands"
 
 export const metadata: Metadata = {
   title: 'Производители автозапчастей - интернет-магазин АСО',
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 
 // Группировка брендов по первой букве
-function groupBrandsByLetter(brands: any[]) {
+function groupBrandsByLetter(brands: BrandWithProductsCount[]) {
   const grouped = brands.reduce((acc, brand) => {
     const letter = brand.name[0].toUpperCase();
     if (!acc[letter]) {
@@ -20,13 +20,13 @@ function groupBrandsByLetter(brands: any[]) {
     }
     acc[letter].push(brand);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, BrandWithProductsCount[]>);
 
   return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
 }
 
 export default async function BrandsPage() {
-  let brands;
+  let brands: BrandWithProductsCount[] = [];
   let errorMessage = null;
   
   try {
@@ -129,7 +129,7 @@ export default async function BrandsPage() {
                           </p>
                         )}
                         
-                        {brand.productsCount > 0 && (
+                        {brand.productsCount && brand.productsCount > 0 && (
                           <p className="text-sm text-primary mt-2">
                             Товаров: {brand.productsCount}
                           </p>

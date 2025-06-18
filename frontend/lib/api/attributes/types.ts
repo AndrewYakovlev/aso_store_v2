@@ -1,12 +1,16 @@
-export type AttributeType = 'SELECT_ONE' | 'SELECT_MANY' | 'NUMBER' | 'TEXT' | 'COLOR';
+export enum AttributeType {
+  SELECT_ONE = 'SELECT_ONE',
+  SELECT_MANY = 'SELECT_MANY',
+  NUMBER = 'NUMBER',
+  TEXT = 'TEXT',
+  COLOR = 'COLOR',
+}
 
 export interface AttributeOptionDto {
   id: string;
   attributeId: string;
   value: string;
   sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface AttributeDto {
@@ -19,8 +23,6 @@ export interface AttributeDto {
   isFilterable: boolean;
   sortOrder: number;
   options?: AttributeOptionDto[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface ProductAttributeValueDto {
@@ -30,4 +32,16 @@ export interface ProductAttributeValueDto {
   numberValue?: number;
   colorValue?: string;
   optionIds?: string[];
+}
+
+export interface SetProductAttributeDto {
+  attributeId: string;
+  textValue?: string;
+  numberValue?: number;
+  colorValue?: string;
+  optionIds?: string[];
+}
+
+export interface BulkSetProductAttributesDto {
+  attributes: SetProductAttributeDto[];
 }

@@ -395,8 +395,8 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
         </div>
       )}
 
-      {/* Цена */}
-      {filters.priceRange && (
+      {/* Цена - показываем только если min и max различаются */}
+      {filters.priceRange && filters.priceRange.min !== filters.priceRange.max && (
         <div className="border-b pb-4">
           <button
             onClick={() => toggleSection('price')}
@@ -473,7 +473,20 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
       </div>
 
       {/* Атрибуты */}
-      {filters.attributes?.map((attribute: any) => (
+      {filters.attributes?.map((attribute: any) => {
+        // Пропускаем числовые атрибуты, если min и max совпадают
+        if (attribute.type === 'NUMBER' && attribute.range) {
+          if (attribute.range.min === attribute.range.max) {
+            return null;
+          }
+        }
+        
+        // Пропускаем SELECT атрибуты без опций
+        if ((attribute.type === 'SELECT_ONE' || attribute.type === 'SELECT_MANY') && (!attribute.options || attribute.options.length === 0)) {
+          return null;
+        }
+        
+        return (
         <div key={attribute.id} className="border-b pb-4">
           <button
             onClick={() => toggleSection(`attr-${attribute.id}`)}
@@ -495,7 +508,9 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
                   {attribute.options?.map((option: any) => {
                     const currentAttributeFilter = selectedFilters.attributes?.[attribute.id];
                     const currentValues = currentAttributeFilter?.values || [];
-                    const valuesArray = Array.isArray(currentValues) ? currentValues : [currentValues];
+                    const valuesArray: string[] = Array.isArray(currentValues) 
+                      ? (currentValues as string[])
+                      : [currentValues as string];
                     const isChecked = valuesArray.includes(option.id);
                     
                     return (
@@ -604,7 +619,8 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

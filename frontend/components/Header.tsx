@@ -66,7 +66,7 @@ export function Header() {
       {/* Основная шапка */}
       <header className="bg-white border-b sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between py-4">
+          <div className="flex items-center justify-between gap-4 py-4">
             {/* Левая часть */}
             <div className="flex items-center gap-4">
               {/* Кнопка меню для мобильных и планшетов */}
@@ -100,41 +100,41 @@ export function Header() {
                 <MapPinIcon className="w-4 h-4" />
                 <span>ул. Автозапчастей, 15</span>
               </div>
-
-              {/* Поисковая форма для десктопа */}
-              <form 
-                className="hidden lg:flex flex-1 max-w-xl"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  if (searchQuery.trim()) {
-                    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
-                  }
-                }}
-              >
-                <div className="relative w-full">
-                  <input
-                    type="search"
-                    placeholder="Поиск по каталогу..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:border-blue-500"
-                  />
-                  <button
-                    type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
-                  >
-                    <MagnifyingGlassIcon className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-              </form>
             </div>
+
+            {/* Поисковая форма для десктопа - теперь в центре и занимает всё доступное место */}
+            <form 
+              className="hidden lg:flex flex-1 mx-4"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (searchQuery.trim()) {
+                  router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+                }
+              }}
+            >
+              <div className="relative w-full">
+                <input
+                  type="search"
+                  placeholder="Поиск по каталогу..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:border-blue-500"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+                >
+                  <MagnifyingGlassIcon className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+            </form>
 
             {/* Правая часть */}
             <div className="flex items-center gap-2 md:gap-4">
-              {/* Кнопка телефона */}
+              {/* Кнопка телефона - только для планшетов и мобильных */}
               <Link
                 href="tel:+71234567890"
-                className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg"
+                className="flex lg:hidden items-center gap-2 p-2 hover:bg-gray-100 rounded-lg"
               >
                 <PhoneIcon className="w-6 h-6" />
                 <span className="hidden md:inline text-sm">+7 (123) 456-78-90</span>

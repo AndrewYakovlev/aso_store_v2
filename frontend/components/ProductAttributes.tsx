@@ -26,10 +26,10 @@ export function ProductAttributes({ attributes }: ProductAttributesProps) {
             case 'SELECT_ONE':
             case 'SELECT_MANY':
               if (attrValue.optionIds && attrValue.optionIds.length > 0) {
-                const selectedOptions = attribute.options?.filter(opt => 
+                const selectedOptions = attribute.options?.filter((opt) => 
                   attrValue.optionIds?.includes(opt.id)
                 );
-                value = selectedOptions?.map(opt => opt.value).join(', ') || null;
+                value = selectedOptions?.map((opt) => opt.value).join(', ') || null;
               }
               break;
             case 'NUMBER':
