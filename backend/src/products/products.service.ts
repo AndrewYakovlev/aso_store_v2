@@ -585,16 +585,24 @@ export class ProductsService {
 
   async getAvailableFilters(baseFilter: ProductsFilterDto) {
     try {
-      // console.log('Getting available filters with base filter:', JSON.stringify(baseFilter, null, 2));
+      console.log('Getting available filters with base filter:', JSON.stringify(baseFilter, null, 2));
       
-      // Создаем копию фильтра без категорий и брендов для получения всех доступных опций
-      const { categoryIds, brandIds, ...baseFilterWithoutCategoriesAndBrands } = baseFilter;
+      // Создаем копию фильтра без брендов для получения всех доступных брендов
+      const { brandIds, ...baseFilterWithoutBrands } = baseFilter;
+      
+      // Создаем копию фильтра без категорий для получения всех доступных категорий
+      const { categoryIds, ...baseFilterWithoutCategories } = baseFilter;
       
       // Получаем фильтры для категорий и брендов без учета их собственных фильтров
-      const categoriesAndBrandsFilters = await this.getFiltersForCategoriesAndBrands(baseFilterWithoutCategoriesAndBrands);
+      const categoriesAndBrandsFilters = await this.getFiltersForCategoriesAndBrands({
+        ...baseFilterWithoutBrands,
+        ...baseFilterWithoutCategories,
+        // Но обязательно сохраняем текущие категории для правильной фильтрации брендов
+        categoryIds: baseFilter.categoryIds,
+      });
       
-      // Для диапазона цен также используем фильтр без ограничений по цене
-      const { minPrice, maxPrice, ...baseFilterWithoutPrice } = baseFilterWithoutCategoriesAndBrands;
+      // Для диапазона цен используем фильтр без ограничений по цене, но с категориями
+      const { minPrice, maxPrice, ...baseFilterWithoutPrice } = baseFilter;
       const priceRangeFilter = await this.getPriceRange(baseFilterWithoutPrice);
       
       // Для атрибутов создаем отдельные фильтры без учета каждого конкретного атрибута
@@ -613,6 +621,7 @@ export class ProductsService {
   }
 
   private async getPriceRange(baseFilter: ProductsFilterDto) {
+    console.log('getPriceRange called with:', JSON.stringify(baseFilter, null, 2));
     const where: Prisma.ProductWhereInput = {};
     
     if (baseFilter.search) {
@@ -742,6 +751,7 @@ export class ProductsService {
   }
 
   private async getFiltersForCategoriesAndBrands(baseFilter: ProductsFilterDto) {
+    console.log('getFiltersForCategoriesAndBrands called with:', JSON.stringify(baseFilter, null, 2));
     const where: Prisma.ProductWhereInput = {};
     
     if (baseFilter.search) {
@@ -872,10 +882,13 @@ export class ProductsService {
       },
     });
 
-    return {
+    console.log('Found products count:', products.length);
+    const result = {
       categories: await this.getCategoriesWithCounts(products),
       brands: await this.getBrandsWithCounts(products),
     };
+    console.log('Brands found:', result.brands.map(b => b.name));
+    return result;
   }
 
   private async getFiltersForOtherParameters(baseFilter: ProductsFilterDto) {
