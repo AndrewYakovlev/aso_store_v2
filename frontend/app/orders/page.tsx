@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ordersApi, Order, OrderStatus } from '@/lib/api/orders';
+import { ordersClientApi } from '@/lib/api/orders-client';
 import { formatPrice } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -40,7 +41,7 @@ export default function OrdersPage() {
   const loadOrders = async () => {
     setLoading(true);
     try {
-      const result = await ordersApi.getOrders({
+      const result = await ordersClientApi.getOrders({
         statusId: selectedStatus || undefined,
         page,
         limit: 10,

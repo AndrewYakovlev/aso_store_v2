@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -8,29 +8,31 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ordersApi, Order } from '@/lib/api/orders';
+import { ordersClientApi } from '@/lib/api/orders-client';
 import { formatPrice } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default function OrderDetailPage({ params }: PageProps) {
+  const resolvedParams = use(params);
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadOrder();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   const loadOrder = async () => {
     try {
-      const orderData = await ordersApi.getById(params.id);
+      const orderData = await ordersClientApi.getById(resolvedParams.id);
       setOrder(orderData);
     } catch (error) {
       console.error('Failed to load order:', error);

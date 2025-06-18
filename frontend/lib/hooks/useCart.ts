@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react';
-import { cartApi, Cart, CartSummary, AddToCartData } from '@/lib/api/cart';
+import { Cart, CartSummary, AddToCartData } from '@/lib/api/cart';
+import { cartClientApi } from '@/lib/api/cart-client';
 import { useAnonymousToken } from './useAnonymousToken';
 
 export function useCart() {
@@ -18,8 +19,8 @@ export function useCart() {
     try {
       setLoading(true);
       const [cartData, summaryData] = await Promise.all([
-        cartApi.getCart(),
-        cartApi.getCartSummary(),
+        cartClientApi.getCart(),
+        cartClientApi.getCartSummary(),
       ]);
       setCart(cartData);
       setSummary(summaryData);
@@ -56,7 +57,7 @@ export function useCart() {
         itemsCount: prev.itemsCount + 1,
       } : null);
 
-      await cartApi.addToCart(data);
+      await cartClientApi.addToCart(data);
       
       // Reload cart to get updated data
       await loadCart();
@@ -94,7 +95,7 @@ export function useCart() {
         totalQuantity: prev.totalQuantity + quantityDiff,
       } : null);
 
-      await cartApi.updateCartItem(productId, { quantity });
+      await cartClientApi.updateCartItem(productId, { quantity });
     } catch (err) {
       // Revert optimistic update
       await loadCart();
@@ -124,7 +125,7 @@ export function useCart() {
         itemsCount: prev.itemsCount - 1,
       } : null);
 
-      await cartApi.removeFromCart(productId);
+      await cartClientApi.removeFromCart(productId);
     } catch (err) {
       // Revert optimistic update
       await loadCart();
@@ -151,7 +152,7 @@ export function useCart() {
         itemsCount: 0,
       });
 
-      await cartApi.clearCart();
+      await cartClientApi.clearCart();
     } catch (err) {
       // Revert optimistic update
       await loadCart();

@@ -16,35 +16,44 @@ export class CartService {
     userId: string | undefined,
     anonymousUserId: string | undefined,
   ) {
+    console.log('getOrCreateCart - input:', { userId, anonymousUserId });
+    
     if (!userId && !anonymousUserId) {
       throw new BadRequestException('User identification required');
     }
 
-    let cart = await this.prisma.cart.findFirst({
-      where: {
-        OR: [
-          { userId: userId || undefined },
-          { anonymousUserId: anonymousUserId || undefined },
-        ],
-      },
-    });
-
-    if (!cart) {
-      cart = await this.prisma.cart.create({
-        data: {
-          ...(userId && { userId }),
-          ...(anonymousUserId && { anonymousUserId }),
+    try {
+      let cart = await this.prisma.cart.findFirst({
+        where: {
+          OR: [
+            ...(userId ? [{ userId }] : []),
+            ...(anonymousUserId ? [{ anonymousUserId }] : []),
+          ],
         },
       });
-    }
 
-    return cart;
+      if (!cart) {
+        console.log('Creating new cart for:', { userId, anonymousUserId });
+        cart = await this.prisma.cart.create({
+          data: {
+            ...(userId && { userId }),
+            ...(anonymousUserId && { anonymousUserId }),
+          },
+        });
+      }
+
+      return cart;
+    } catch (error) {
+      console.error('Error in getOrCreateCart:', error);
+      throw error;
+    }
   }
 
   async getCart(
     userId: string | undefined,
     anonymousUserId: string | undefined,
   ): Promise<CartDto> {
+    console.log('getCart called with:', { userId, anonymousUserId });
     const cart = await this.getOrCreateCart(userId, anonymousUserId);
 
     const cartWithItems = await this.prisma.cart.findUnique({
@@ -54,7 +63,11 @@ export class CartService {
           include: {
             product: {
               include: {
-                categories: true,
+                categories: {
+                  include: {
+                    category: true,
+                  },
+                },
                 specifications: true,
               },
             },
@@ -116,7 +129,11 @@ export class CartService {
         include: {
           product: {
             include: {
-              categories: true,
+              categories: {
+                include: {
+                  category: true,
+                },
+              },
               specifications: true,
             },
           },
@@ -133,7 +150,11 @@ export class CartService {
         include: {
           product: {
             include: {
-              categories: true,
+              categories: {
+                include: {
+                  category: true,
+                },
+              },
               specifications: true,
             },
           },
@@ -180,7 +201,11 @@ export class CartService {
       include: {
         product: {
           include: {
-            categories: true,
+            categories: {
+              include: {
+                category: true,
+              },
+            },
             specifications: true,
           },
         },
@@ -325,17 +350,38 @@ export class CartService {
   }
 
   private formatProduct(product: any): ProductDto {
+    // Format categories if they exist
+    let categories = [];
+    if (product.categories && Array.isArray(product.categories)) {
+      categories = product.categories.map((pc: any) => {
+        if (pc.category) {
+          // This is a ProductCategory relation
+          return {
+            id: pc.category.id,
+            name: pc.category.name,
+            slug: pc.category.slug,
+            description: pc.category.description,
+            parentId: pc.category.parentId,
+            isActive: pc.category.isActive,
+            sortOrder: pc.category.sortOrder,
+          };
+        }
+        // This is already a category object
+        return pc;
+      });
+    }
+
     const formatted: ProductDto = {
       id: product.id,
       name: product.name,
       slug: product.slug,
       description: product.description || undefined,
-      price: product.price,
+      price: product.price.toNumber ? product.price.toNumber() : product.price,
       sku: product.sku,
       stock: product.stock,
-      images: product.images,
+      images: product.images || [],
       isActive: product.isActive,
-      categories: product.categories || [],
+      categories,
       specifications: product.specifications || undefined,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,

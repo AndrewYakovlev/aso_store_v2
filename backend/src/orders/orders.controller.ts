@@ -20,6 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   CreateOrderDto,
   UpdateOrderStatusDto,
@@ -70,7 +71,7 @@ export class OrdersController {
   }
 
   @Post()
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Создать новый заказ' })
   @ApiResponse({
@@ -79,18 +80,20 @@ export class OrdersController {
     type: OrderDto,
   })
   @ApiResponse({ status: 400, description: 'Некорректные данные' })
+  @ApiResponse({ status: 401, description: 'Требуется авторизация' })
   @ApiBearerAuth()
   async create(
     @Request() req,
     @Body() createOrderDto: CreateOrderDto,
   ): Promise<OrderDto> {
     const user = req.user as any;
-    const userId = user?.type === 'user' ? user.id : undefined;
-    const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
+    console.log('Order create - user from request:', user);
+    const userId = user?.id || user?.sub;
+    console.log('Order create - userId:', userId);
     
     return this.ordersService.create(
       userId,
-      anonymousUserId,
+      undefined, // Orders are only for authenticated users now
       createOrderDto,
     );
   }

@@ -51,10 +51,12 @@ export async function apiRequest<T = any>(
 
   if (token) {
     requestHeaders['Authorization'] = `Bearer ${token}`;
+    console.log('API Request - Adding Authorization header');
   }
 
   if (anonymousToken) {
     requestHeaders['x-anonymous-token'] = anonymousToken;
+    console.log('API Request - Adding anonymous token header');
   }
 
   const url = `${API_BASE_URL}${endpoint}`;

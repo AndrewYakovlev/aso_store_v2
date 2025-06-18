@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { PhoneInput } from '@/components/ui/phone-input';
+import { PhoneInput } from '@/components/auth/PhoneInput';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { authApi } from '@/lib/api/auth';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
+import { ClientAnonymousTokenService } from '@/lib/services/client-token.service';
 
 interface AuthStepProps {
   phone: string;
@@ -56,7 +57,9 @@ export function AuthStep({ phone, onPhoneChange, onAuthSuccess }: AuthStepProps)
     setError('');
     
     try {
-      const response = await authApi.verifyOtp(phone, otp);
+      // Get anonymous token to merge data
+      const anonymousToken = ClientAnonymousTokenService.getToken();
+      const response = await authApi.verifyOtp(phone, otp, anonymousToken || undefined);
       onAuthSuccess(response);
     } catch (err: any) {
       setError(err.message || 'Неверный код подтверждения');

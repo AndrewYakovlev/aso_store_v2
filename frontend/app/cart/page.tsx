@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { TrashIcon, MinusIcon, PlusIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
 import { useCartContext } from '@/lib/contexts/CartContext'
 import { ProductImage } from '@/components/products/ProductImage'
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 
 export default function CartPage() {
+  const router = useRouter()
   const { cart, loading, updateCartItem, removeFromCart, clearCart } = useCartContext()
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set())
 

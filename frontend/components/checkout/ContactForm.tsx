@@ -2,7 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PhoneInput } from '@/components/ui/phone-input';
+import { PhoneInput } from '@/components/auth/PhoneInput';
 
 interface ContactFormProps {
   data: {

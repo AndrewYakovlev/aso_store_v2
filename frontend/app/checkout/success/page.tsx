@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { ordersApi, Order } from '@/lib/api/orders';
+import { ordersClientApi } from '@/lib/api/orders-client';
 
 export default function CheckoutSuccessPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function CheckoutSuccessPage() {
 
   const loadOrder = async () => {
     try {
-      const orderData = await ordersApi.getByOrderNumber(orderNumber!);
+      const orderData = await ordersClientApi.getByOrderNumber(orderNumber!);
       setOrder(orderData);
     } catch (error) {
       console.error('Failed to load order:', error);

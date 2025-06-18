@@ -12,12 +12,13 @@ import { OrderSummary } from '@/components/checkout/OrderSummary';
 import { AuthStep } from '@/components/checkout/AuthStep';
 import { useCart } from '@/lib/hooks/useCart';
 import { ordersApi } from '@/lib/api/orders';
-import { useAuth } from '@/contexts/AuthContext';
+import { ordersClientApi } from '@/lib/api/orders-client';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { DeliveryMethod, PaymentMethod } from '@/lib/api/orders';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, loading: cartLoading } = useCart();
+  const { cart, loading: cartLoading, refetch: refreshCart } = useCart();
   const { user, login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>([]);
@@ -91,9 +92,11 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleAuthSuccess = (data: any) => {
+  const handleAuthSuccess = async (data: any) => {
+    console.log('Auth success, saving tokens...');
     login(data.accessToken, data.refreshToken, data.user);
     setIsAuthenticated(true);
+    
     // Update form data with user info
     setFormData(prev => ({
       ...prev,
@@ -101,6 +104,13 @@ export default function CheckoutPage() {
       customerPhone: data.user.phone || prev.customerPhone,
       customerEmail: data.user.email || prev.customerEmail,
     }));
+    
+    // Small delay to ensure tokens are saved
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    console.log('Refreshing cart after auth...');
+    // Refresh cart to get merged data
+    await refreshCart();
   };
 
   const validateForm = () => {
@@ -134,9 +144,12 @@ export default function CheckoutPage() {
       return;
     }
 
+    const authToken = localStorage.getItem('access_token');
+    console.log('Before order create - auth token:', authToken ? 'present' : 'missing');
+
     setLoading(true);
     try {
-      const order = await ordersApi.create({
+      const order = await ordersClientApi.create({
         deliveryMethodId: formData.deliveryMethodId,
         paymentMethodId: formData.paymentMethodId,
         customerName: formData.customerName,
