@@ -24,6 +24,10 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
   const [maxPriceInput, setMaxPriceInput] = useState<string>('');
   const priceDebounceRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Локальные состояния для числовых атрибутов
+  const [numberInputs, setNumberInputs] = useState<Record<string, { min: string; max: string }>>({});
+  const numberDebounceRefs = useRef<Record<string, NodeJS.Timeout | null>>({});
+  
   // Инициализация значений цены при загрузке и изменении фильтров
   useEffect(() => {
     if (filters?.priceRange) {
@@ -43,12 +47,59 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
     }
   }, [selectedFilters.minPrice, selectedFilters.maxPrice]);
   
-  // Очистка таймера при размонтировании
+  // Инициализация значений числовых атрибутов
+  useEffect(() => {
+    if (filters?.attributes) {
+      const newNumberInputs: Record<string, { min: string; max: string }> = {};
+      
+      filters.attributes.forEach((attr: any) => {
+        if (attr.type === 'NUMBER' && attr.range) {
+          const currentValues = selectedFilters.attributes?.[attr.id]?.values as number[] | undefined;
+          if (!numberInputs[attr.id]) {
+            newNumberInputs[attr.id] = {
+              min: currentValues?.[0]?.toString() || '',
+              max: currentValues?.[1]?.toString() || '',
+            };
+          }
+        }
+      });
+      
+      if (Object.keys(newNumberInputs).length > 0) {
+        setNumberInputs(prev => ({ ...prev, ...newNumberInputs }));
+      }
+    }
+  }, [filters?.attributes]);
+  
+  // Синхронизация числовых атрибутов с URL параметрами
+  useEffect(() => {
+    if (selectedFilters.attributes) {
+      const updates: Record<string, { min: string; max: string }> = {};
+      
+      Object.entries(selectedFilters.attributes).forEach(([attrId, filter]) => {
+        const values = filter.values as number[] | undefined;
+        if (Array.isArray(values) && values.length === 2) {
+          updates[attrId] = {
+            min: values[0].toString(),
+            max: values[1].toString(),
+          };
+        }
+      });
+      
+      if (Object.keys(updates).length > 0) {
+        setNumberInputs(prev => ({ ...prev, ...updates }));
+      }
+    }
+  }, [selectedFilters.attributes]);
+  
+  // Очистка таймеров при размонтировании
   useEffect(() => {
     return () => {
       if (priceDebounceRef.current) {
         clearTimeout(priceDebounceRef.current);
       }
+      Object.values(numberDebounceRefs.current).forEach(timeout => {
+        if (timeout) clearTimeout(timeout);
+      });
     };
   }, []);
 
@@ -145,14 +196,75 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
     
     onFiltersChange({ attributes: newAttributes });
   };
+  
+  // Обработка изменения числовых атрибутов с debounce
+  const handleNumberAttributeInputChange = (attributeId: string, type: 'min' | 'max', value: string, range: { min: number; max: number }) => {
+    // Обновляем локальное состояние сразу
+    setNumberInputs(prev => ({
+      ...prev,
+      [attributeId]: {
+        ...prev[attributeId],
+        [type]: value,
+      },
+    }));
+    
+    // Отменяем предыдущий таймер для этого атрибута
+    if (numberDebounceRefs.current[attributeId]) {
+      clearTimeout(numberDebounceRefs.current[attributeId]!);
+    }
+    
+    // Устанавливаем новый таймер
+    numberDebounceRefs.current[attributeId] = setTimeout(() => {
+      const currentInput = numberInputs[attributeId] || { min: '', max: '' };
+      const minValue = type === 'min' ? value : currentInput.min;
+      const maxValue = type === 'max' ? value : currentInput.max;
+      
+      const min = minValue ? parseFloat(minValue) : range.min;
+      const max = maxValue ? parseFloat(maxValue) : range.max;
+      
+      // Валидация: минимальное значение не должно быть больше максимального
+      if (min >= max) {
+        return;
+      }
+      
+      handleAttributeChange(attributeId, [min, max]);
+    }, 1000);
+  };
+  
+  // Обработка слайдера числовых атрибутов - только обновляем локальное состояние
+  const handleNumberAttributeSliderChange = (attributeId: string, values: number[]) => {
+    setNumberInputs(prev => ({
+      ...prev,
+      [attributeId]: {
+        min: values[0].toString(),
+        max: values[1].toString(),
+      },
+    }));
+    
+    // Отменяем debounce таймер, если он есть
+    if (numberDebounceRefs.current[attributeId]) {
+      clearTimeout(numberDebounceRefs.current[attributeId]!);
+    }
+  };
+  
+  // Применение фильтра при отпускании слайдера
+  const handleNumberAttributeSliderCommit = (attributeId: string, values: number[]) => {
+    handleAttributeChange(attributeId, values);
+  };
 
   const clearAllFilters = () => {
     setMinPriceInput('');
     setMaxPriceInput('');
+    setNumberInputs({});
     
     if (priceDebounceRef.current) {
       clearTimeout(priceDebounceRef.current);
     }
+    
+    Object.values(numberDebounceRefs.current).forEach(timeout => {
+      if (timeout) clearTimeout(timeout);
+    });
+    numberDebounceRefs.current = {};
     
     onFiltersChange({
       categoryIds: [],
@@ -421,27 +533,42 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
-                      placeholder="От"
-                      className="w-24"
-                      onChange={(e) => {
-                        const min = e.target.value ? parseFloat(e.target.value) : attribute.range.min;
-                        const max = (selectedFilters.attributes?.[attribute.id]?.values as number[])?.[1] || attribute.range.max;
-                        handleAttributeChange(attribute.id, [min, max]);
-                      }}
+                      placeholder={`От ${attribute.range.min}`}
+                      value={numberInputs[attribute.id]?.min || ''}
+                      onChange={(e) => handleNumberAttributeInputChange(attribute.id, 'min', e.target.value, attribute.range)}
+                      min={attribute.range.min}
+                      max={numberInputs[attribute.id]?.max ? parseFloat(numberInputs[attribute.id].max) - 1 : attribute.range.max}
+                      className="w-28"
                     />
                     <span>—</span>
                     <Input
                       type="number"
-                      placeholder="До"
-                      className="w-24"
-                      onChange={(e) => {
-                        const min = (selectedFilters.attributes?.[attribute.id]?.values as number[])?.[0] || attribute.range.min;
-                        const max = e.target.value ? parseFloat(e.target.value) : attribute.range.max;
-                        handleAttributeChange(attribute.id, [min, max]);
-                      }}
+                      placeholder={`До ${attribute.range.max}`}
+                      value={numberInputs[attribute.id]?.max || ''}
+                      onChange={(e) => handleNumberAttributeInputChange(attribute.id, 'max', e.target.value, attribute.range)}
+                      min={numberInputs[attribute.id]?.min ? parseFloat(numberInputs[attribute.id].min) + 1 : attribute.range.min}
+                      max={attribute.range.max}
+                      className="w-28"
                     />
                     {attribute.unit && <span className="text-sm text-gray-500">{attribute.unit}</span>}
                   </div>
+                  
+                  <div className="text-xs text-gray-500">
+                    Диапазон: {attribute.range.min} - {attribute.range.max} {attribute.unit || ''}
+                  </div>
+                  
+                  <Slider
+                    min={attribute.range.min}
+                    max={attribute.range.max}
+                    step={1}
+                    value={[
+                      numberInputs[attribute.id]?.min ? parseFloat(numberInputs[attribute.id].min) : attribute.range.min,
+                      numberInputs[attribute.id]?.max ? parseFloat(numberInputs[attribute.id].max) : attribute.range.max
+                    ]}
+                    onValueChange={(values) => handleNumberAttributeSliderChange(attribute.id, values)}
+                    onValueCommit={(values) => handleNumberAttributeSliderCommit(attribute.id, values)}
+                    className="mt-2"
+                  />
                 </div>
               )}
 

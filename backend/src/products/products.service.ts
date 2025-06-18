@@ -585,7 +585,7 @@ export class ProductsService {
 
   async getAvailableFilters(baseFilter: ProductsFilterDto) {
     try {
-      console.log('Getting available filters with base filter:', JSON.stringify(baseFilter, null, 2));
+      // console.log('Getting available filters with base filter:', JSON.stringify(baseFilter, null, 2));
       
       // Создаем копию фильтра без брендов для получения всех доступных брендов
       const { brandIds, ...baseFilterWithoutBrands } = baseFilter;
@@ -621,7 +621,6 @@ export class ProductsService {
   }
 
   private async getPriceRange(baseFilter: ProductsFilterDto) {
-    console.log('getPriceRange called with:', JSON.stringify(baseFilter, null, 2));
     const where: Prisma.ProductWhereInput = {};
     
     if (baseFilter.search) {
@@ -751,7 +750,6 @@ export class ProductsService {
   }
 
   private async getFiltersForCategoriesAndBrands(baseFilter: ProductsFilterDto) {
-    console.log('getFiltersForCategoriesAndBrands called with:', JSON.stringify(baseFilter, null, 2));
     const where: Prisma.ProductWhereInput = {};
     
     if (baseFilter.search) {
@@ -882,12 +880,10 @@ export class ProductsService {
       },
     });
 
-    console.log('Found products count:', products.length);
     const result = {
       categories: await this.getCategoriesWithCounts(products),
       brands: await this.getBrandsWithCounts(products),
     };
-    console.log('Brands found:', result.brands.map(b => b.name));
     return result;
   }
 
