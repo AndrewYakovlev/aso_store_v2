@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { vehicleModelsApi } from '@/lib/api/vehicles';
 import { productsApi } from '@/lib/api/products';
-import { ProductsGrid } from '@/components/products/ProductsGrid';
+import { ModelContent } from './ModelContent';
 
 interface Props {
   params: Promise<{ brandSlug: string; modelSlug: string }>;
@@ -146,40 +146,13 @@ export default async function VehicleModelPage({ params, searchParams }: Props) 
         </h2>
         
 
-        {products.items.length > 0 ? (
-          <>
-            <ProductsGrid products={products.items} />
-            {products.totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-8">
-                {currentPage > 1 && (
-                  <Link
-                    href={`/vehicles/${brandSlug}/${modelSlug}?page=${currentPage - 1}`}
-                    className="px-4 py-2 border rounded hover:bg-gray-100"
-                  >
-                    Назад
-                  </Link>
-                )}
-                <span className="px-4 py-2">
-                  Страница {currentPage} из {products.totalPages}
-                </span>
-                {currentPage < products.totalPages && (
-                  <Link
-                    href={`/vehicles/${brandSlug}/${modelSlug}?page=${currentPage + 1}`}
-                    className="px-4 py-2 border rounded hover:bg-gray-100"
-                  >
-                    Вперед
-                  </Link>
-                )}
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500">
-              Товары для этой модели пока не добавлены
-            </p>
-          </div>
-        )}
+        <ModelContent
+          modelId={model.id}
+          brandSlug={brandSlug}
+          modelSlug={modelSlug}
+          initialProducts={products}
+          selectedYear={selectedYear}
+        />
       </section>
     </div>
   );

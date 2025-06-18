@@ -2,8 +2,7 @@ import React from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Metadata } from "next"
-import { ProductCard } from "@/components/products"
-import { ProductsPagination } from "@/components/products/ProductsPagination"
+import { BrandContent } from "./BrandContent"
 import { Card } from "@/components/ui/card"
 import { brandsApi } from "@/lib/api/brands"
 import { productsApi } from "@/lib/api/products"
@@ -159,36 +158,13 @@ export default async function BrandPage({ params, searchParams }: BrandPageProps
       <div>
         <h2 className="text-2xl font-semibold mb-6">
           Товары {brand.name}
-          {products.total > 0 && (
-            <span className="text-muted-foreground ml-2">({products.total})</span>
-          )}
         </h2>
 
-        {products.items.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.items.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-
-            {products.totalPages > 1 && (
-              <div className="mt-8">
-                <ProductsPagination
-                  currentPage={currentPage}
-                  totalPages={products.totalPages}
-                  baseUrl={`/brands/${slug}`}
-                />
-              </div>
-            )}
-          </>
-        ) : (
-          <Card className="p-8 text-center">
-            <p className="text-muted-foreground">
-              К сожалению, товары производителя {brand.name} временно отсутствуют.
-            </p>
-          </Card>
-        )}
+        <BrandContent
+          brandId={brand.id}
+          brandSlug={slug}
+          initialProducts={products}
+        />
       </div>
     </div>
   );

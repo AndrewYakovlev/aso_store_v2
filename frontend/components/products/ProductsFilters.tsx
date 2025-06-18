@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { ProductsFilter } from '@/lib/api/products';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,39 @@ interface Props {
 
 export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loading }: Props) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['categories', 'brands', 'price']));
+  
+  // Локальные состояния для инпутов цены с debounce
+  const [minPriceInput, setMinPriceInput] = useState<string>('');
+  const [maxPriceInput, setMaxPriceInput] = useState<string>('');
+  const priceDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Инициализация значений цены при загрузке и изменении фильтров
+  useEffect(() => {
+    if (filters?.priceRange) {
+      // Инициализируем только если значения еще не установлены
+      if (!minPriceInput && !maxPriceInput) {
+        setMinPriceInput(selectedFilters.minPrice?.toString() || '');
+        setMaxPriceInput(selectedFilters.maxPrice?.toString() || '');
+      }
+    }
+  }, [filters?.priceRange]);
+  
+  // Синхронизация с URL параметрами
+  useEffect(() => {
+    if (selectedFilters.minPrice !== undefined || selectedFilters.maxPrice !== undefined) {
+      setMinPriceInput(selectedFilters.minPrice?.toString() || '');
+      setMaxPriceInput(selectedFilters.maxPrice?.toString() || '');
+    }
+  }, [selectedFilters.minPrice, selectedFilters.maxPrice]);
+  
+  // Очистка таймера при размонтировании
+  useEffect(() => {
+    return () => {
+      if (priceDebounceRef.current) {
+        clearTimeout(priceDebounceRef.current);
+      }
+    };
+  }, []);
 
   const toggleSection = (section: string) => {
     const newExpanded = new Set(expandedSections);
@@ -47,7 +80,53 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
     onFiltersChange({ brandIds: newBrands });
   };
 
-  const handlePriceChange = (values: number[]) => {
+  // Обработка изменения цены с debounce
+  const handlePriceInputChange = (type: 'min' | 'max', value: string) => {
+    // Обновляем локальное состояние сразу
+    if (type === 'min') {
+      setMinPriceInput(value);
+    } else {
+      setMaxPriceInput(value);
+    }
+    
+    // Отменяем предыдущий таймер
+    if (priceDebounceRef.current) {
+      clearTimeout(priceDebounceRef.current);
+    }
+    
+    // Устанавливаем новый таймер
+    priceDebounceRef.current = setTimeout(() => {
+      const minValue = type === 'min' ? value : minPriceInput;
+      const maxValue = type === 'max' ? value : maxPriceInput;
+      
+      const min = minValue ? parseInt(minValue) : undefined;
+      const max = maxValue ? parseInt(maxValue) : undefined;
+      
+      // Валидация: минимальная цена не должна быть больше максимальной
+      if (min !== undefined && max !== undefined && min >= max) {
+        return;
+      }
+      
+      onFiltersChange({
+        minPrice: min,
+        maxPrice: max,
+      });
+    }, 1000);
+  };
+  
+  // Обработка слайдера цены - только обновляем локальное состояние
+  const handlePriceSliderChange = (values: number[]) => {
+    setMinPriceInput(values[0].toString());
+    setMaxPriceInput(values[1].toString());
+    
+    // Отменяем debounce таймер, если он есть
+    if (priceDebounceRef.current) {
+      clearTimeout(priceDebounceRef.current);
+    }
+  };
+  
+  // Применение фильтра при отпускании слайдера
+  const handlePriceSliderCommit = (values: number[]) => {
     onFiltersChange({
       minPrice: values[0],
       maxPrice: values[1],
@@ -68,6 +147,13 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
   };
 
   const clearAllFilters = () => {
+    setMinPriceInput('');
+    setMaxPriceInput('');
+    
+    if (priceDebounceRef.current) {
+      clearTimeout(priceDebounceRef.current);
+    }
+    
     onFiltersChange({
       categoryIds: [],
       brandIds: [],
@@ -217,30 +303,39 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
-                  placeholder="От"
-                  value={selectedFilters.minPrice || ''}
-                  onChange={(e) => onFiltersChange({ minPrice: e.target.value ? parseInt(e.target.value) : undefined })}
-                  className="w-24"
+                  placeholder={`От ${filters.priceRange.min}`}
+                  value={minPriceInput}
+                  onChange={(e) => handlePriceInputChange('min', e.target.value)}
+                  min={filters.priceRange.min}
+                  max={maxPriceInput ? parseInt(maxPriceInput) - 1 : filters.priceRange.max}
+                  className="w-28"
                 />
                 <span>—</span>
                 <Input
                   type="number"
-                  placeholder="До"
-                  value={selectedFilters.maxPrice || ''}
-                  onChange={(e) => onFiltersChange({ maxPrice: e.target.value ? parseInt(e.target.value) : undefined })}
-                  className="w-24"
+                  placeholder={`До ${filters.priceRange.max}`}
+                  value={maxPriceInput}
+                  onChange={(e) => handlePriceInputChange('max', e.target.value)}
+                  min={minPriceInput ? parseInt(minPriceInput) + 1 : filters.priceRange.min}
+                  max={filters.priceRange.max}
+                  className="w-28"
                 />
+              </div>
+              
+              <div className="text-xs text-gray-500">
+                Диапазон: {filters.priceRange.min} - {filters.priceRange.max} ₽
               </div>
               
               <Slider
                 min={filters.priceRange.min}
                 max={filters.priceRange.max}
-                step={100}
+                step={10}
                 value={[
-                  selectedFilters.minPrice || filters.priceRange.min,
-                  selectedFilters.maxPrice || filters.priceRange.max
+                  minPriceInput ? parseInt(minPriceInput) : filters.priceRange.min,
+                  maxPriceInput ? parseInt(maxPriceInput) : filters.priceRange.max
                 ]}
-                onValueChange={handlePriceChange}
+                onValueChange={handlePriceSliderChange}
+                onValueCommit={handlePriceSliderCommit}
                 className="mt-2"
               />
             </div>
@@ -286,8 +381,10 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
               {(attribute.type === 'SELECT_ONE' || attribute.type === 'SELECT_MANY') && (
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {attribute.options?.map((option: any) => {
-                    const currentValues = selectedFilters.attributes?.[attribute.id]?.values as string[] || [];
-                    const isChecked = currentValues.includes(option.id);
+                    const currentAttributeFilter = selectedFilters.attributes?.[attribute.id];
+                    const currentValues = currentAttributeFilter?.values || [];
+                    const valuesArray = Array.isArray(currentValues) ? currentValues : [currentValues];
+                    const isChecked = valuesArray.includes(option.id);
                     
                     return (
                       <div key={option.id} className="flex items-center">
@@ -296,8 +393,8 @@ export function ProductsFilters({ filters, selectedFilters, onFiltersChange, loa
                           checked={isChecked}
                           onCheckedChange={(checked) => {
                             const newValues = checked
-                              ? [...currentValues, option.id]
-                              : currentValues.filter(v => v !== option.id);
+                              ? [...valuesArray, option.id]
+                              : valuesArray.filter(v => v !== option.id);
                             
                             handleAttributeChange(
                               attribute.id,

@@ -4,80 +4,76 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { productsApi, ProductsFilter } from '@/lib/api/products';
 import { ProductsGrid } from '@/components/products/ProductsGrid';
-import { ProductsFilters } from '@/components/products/ProductsFilters';
 import { ProductsPagination } from '@/components/products/ProductsPagination';
+import { ProductsFilters } from '@/components/products/ProductsFilters';
+import { EmptyCategory } from '@/components/categories';
 import { Loader2 } from 'lucide-react';
 
 interface Props {
-  searchParams: { [key: string]: string | string[] | undefined };
+  categoryId: string;
+  categorySlug: string;
+  categoryName: string;
+  initialProducts: any;
 }
 
-export function SearchContent({ searchParams }: Props) {
+export function CategoryContent({ categoryId, categorySlug, categoryName, initialProducts }: Props) {
   const router = useRouter();
-  const urlSearchParams = useSearchParams();
-  const [products, setProducts] = useState<any>(null);
+  const searchParams = useSearchParams();
+  const [products, setProducts] = useState(initialProducts);
   const [filters, setFilters] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [filtersLoading, setFiltersLoading] = useState(true);
 
   // Парсим параметры из URL
   const parseSearchParams = useCallback((): ProductsFilter => {
     const filter: ProductsFilter = {
       page: 1,
-      limit: 20,
+      limit: 12,
       onlyActive: true,
+      // Всегда фильтруем по текущей категории
+      categoryIds: [categoryId],
     };
 
-    // Поисковый запрос
-    if (searchParams.q) {
-      filter.search = Array.isArray(searchParams.q) ? searchParams.q[0] : searchParams.q;
-    }
-
-    // Категории
-    if (searchParams.categories) {
-      filter.categoryIds = Array.isArray(searchParams.categories) 
-        ? searchParams.categories 
-        : [searchParams.categories];
-    }
-
     // Бренды
-    if (searchParams.brands) {
-      filter.brandIds = Array.isArray(searchParams.brands) 
-        ? searchParams.brands 
-        : [searchParams.brands];
+    const brands = searchParams.getAll('brands');
+    if (brands.length > 0) {
+      filter.brandIds = brands;
     }
 
     // Цена
-    if (searchParams.minPrice) {
-      filter.minPrice = parseInt(searchParams.minPrice as string);
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    if (minPrice) {
+      filter.minPrice = parseInt(minPrice);
     }
-    if (searchParams.maxPrice) {
-      filter.maxPrice = parseInt(searchParams.maxPrice as string);
+    if (maxPrice) {
+      filter.maxPrice = parseInt(maxPrice);
     }
 
     // В наличии
-    if (searchParams.inStock === 'true') {
+    if (searchParams.get('inStock') === 'true') {
       filter.inStock = true;
     }
 
     // Страница
-    if (searchParams.page) {
-      filter.page = parseInt(searchParams.page as string);
+    const page = searchParams.get('page');
+    if (page) {
+      filter.page = parseInt(page);
     }
 
     // Сортировка
-    if (searchParams.sort) {
-      const [sortBy, sortOrder] = (searchParams.sort as string).split(':');
+    const sort = searchParams.get('sort');
+    if (sort) {
+      const [sortBy, sortOrder] = sort.split(':');
       filter.sortBy = sortBy;
       filter.sortOrder = sortOrder as 'asc' | 'desc';
     }
 
     // Атрибуты
-    if (searchParams.attr) {
+    const attrs = searchParams.getAll('attr');
+    if (attrs.length > 0) {
       filter.attributes = {};
-      const attrParams = Array.isArray(searchParams.attr) ? searchParams.attr : [searchParams.attr];
-      
-      attrParams.forEach(param => {
+      attrs.forEach(param => {
         const [attrId, values] = param.split(':');
         if (attrId && values) {
           filter.attributes![attrId] = {
@@ -88,7 +84,7 @@ export function SearchContent({ searchParams }: Props) {
     }
 
     return filter;
-  }, [searchParams]);
+  }, [searchParams, categoryId]);
 
   // Загружаем товары
   const loadProducts = useCallback(async () => {
@@ -128,17 +124,20 @@ export function SearchContent({ searchParams }: Props) {
 
   // Обновляем URL с новыми параметрами
   const updateFilters = (newFilter: Partial<ProductsFilter>) => {
-    const params = new URLSearchParams(urlSearchParams.toString());
+    const params = new URLSearchParams(searchParams.toString());
     
     // Маппинг между именами в фильтрах и URL параметрами
     const paramMapping: Record<string, string> = {
-      categoryIds: 'categories',
       brandIds: 'brands',
     };
     
     // Обновляем или удаляем параметры
     Object.entries(newFilter).forEach(([key, value]) => {
+      // Пропускаем categoryIds, так как категория фиксирована
+      if (key === 'categoryIds') return;
+      
       const paramKey = paramMapping[key] || key;
+      
       if (value === undefined || value === null || 
           (Array.isArray(value) && value.length === 0)) {
         params.delete(paramKey);
@@ -170,7 +169,13 @@ export function SearchContent({ searchParams }: Props) {
       params.delete('page');
     }
 
-    router.push(`/search?${params.toString()}`);
+    router.push(`/catalog/${categorySlug}?${params.toString()}`);
+  };
+
+  const handleSortChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('sort', value);
+    router.push(`/catalog/${categorySlug}?${params.toString()}`);
   };
 
   if (loading && !products) {
@@ -181,46 +186,38 @@ export function SearchContent({ searchParams }: Props) {
     );
   }
 
+  const currentSort = searchParams.get('sort') || 'createdAt:desc';
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       {/* Фильтры */}
       <div className="lg:col-span-1">
         <ProductsFilters
-          filters={filters}
+          filters={{
+            ...filters,
+            // Исключаем категории из фильтров, так как мы уже находимся в категории
+            categories: undefined
+          }}
           selectedFilters={parseSearchParams()}
           onFiltersChange={updateFilters}
           loading={filtersLoading}
         />
       </div>
 
-      {/* Результаты поиска */}
+      {/* Товары */}
       <div className="lg:col-span-3">
-        {/* Информация о результатах */}
-        <div className="mb-6">
-          <p className="text-gray-600">
-            {products?.total > 0 ? (
-              <>
-                Найдено товаров: <span className="font-semibold">{products.total}</span>
-                {searchParams.q && (
-                  <> по запросу "<span className="font-semibold">{searchParams.q}</span>"</>
-                )}
-              </>
-            ) : (
-              'Товары не найдены'
-            )}
-          </p>
-
-          {/* Сортировка */}
-          {products?.total > 0 && (
-            <div className="mt-4">
+        {products && products.items.length > 0 ? (
+          <>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Найдено товаров: {products.total}
+              </p>
+              
+              {/* Сортировка */}
               <select
-                value={`${parseSearchParams().sortBy || 'createdAt'}:${parseSearchParams().sortOrder || 'desc'}`}
-                onChange={(e) => {
-                  const params = new URLSearchParams(urlSearchParams.toString());
-                  params.set('sort', e.target.value);
-                  router.push(`/search?${params.toString()}`);
-                }}
-                className="px-4 py-2 border rounded-lg"
+                value={currentSort}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="px-4 py-2 border rounded-lg text-sm"
               >
                 <option value="createdAt:desc">Сначала новые</option>
                 <option value="price:asc">Сначала дешевые</option>
@@ -229,16 +226,7 @@ export function SearchContent({ searchParams }: Props) {
                 <option value="name:desc">По названию (Я-А)</option>
               </select>
             </div>
-          )}
-        </div>
 
-        {/* Товары */}
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        ) : products?.items.length > 0 ? (
-          <>
             <ProductsGrid products={products.items} />
             
             {/* Пагинация */}
@@ -251,14 +239,7 @@ export function SearchContent({ searchParams }: Props) {
             )}
           </>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              По вашему запросу ничего не найдено
-            </p>
-            <p className="text-gray-400 mt-2">
-              Попробуйте изменить параметры поиска или фильтры
-            </p>
-          </div>
+          <EmptyCategory categoryName={categoryName} />
         )}
       </div>
     </div>

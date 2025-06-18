@@ -5,8 +5,7 @@ import { Metadata } from "next"
 import { categoriesApi } from "@/lib/api/categories"
 import { productsApi } from "@/lib/api/products"
 import { CategoryTree } from "@/components/categories/CategoryTree"
-import { EmptyCategory } from "@/components/categories"
-import { ProductsGrid } from "@/components/products"
+import { CategoryContent } from "./CategoryContent"
 import { ChevronRightIcon } from "@heroicons/react/24/outline"
 
 interface CategoryPageProps {
@@ -112,51 +111,35 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <p className="text-muted-foreground mb-8">{category.description}</p>
       )}
 
-      <div className="grid lg:grid-cols-4 gap-8">
-        {/* Sidebar with categories */}
-        <div className="lg:col-span-1">
-          <CategoryTree categories={allCategories} title="Категории" />
+      {/* Subcategories if any */}
+      {category.children && category.children.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Подкатегории</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {category.children.map(child => (
+              <Link
+                key={child.id}
+                href={`/catalog/${child.slug}`}
+                className="block p-4 border rounded-lg hover:shadow-md transition-shadow">
+                <h3 className="font-medium mb-1">{child.name}</h3>
+                {child.productCount !== undefined && (
+                  <p className="text-sm text-muted-foreground">
+                    {child.productCount} товаров
+                  </p>
+                )}
+              </Link>
+            ))}
+          </div>
         </div>
+      )}
 
-        {/* Main content area */}
-        <div className="lg:col-span-3">
-          {/* Subcategories if any */}
-          {category.children && category.children.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Подкатегории</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {category.children.map(child => (
-                  <Link
-                    key={child.id}
-                    href={`/catalog/${child.slug}`}
-                    className="block p-4 border rounded-lg hover:shadow-md transition-shadow">
-                    <h3 className="font-medium mb-1">{child.name}</h3>
-                    {child.productCount !== undefined && (
-                      <p className="text-sm text-muted-foreground">
-                        {child.productCount} товаров
-                      </p>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Products */}
-          {products && products.items.length > 0 ? (
-            <>
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Найдено товаров: {products.total}
-                </p>
-              </div>
-              <ProductsGrid products={products.items} />
-            </>
-          ) : (
-            <EmptyCategory categoryName={category.name} />
-          )}
-        </div>
-      </div>
+      {/* Products with filters */}
+      <CategoryContent 
+        categoryId={category.id}
+        categorySlug={slug}
+        categoryName={category.name}
+        initialProducts={products}
+      />
     </div>
   )
 }

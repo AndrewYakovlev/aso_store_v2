@@ -119,7 +119,6 @@ export class ProductsFilterDto {
     description: 'Фильтры по атрибутам (ключ - ID атрибута, значение - фильтр)', 
     type: 'object',
     additionalProperties: { $ref: '#/components/schemas/AttributeFilterDto' },
-    required: false,
     example: {
       'attr-id-1': { values: ['option-id-1', 'option-id-2'] },
       'attr-id-2': { values: [10, 50] },
