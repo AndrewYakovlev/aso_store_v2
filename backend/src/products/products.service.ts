@@ -159,6 +159,8 @@ export class ProductsService {
 
         if (!attribute) continue;
 
+        let attributeCondition: any = {};
+
         switch (attribute.type) {
           case 'SELECT_ONE':
           case 'SELECT_MANY':
