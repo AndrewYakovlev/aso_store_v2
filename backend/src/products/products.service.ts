@@ -1093,50 +1093,14 @@ export class ProductsService {
   }
 
   private async getAttributeFiltersWithoutSelf(baseFilter: ProductsFilterDto) {
-    // Получаем все атрибуты, которые используются в фильтрах
-    const filterAttributeIds = baseFilter.attributes ? Object.keys(baseFilter.attributes) : [];
+    // Создаем фильтр без атрибутов для получения всех доступных опций
+    // Это работает так же, как для категорий и брендов
+    const { attributes, ...filterWithoutAttributes } = baseFilter;
     
-    // Для каждого атрибута получаем доступные значения без учета его собственного фильтра
-    const attributeFilters: any[] = [];
+    // Получаем все доступные атрибуты без учета фильтров по самим атрибутам
+    const result = await this.getFiltersForOtherParameters(filterWithoutAttributes);
     
-    // Сначала получаем все атрибуты с учетом всех остальных фильтров
-    const { attributes: currentAttributes, ...filterWithoutAttributes } = baseFilter;
-    const allAttributesFilter = await this.getFiltersForOtherParameters(filterWithoutAttributes);
-    
-    // Если есть текущие фильтры по атрибутам, обрабатываем каждый отдельно
-    if (currentAttributes && Object.keys(currentAttributes).length > 0) {
-      for (const [attributeId, _] of Object.entries(currentAttributes)) {
-        // Создаем фильтр без текущего атрибута
-        const { [attributeId]: _, ...otherAttributes } = currentAttributes;
-        const filterWithoutCurrentAttribute = {
-          ...baseFilter,
-          attributes: otherAttributes,
-        };
-        
-        // Получаем доступные значения для этого атрибута
-        const attrFilter = await this.getFiltersForOtherParameters(filterWithoutCurrentAttribute);
-        const foundAttribute = attrFilter.attributes?.find((a: any) => a.id === attributeId);
-        
-        if (foundAttribute) {
-          attributeFilters.push(foundAttribute);
-        }
-      }
-      
-      // Добавляем атрибуты, которые не используются в фильтрах
-      if (allAttributesFilter.attributes) {
-        for (const attr of allAttributesFilter.attributes) {
-          if (!filterAttributeIds.includes(attr.id)) {
-            attributeFilters.push(attr);
-          }
-        }
-      }
-    } else {
-      // Если нет фильтров по атрибутам, возвращаем все доступные
-      return allAttributesFilter.attributes || [];
-    }
-    
-    // Сортируем атрибуты для консистентности
-    return attributeFilters.sort((a, b) => a.name.localeCompare(b.name));
+    return result.attributes || [];
   }
 
   private async getAttributesWithCounts(products: any[]) {
