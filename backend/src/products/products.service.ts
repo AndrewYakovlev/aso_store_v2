@@ -11,6 +11,7 @@ import {
   ProductDto,
   ProductsFilterDto,
   PaginatedProductsDto,
+  AvailableFiltersDto,
 } from './dto';
 
 @Injectable()
@@ -599,7 +600,7 @@ export class ProductsService {
     return dto;
   }
 
-  async getAvailableFilters(baseFilter: ProductsFilterDto) {
+  async getAvailableFilters(baseFilter: ProductsFilterDto): Promise<AvailableFiltersDto> {
     try {
       // console.log('Getting available filters with base filter:', JSON.stringify(baseFilter, null, 2));
 

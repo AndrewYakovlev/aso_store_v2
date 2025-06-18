@@ -21,6 +21,9 @@ import {
 import { OrdersService } from './orders.service';
 import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 import {
   CreateOrderDto,
   UpdateOrderStatusDto,
@@ -163,15 +166,19 @@ export class OrdersController {
     return this.ordersService.findOne(id, userId, anonymousUserId);
   }
 
-  // Admin endpoint - should be protected with admin guard in production
   @Put(':id/status')
-  @ApiOperation({ summary: 'Обновить статус заказа (для администраторов)' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Обновить статус заказа (Admin/Manager only)' })
   @ApiParam({ name: 'id', description: 'ID заказа' })
   @ApiResponse({
     status: 200,
     description: 'Статус заказа обновлен',
     type: OrderDto,
   })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Заказ не найден' })
   @ApiResponse({ status: 400, description: 'Некорректный статус' })
   async updateStatus(

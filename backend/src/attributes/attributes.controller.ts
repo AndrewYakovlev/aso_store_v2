@@ -8,8 +8,9 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { AttributesService } from './attributes.service';
 import {
   AttributeDto,
@@ -21,6 +22,10 @@ import {
   SetProductAttributeDto,
   BulkSetProductAttributesDto,
 } from './dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('attributes')
 @Controller('attributes')
@@ -28,13 +33,18 @@ export class AttributesController {
   constructor(private readonly attributesService: AttributesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Создать новый атрибут' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Создать новый атрибут (Admin only)' })
   @ApiResponse({
     status: 201,
     description: 'Атрибут успешно создан',
     type: AttributeDto,
   })
   @ApiResponse({ status: 400, description: 'Некорректные данные' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   create(
     @Body() createAttributeDto: CreateAttributeDto,
   ): Promise<AttributeDto> {
@@ -79,13 +89,18 @@ export class AttributesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Обновить атрибут' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Обновить атрибут (Admin only)' })
   @ApiParam({ name: 'id', description: 'ID атрибута' })
   @ApiResponse({
     status: 200,
     description: 'Атрибут успешно обновлен',
     type: AttributeDto,
   })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Атрибут не найден' })
   update(
     @Param('id') id: string,
@@ -95,10 +110,15 @@ export class AttributesController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Удалить атрибут' })
+  @ApiOperation({ summary: 'Удалить атрибут (Admin only)' })
   @ApiParam({ name: 'id', description: 'ID атрибута' })
   @ApiResponse({ status: 204, description: 'Атрибут успешно удален' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Атрибут не найден' })
   remove(@Param('id') id: string): Promise<void> {
     return this.attributesService.remove(id);
@@ -120,13 +140,18 @@ export class AttributesController {
   }
 
   @Post('category/:categoryId')
-  @ApiOperation({ summary: 'Привязать атрибуты к категории' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Привязать атрибуты к категории (Admin only)' })
   @ApiParam({ name: 'categoryId', description: 'ID категории' })
   @ApiResponse({
     status: 200,
     description: 'Атрибуты успешно привязаны',
     type: [CategoryAttributeDto],
   })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Категория не найдена' })
   assignAttributesToCategory(
     @Param('categoryId') categoryId: string,
@@ -136,11 +161,16 @@ export class AttributesController {
   }
 
   @Delete('category/:categoryId/:attributeId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Отвязать атрибут от категории' })
+  @ApiOperation({ summary: 'Отвязать атрибут от категории (Admin only)' })
   @ApiParam({ name: 'categoryId', description: 'ID категории' })
   @ApiParam({ name: 'attributeId', description: 'ID атрибута' })
   @ApiResponse({ status: 204, description: 'Атрибут успешно отвязан' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Связь не найдена' })
   removeAttributeFromCategory(
     @Param('categoryId') categoryId: string,
@@ -168,13 +198,18 @@ export class AttributesController {
   }
 
   @Post('product/:productId')
-  @ApiOperation({ summary: 'Установить значение атрибута товара' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Установить значение атрибута товара (Admin/Manager only)' })
   @ApiParam({ name: 'productId', description: 'ID товара' })
   @ApiResponse({
     status: 200,
     description: 'Значение атрибута установлено',
     type: ProductAttributeValueDto,
   })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Товар или атрибут не найден' })
   setProductAttribute(
     @Param('productId') productId: string,
@@ -184,13 +219,18 @@ export class AttributesController {
   }
 
   @Post('product/:productId/bulk')
-  @ApiOperation({ summary: 'Установить значения нескольких атрибутов товара' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Установить значения нескольких атрибутов товара (Admin/Manager only)' })
   @ApiParam({ name: 'productId', description: 'ID товара' })
   @ApiResponse({
     status: 200,
     description: 'Значения атрибутов установлены',
     type: [ProductAttributeValueDto],
   })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Товар или атрибут не найден' })
   setProductAttributes(
     @Param('productId') productId: string,
@@ -200,11 +240,16 @@ export class AttributesController {
   }
 
   @Delete('product/:productId/:attributeId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Удалить значение атрибута товара' })
+  @ApiOperation({ summary: 'Удалить значение атрибута товара (Admin/Manager only)' })
   @ApiParam({ name: 'productId', description: 'ID товара' })
   @ApiParam({ name: 'attributeId', description: 'ID атрибута' })
   @ApiResponse({ status: 204, description: 'Значение атрибута удалено' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Значение не найдено' })
   removeProductAttribute(
     @Param('productId') productId: string,

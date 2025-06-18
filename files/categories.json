@@ -1,0 +1,633 @@
+{
+  "catalog": {
+    "categories": [
+      {
+        "id": "avtozapchasti",
+        "name": "Автозапчасти",
+        "url": "/catalog/avtozapchasti/",
+        "icon": "/medias/sys_master/images/images/h33/h94/9663442354206.svg",
+        "subcategories": [
+          {
+            "id": "dvigatel", 
+            "name": "Двигатель", 
+            "url": "/catalog/avtozapchasti/dvigatel/",
+            "icon": "/medias/sys_master/images/images/h7a/hae/8806680723486.svg",
+            "subcategories": [
+              {"id": "bloki-cilindrov", "name": "Блоки цилиндров", "url": "/catalog/avtozapchasti/dvigatel/bloki-cilindrov/"},
+              {"id": "valy-kolenchatye", "name": "Валы коленчатые", "url": "/catalog/avtozapchasti/dvigatel/valy-kolenchatye/"},
+              {"id": "vkladyshi", "name": "Вкладыши", "url": "/catalog/avtozapchasti/dvigatel/vkladyshi/"},
+              {"id": "golovki-bloka-tsilindrov", "name": "Головки блока цилиндров", "url": "/catalog/avtozapchasti/dvigatel/golovki-bloka-tsilindrov/"},
+              {"id": "zaglushki-dvigatelya", "name": "Заглушки двигателя", "url": "/catalog/avtozapchasti/dvigatel/zaglushki-dvigatelya/"},
+              {"id": "kolca", "name": "Кольца", "url": "/catalog/avtozapchasti/dvigatel/kolca/"},
+              {"id": "zapchasti-dlya-dvigatelya", "name": "Комплектующие двигателя", "url": "/catalog/avtozapchasti/dvigatel/zapchasti-dlya-dvigatelya/"},
+              {"id": "komplekty-krepleniya-dvigatel", "name": "Комплекты крепления", "url": "/catalog/avtozapchasti/dvigatel/komplekty-krepleniya-dvigatel/"},
+              {"id": "kronshteiny-dvigatelya", "name": "Кронштейны двигателя", "url": "/catalog/avtozapchasti/dvigatel/kronshteiny-dvigatelya/"},
+              {"id": "mahoviki", "name": "Маховики", "url": "/catalog/avtozapchasti/dvigatel/mahoviki/"},
+              {"id": "opora-dvigatelja", "name": "Опора двигателя", "url": "/catalog/avtozapchasti/dvigatel/opora-dvigatelja/"},
+              {"id": "palcy-porshnevye", "name": "Пальцы поршневые", "url": "/catalog/avtozapchasti/dvigatel/palcy-porshnevye/"},
+              {"id": "poddony", "name": "Поддоны", "url": "/catalog/avtozapchasti/dvigatel/poddony/"},
+              {"id": "porshni", "name": "Поршни", "url": "/catalog/avtozapchasti/dvigatel/porshni/"},
+              {"id": "sistema-vpuska", "name": "Система впуска", "url": "/catalog/avtozapchasti/dvigatel/sistema-vpuska/"},
+              {"id": "sistema-smazki", "name": "Система смазки", "url": "/catalog/avtozapchasti/dvigatel/sistema-smazki/"},
+              {"id": "rti-dvigatelja", "name": "Уплотнители, сальники", "url": "/catalog/avtozapchasti/dvigatel/rti-dvigatelja/"},
+              {"id": "shatuny", "name": "Шатуны", "url": "/catalog/avtozapchasti/dvigatel/shatuny/"},
+              {"id": "shkivy-kolenchatogo-vala", "name": "Шкивы коленчатого вала", "url": "/catalog/avtozapchasti/dvigatel/shkivy-kolenchatogo-vala/"}
+            ]
+          },
+          {
+            "id": "kuzovnye-detali", 
+            "name": "Кузовные детали", 
+            "url": "/catalog/avtozapchasti/kuzovnye-detali/",
+            "icon": "/medias/sys_master/images/images/hc6/hbe/8806680002590.svg",
+            "subcategories": [
+              {"id": "bagazhnik", "name": "Багажник и комплектующие", "url": "/catalog/avtozapchasti/kuzovnye-detali/bagazhnik/"},
+              {"id": "bamperi", "name": "Бамперы", "url": "/catalog/avtozapchasti/kuzovnye-detali/bamperi/"},
+              {"id": "dveri", "name": "Двери", "url": "/catalog/avtozapchasti/kuzovnye-detali/dveri/"},
+              {"id": "zashhita-dvigatelja", "name": "Защита двигателя", "url": "/catalog/avtozapchasti/kuzovnye-detali/zashhita-dvigatelja/"},
+              {"id": "kapot", "name": "Капот и комплектующие", "url": "/catalog/avtozapchasti/kuzovnye-detali/kapot/"},
+              {"id": "komplekty-krepleniya-kuzovnye-detali", "name": "Комплекты крепления", "url": "/catalog/avtozapchasti/kuzovnye-detali/komplekty-krepleniya-kuzovnye-detali/"},
+              {"id": "krylja", "name": "Крылья", "url": "/catalog/avtozapchasti/kuzovnye-detali/krylja/"},
+              {"id": "kryshki-zaglushki-kuzovnye-detali", "name": "Крышки, заглушки", "url": "/catalog/avtozapchasti/kuzovnye-detali/kryshki-zaglushki-kuzovnye-detali/"},
+              {"id": "kuzovnye-elementy-bokovye", "name": "Кузовные элементы боковые", "url": "/catalog/avtozapchasti/kuzovnye-detali/kuzovnye-elementy-bokovye/"},
+              {"id": "kuzovnye-elementy-zadnie", "name": "Кузовные элементы задние", "url": "/catalog/avtozapchasti/kuzovnye-detali/kuzovnye-elementy-zadnie/"},
+              {"id": "kuzovnye-elementy-perednie", "name": "Кузовные элементы передние", "url": "/catalog/avtozapchasti/kuzovnye-detali/kuzovnye-elementy-perednie/"},
+              {"id": "lonzherony", "name": "Лонжероны", "url": "/catalog/avtozapchasti/kuzovnye-detali/lonzherony/"},
+              {"id": "panel-kryshi", "name": "Панель крыши", "url": "/catalog/avtozapchasti/kuzovnye-detali/panel-kryshi/"},
+              {"id": "porogi", "name": "Пороги", "url": "/catalog/avtozapchasti/kuzovnye-detali/porogi/"},
+              {"id": "ramki-radiatora", "name": "Рамки радиатора", "url": "/catalog/avtozapchasti/kuzovnye-detali/ramki-radiatora/"},
+              {"id": "remkomplekty-kuzovnye-detali", "name": "Ремкомплекты", "url": "/catalog/avtozapchasti/kuzovnye-detali/remkomplekty-kuzovnye-detali/"},
+              {"id": "uplotniteli", "name": "Уплотнители", "url": "/catalog/avtozapchasti/kuzovnye-detali/uplotniteli/"},
+              {"id": "usiliteli", "name": "Усилители", "url": "/catalog/avtozapchasti/kuzovnye-detali/usiliteli/"},
+              {"id": "elementy-pola", "name": "Элементы пола", "url": "/catalog/avtozapchasti/kuzovnye-detali/elementy-pola/"}
+            ]
+          },
+          {
+            "id": "omyvatel-i-stekloochistitel", 
+            "name": "Омыватель и стеклоочиститель", 
+            "url": "/catalog/avtozapchasti/omyvatel-i-stekloochistitel/",
+            "icon": "/medias/sys_master/images/images/h57/ha7/8806682198046.svg",
+            "subcategories": [
+              {"id": "bachok-omyvatelja", "name": "Бачок омывателя", "url": "/catalog/avtozapchasti/omyvatel-i-stekloochistitel/bachok-omyvatelja/"},
+              {"id": "zhiklery-stekloomyvatelya", "name": "Жиклеры стеклоомывателя", "url": "/catalog/avtozapchasti/omyvatel-i-stekloochistitel/zhiklery-stekloomyvatelya/"},
+              {"id": "prochie-komplektujushhie-stekloochistitelej", "name": "Комплектующие стеклоочистителей и омывателей", "url": "/catalog/avtozapchasti/omyvatel-i-stekloochistitel/prochie-komplektujushhie-stekloochistitelej/"},
+              {"id": "kryshki-zaglushki-omyvatel-stekloochistitel", "name": "Крышки, заглушки", "url": "/catalog/avtozapchasti/omyvatel-i-stekloochistitel/kryshki-zaglushki-omyvatel-stekloochistitel/"},
+              {"id": "motor-omyvatelja", "name": "Мотор омывателя", "url": "/catalog/avtozapchasti/omyvatel-i-stekloochistitel/motor-omyvatelja/"},
+              {"id": "motor-stekloochistitelja", "name": "Мотор стеклоочистителя", "url": "/catalog/avtozapchasti/omyvatel-i-stekloochistitel/motor-stekloochistitelja/"},
+              {"id": "rychag-stekloochistitelya", "name": "Рычаг стеклоочистителя", "url": "/catalog/avtozapchasti/omyvatel-i-stekloochistitel/rychag-stekloochistitelya/"},
+              {"id": "trapecija-stekloochistitelja", "name": "Трапеция стеклоочистителя", "url": "/catalog/avtozapchasti/omyvatel-i-stekloochistitel/trapecija-stekloochistitelja/"}
+            ]
+          },
+          {
+            "id": "otoplenie-i-ventiljacija-salona", 
+            "name": "Отопление и вентиляция салона", 
+            "url": "/catalog/avtozapchasti/otoplenie-i-ventiljacija-salona/",
+            "icon": "/medias/sys_master/images/images/h7b/h63/8806682165278.svg",
+            "subcategories": [
+              {"id": "zapchasti-otopitelya", "name": "Запчасти отопителя", "url": "/catalog/avtozapchasti/otoplenie-i-ventiljacija-salona/zapchasti-otopitelya/"},
+              {"id": "kran-otopitelja", "name": "Кран отопителя", "url": "/catalog/avtozapchasti/otoplenie-i-ventiljacija-salona/kran-otopitelja/"},
+              {"id": "motor-otopitelja", "name": "Мотор отопителя", "url": "/catalog/avtozapchasti/otoplenie-i-ventiljacija-salona/motor-otopitelja/"},
+              {"id": "radiator-otopitelja", "name": "Радиатор отопителя", "url": "/catalog/avtozapchasti/otoplenie-i-ventiljacija-salona/radiator-otopitelja/"}
+            ]
+          },
+          {
+            "id": "podveska", 
+            "name": "Подвеска", 
+            "url": "/catalog/avtozapchasti/podveska/",
+            "icon": "/medias/sys_master/images/images/h36/hfe/8806679805982.svg",
+            "subcategories": [
+              {"id": "amortizatory", "name": "Амортизаторы", "url": "/catalog/avtozapchasti/podveska/amortizatory/"},
+              {"id": "balki", "name": "Балки", "url": "/catalog/avtozapchasti/podveska/balki/"},
+              {"id": "vtulki-podushki", "name": "Втулки, подушки", "url": "/catalog/avtozapchasti/podveska/vtulki-podushki/"},
+              {"id": "komplektujushhie-zadnej-podveski", "name": "Комплектующие задней подвески", "url": "/catalog/avtozapchasti/podveska/komplektujushhie-zadnej-podveski/"},
+              {"id": "komplektujushhie-perednej-podveski", "name": "Комплектующие передней подвески", "url": "/catalog/avtozapchasti/podveska/komplektujushhie-perednej-podveski/"},
+              {"id": "komplekty-krepleniya-podveska", "name": "Комплекты крепления", "url": "/catalog/avtozapchasti/podveska/komplekty-krepleniya-podveska/"},
+              {"id": "kryshki-zaglushki-podveska", "name": "Крышки, заглушки", "url": "/catalog/avtozapchasti/podveska/kryshki-zaglushki-podveska/"},
+              {"id": "perednyaya-opora", "name": "Опора амортизатора", "url": "/catalog/avtozapchasti/podveska/perednyaya-opora/"},
+              {"id": "povorotniy-kulak", "name": "Поворотный кулак", "url": "/catalog/avtozapchasti/podveska/povorotniy-kulak/"},
+              {"id": "prujiny", "name": "Пружины", "url": "/catalog/avtozapchasti/podveska/prujiny/"},
+              {"id": "pylniki-salniki", "name": "Пыльники, сальники", "url": "/catalog/avtozapchasti/podveska/pylniki-salniki/"},
+              {"id": "remkomplekty-podveska", "name": "Ремкомплекты", "url": "/catalog/avtozapchasti/podveska/remkomplekty-podveska/"},
+              {"id": "rychagi-podveski", "name": "Рычаги подвески", "url": "/catalog/avtozapchasti/podveska/rychagi-podveski/"},
+              {"id": "sajlentbloki", "name": "Сайлентблоки", "url": "/catalog/avtozapchasti/podveska/sajlentbloki/"},
+              {"id": "stabilizatory", "name": "Стабилизаторы", "url": "/catalog/avtozapchasti/podveska/stabilizatory/"},
+              {"id": "stoiki-stabilizatora", "name": "Стойки стабилизатора", "url": "/catalog/avtozapchasti/podveska/stoiki-stabilizatora/"},
+              {"id": "stupicy", "name": "Ступицы", "url": "/catalog/avtozapchasti/podveska/stupicy/"},
+              {"id": "sharovaya-opora", "name": "Шаровая опора", "url": "/catalog/avtozapchasti/podveska/sharovaya-opora/"}
+            ]
+          },
+          {
+            "id": "podshipniki", 
+            "name": "Подшипники", 
+            "url": "/catalog/avtozapchasti/podshipniki/",
+            "icon": "/medias/sys_master/images/images/h62/h9c/8806682525726.svg",
+            "subcategories": [
+              {"id": "podshipniki-prochie", "name": "Подшипники генератора", "url": "/catalog/avtozapchasti/podshipniki/podshipniki-prochie/"},
+              {"id": "podshipniki-dvigatelja", "name": "Подшипники двигателя", "url": "/catalog/avtozapchasti/podshipniki/podshipniki-dvigatelja/"},
+              {"id": "podshipniki-transmissii", "name": "Подшипники трансмиссии", "url": "/catalog/avtozapchasti/podshipniki/podshipniki-transmissii/"},
+              {"id": "podshipniki-hodovoj-chasti", "name": "Подшипники ходовой части", "url": "/catalog/avtozapchasti/podshipniki/podshipniki-hodovoj-chasti/"}
+            ]
+          },
+          {
+            "id": "prokladki", 
+            "name": "Прокладки", 
+            "url": "/catalog/avtozapchasti/prokladki/",
+            "icon": "/medias/sys_master/images/images/hbd/h49/8806680035358.svg",
+            "subcategories": [
+              {"id": "prokladki-dvigatelja-i-navesnogo-oborudovanija", "name": "Прокладки двигателя и навесного оборудования", "url": "/catalog/avtozapchasti/prokladki/prokladki-dvigatelja-i-navesnogo-oborudovanija/"},
+              {"id": "prokladki-prochie", "name": "Прокладки прочие", "url": "/catalog/avtozapchasti/prokladki/prokladki-prochie/"},
+              {"id": "prokladki-transmissii", "name": "Прокладки трансмиссии", "url": "/catalog/avtozapchasti/prokladki/prokladki-transmissii/"}
+            ]
+          },
+          {
+            "id": "rulevoe-upravlenie", 
+            "name": "Рулевое управление", 
+            "url": "/catalog/avtozapchasti/rulevoe-upravlenie/",
+            "icon": "/medias/sys_master/images/images/h90/h62/8806682230814.svg",
+            "subcategories": [
+              {"id": "valy-rulevye", "name": "Валы рулевые", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/valy-rulevye/"},
+              {"id": "komplektuyuschie-rulya", "name": "Комплектующие руля", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/komplektuyuschie-rulya/"},
+              {"id": "komplekty-krepleniya-rulevoe-upravlenie", "name": "Комплекты крепления", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/komplekty-krepleniya-rulevoe-upravlenie/"},
+              {"id": "kryshki-zaglushki-rulevoe-upravlenie", "name": "Крышки, заглушки", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/kryshki-zaglushki-rulevoe-upravlenie/"},
+              {"id": "pylniki-rulevoe-upravlenie", "name": "Пыльники", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/pylniki-rulevoe-upravlenie/"},
+              {"id": "remkomplekty-rulevoe-upravlenie", "name": "Ремкомплекты", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/remkomplekty-rulevoe-upravlenie/"},
+              {"id": "rulevaya-tyaga", "name": "Рулевая тяга", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/rulevaya-tyaga/"},
+              {"id": "rulevojprivod", "name": "Рулевой привод", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/rulevojprivod/"},
+              {"id": "rulevye-kolesa", "name": "Рулевые колеса", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/rulevye-kolesa/"},
+              {"id": "rulevye-mehanizmy-reiki", "name": "Рулевые механизмы, рейки", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/rulevye-mehanizmy-reiki/"},
+              {"id": "rulevye-nakonechniki", "name": "Рулевые наконечники", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/rulevye-nakonechniki/"},
+              {"id": "usilitelirulevogoypravleniya", "name": "Усилители рулевого управления", "url": "/catalog/avtozapchasti/rulevoe-upravlenie/usilitelirulevogoypravleniya/"}
+            ]
+          },
+          {
+            "id": "salon", 
+            "name": "Салон", 
+            "url": "/catalog/avtozapchasti/salon/",
+            "icon": "/medias/sys_master/images/images/h0e/h98/8806681608222.svg",
+            "subcategories": [
+              {"id": "zapchasti-dveri", "name": "Запчасти двери", "url": "/catalog/avtozapchasti/salon/zapchasti-dveri/"},
+              {"id": "kryshki-zaglushki-salon", "name": "Крышки, заглушки", "url": "/catalog/avtozapchasti/salon/kryshki-zaglushki-salon/"},
+              {"id": "moduli-upravleniya-vykluchateli-knopki", "name": "Модули управления, выключатели, кнопки", "url": "/catalog/avtozapchasti/salon/moduli-upravleniya-vykluchateli-knopki/"},
+              {"id": "obivka-salona", "name": "Обивка салона", "url": "/catalog/avtozapchasti/salon/obivka-salona/"},
+              {"id": "panel-priborov", "name": "Панель приборов", "url": "/catalog/avtozapchasti/salon/panel-priborov/"},
+              {"id": "prinadlezhnosti-bagazhnika", "name": "Принадлежности багажника", "url": "/catalog/avtozapchasti/salon/prinadlezhnosti-bagazhnika/"},
+              {"id": "prinadlezhnosti-salona", "name": "Принадлежности салона", "url": "/catalog/avtozapchasti/salon/prinadlezhnosti-salona/"},
+              {"id": "sidenja-i-komplektujushhie", "name": "Сиденья и комплектующие", "url": "/catalog/avtozapchasti/salon/sidenja-i-komplektujushhie/"}
+            ]
+          },
+          {
+            "id": "sistema-vypuska-gazov", 
+            "name": "Система выпуска газов", 
+            "url": "/catalog/avtozapchasti/sistema-vypuska-gazov/",
+            "icon": "/medias/sys_master/images/images/h11/hff/8806681542686.svg",
+            "subcategories": [
+              {"id": "glushiteli", "name": "Глушители", "url": "/catalog/avtozapchasti/sistema-vypuska-gazov/glushiteli/"},
+              {"id": "gofry", "name": "Гофры", "url": "/catalog/avtozapchasti/sistema-vypuska-gazov/gofry/"},
+              {"id": "katalizator", "name": "Катализаторы", "url": "/catalog/avtozapchasti/sistema-vypuska-gazov/katalizator/"},
+              {"id": "kollektory", "name": "Коллекторы", "url": "/catalog/avtozapchasti/sistema-vypuska-gazov/kollektory/"},
+              {"id": "prochie-komplektujushhie-sistemy-vypuska", "name": "Комплектующие системы выпуска", "url": "/catalog/avtozapchasti/sistema-vypuska-gazov/prochie-komplektujushhie-sistemy-vypuska/"},
+              {"id": "krepleniya-sistema-vypuska-gazov", "name": "Крепления", "url": "/catalog/avtozapchasti/sistema-vypuska-gazov/krepleniya-sistema-vypuska-gazov/"},
+              {"id": "priemnaya-truba", "name": "Приемная труба", "url": "/catalog/avtozapchasti/sistema-vypuska-gazov/priemnaya-truba/"},
+              {"id": "rezonator", "name": "Резонатор", "url": "/catalog/avtozapchasti/sistema-vypuska-gazov/rezonator/"}
+            ]
+          },
+          {
+            "id": "sistema-gazoraspredelenija", 
+            "name": "Система ГРМ", 
+            "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/",
+            "icon": "/medias/sys_master/images/images/h5e/h30/8821333164062.svg",
+            "subcategories": [
+              {"id": "valy-raspredelitelnye", "name": "Валы распределительные", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/valy-raspredelitelnye/"},
+              {"id": "vtulki-napravlyaushie-klapanov", "name": "Втулки направляющие клапанов", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/vtulki-napravlyaushie-klapanov/"},
+              {"id": "zaglushki-sistema-grm", "name": "Заглушки", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/zaglushki-sistema-grm/"},
+              {"id": "klapana", "name": "Клапаны", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/klapana/"},
+              {"id": "kozhuh-grm", "name": "Кожух ГРМ", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/kozhuh-grm/"},
+              {"id": "kolpachki-maslosemnye", "name": "Колпачки маслосъемные", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/kolpachki-maslosemnye/"},
+              {"id": "kryshki-klapannye", "name": "Крышки клапанные", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/kryshki-klapannye/"},
+              {"id": "privod-raspredvala", "name": "Привод распредвала", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/privod-raspredvala/"},
+              {"id": "pruzhiny-tarelki-suhar-klapana", "name": "Пружины, тарелки, сухарь клапана", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/pruzhiny-tarelki-suhar-klapana/"},
+              {"id": "remni-grm", "name": "Ремни ГРМ", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/remni-grm/"},
+              {"id": "roliki-natyazhiteli-shkivy", "name": "Ролики, натяжители, шкивы", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/roliki-natyazhiteli-shkivy/"},
+              {"id": "tolkateli-rychagi-shaiby-raspredvala", "name": "Толкатели, рычаги, шайбы распредвала", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/tolkateli-rychagi-shaiby-raspredvala/"},
+              {"id": "uspokoiteli-cepi", "name": "Успокоители цепи", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/uspokoiteli-cepi/"},
+              {"id": "cepi-grm", "name": "Цепи ГРМ", "url": "/catalog/avtozapchasti/sistema-gazoraspredelenija/cepi-grm/"}
+            ]
+          },
+          {
+            "id": "sistema-ohlazhdenija", 
+            "name": "Система охлаждения", 
+            "url": "/catalog/avtozapchasti/sistema-ohlazhdenija/",
+            "icon": "/medias/sys_master/images/images/h9d/h0c/8806679838750.svg",
+            "subcategories": [
+              {"id": "vodyanoy-nasos-pompa", "name": "Водяной насос (помпа)", "url": "/catalog/avtozapchasti/sistema-ohlazhdenija/vodyanoy-nasos-pompa/"},
+              {"id": "datchiki-sistema-ohlazhdeniya", "name": "Датчики", "url": "/catalog/avtozapchasti/sistema-ohlazhdenija/datchiki-sistema-ohlazhdeniya/"},
+              {"id": "prochie-komplektujushhie-sistemy-ohlazhdenija", "name": "Комплектующие системы охлаждения", "url": "/catalog/avtozapchasti/sistema-ohlazhdenija/prochie-komplektujushhie-sistemy-ohlazhdenija/"},
+              {"id": "kryshki-sistema-ohlazhdeniya", "name": "Крышки", "url": "/catalog/avtozapchasti/sistema-ohlazhdenija/kryshki-sistema-ohlazhdeniya/"},
+              {"id": "motory-ventilyatory-i-kozhuhi", "name": "Моторы, вентиляторы и кожухи", "url": "/catalog/avtozapchasti/sistema-ohlazhdenija/motory-ventilyatory-i-kozhuhi/"},
+              {"id": "patrubki-shlangi", "name": "Патрубки, шланги", "url": "/catalog/avtozapchasti/sistema-ohlazhdenija/patrubki-shlangi/"},
+              {"id": "radiatory", "name": "Радиаторы", "url": "/catalog/avtozapchasti/sistema-ohlazhdenija/radiatory/"},
+              {"id": "rasshiritelnyy-bachok", "name": "Расширительный бачок", "url": "/catalog/avtozapchasti/sistema-ohlazhdenija/rasshiritelnyy-bachok/"},
+              {"id": "termostaty", "name": "Термостаты", "url": "/catalog/avtozapchasti/sistema-ohlazhdenija/termostaty/"}
+            ]
+          },
+          {
+            "id": "zerkalo-steklo", 
+            "name": "Стекла и зеркала", 
+            "url": "/catalog/avtozapchasti/zerkalo-steklo/",
+            "icon": "/medias/sys_master/images/images/h23/h3b/8806680690718.svg",
+            "subcategories": [
+              {"id": "zadnee-steklo", "name": "Заднее стекло", "url": "/catalog/avtozapchasti/zerkalo-steklo/zadnee-steklo/"},
+              {"id": "bokovoe-zerkalo", "name": "Зеркала боковые", "url": "/catalog/avtozapchasti/zerkalo-steklo/bokovoe-zerkalo/"},
+              {"id": "zerkala-vnytrisalonnie", "name": "Зеркала внутрисалонные", "url": "/catalog/avtozapchasti/zerkalo-steklo/zerkala-vnytrisalonnie/"},
+              {"id": "zerkalnie-elementi", "name": "Зеркальные элементы", "url": "/catalog/avtozapchasti/zerkalo-steklo/zerkalnie-elementi/"},
+              {"id": "krepleniya-zerkal", "name": "Крепления зеркал", "url": "/catalog/avtozapchasti/zerkalo-steklo/krepleniya-zerkal/"},
+              {"id": "lobovoe-steklo", "name": "Лобовое стекло", "url": "/catalog/avtozapchasti/zerkalo-steklo/lobovoe-steklo/"},
+              {"id": "remkomplekty-stekla-i-zerkala", "name": "Ремкомплекты", "url": "/catalog/avtozapchasti/zerkalo-steklo/remkomplekty-stekla-i-zerkala/"},
+              {"id": "stekla", "name": "Стекла боковые", "url": "/catalog/avtozapchasti/zerkalo-steklo/stekla/"},
+              {"id": "uplotniteli-i-krepleniya-stekol", "name": "Уплотнители и крепления стекол", "url": "/catalog/avtozapchasti/zerkalo-steklo/uplotniteli-i-krepleniya-stekol/"}
+            ]
+          },
+          {
+            "id": "toplivnaja-sistema", 
+            "name": "Топливная система", 
+            "url": "/catalog/avtozapchasti/toplivnaja-sistema/",
+            "icon": "/medias/sys_master/images/images/hb9/hda/8806680821790.svg",
+            "subcategories": [
+              {"id": "drosseli-komplektujushhie", "name": "Дроссель и комплектующие", "url": "/catalog/avtozapchasti/toplivnaja-sistema/drosseli-komplektujushhie/"},
+              {"id": "karbjuratory", "name": "Карбюраторы", "url": "/catalog/avtozapchasti/toplivnaja-sistema/karbjuratory/"},
+              {"id": "prochie-komplektujushhie-toplivnoj-sistemy", "name": "Комплектующие топливной системы", "url": "/catalog/avtozapchasti/toplivnaja-sistema/prochie-komplektujushhie-toplivnoj-sistemy/"},
+              {"id": "kryshki-zaglushki-toplivnya-sistema", "name": "Крышки, заглушки", "url": "/catalog/avtozapchasti/toplivnaja-sistema/kryshki-zaglushki-toplivnya-sistema/"},
+              {"id": "privod-akseleratora", "name": "Привод акселератора", "url": "/catalog/avtozapchasti/toplivnaja-sistema/privod-akseleratora/"},
+              {"id": "rampy", "name": "Рампы", "url": "/catalog/avtozapchasti/toplivnaja-sistema/rampy/"},
+              {"id": "remkomlekty-toplivnaya-sistema", "name": "Ремкомплекты", "url": "/catalog/avtozapchasti/toplivnaja-sistema/remkomlekty-toplivnaya-sistema/"},
+              {"id": "sistema-ulavlivaniya-parov", "name": "Система улавливания паров", "url": "/catalog/avtozapchasti/toplivnaja-sistema/sistema-ulavlivaniya-parov/"},
+              {"id": "toplivnye-shlangi-i-trubki", "name": "Топливные шланги и трубки", "url": "/catalog/avtozapchasti/toplivnaja-sistema/toplivnye-shlangi-i-trubki/"},
+              {"id": "toplivnyy-bak", "name": "Топливный бак", "url": "/catalog/avtozapchasti/toplivnaja-sistema/toplivnyy-bak/"},
+              {"id": "toplivnyy-nasos", "name": "Топливный насос", "url": "/catalog/avtozapchasti/toplivnaja-sistema/toplivnyy-nasos/"},
+              {"id": "forsunki", "name": "Форсунки", "url": "/catalog/avtozapchasti/toplivnaja-sistema/forsunki/"}
+            ]
+          },
+          {
+            "id": "tormoznaja-sistema", 
+            "name": "Тормозная система", 
+            "url": "/catalog/avtozapchasti/tormoznaja-sistema/",
+            "icon": "/medias/sys_master/images/images/h23/h72/9477590581278.svg",
+            "subcategories": [
+              {"id": "datchiki-iznosa", "name": "Датчики износа тормозных колодок", "url": "/catalog/avtozapchasti/tormoznaja-sistema/datchiki-iznosa/"},
+              {"id": "tormoznye-diski", "name": "Диски тормозные", "url": "/catalog/avtozapchasti/tormoznaja-sistema/tormoznye-diski/"},
+              {"id": "kojuhi-tormoznogo-diska", "name": "Кожухи тормозного диска", "url": "/catalog/avtozapchasti/tormoznaja-sistema/kojuhi-tormoznogo-diska/"},
+              {"id": "tormoznye-kolodki", "name": "Колодки тормозные", "url": "/catalog/avtozapchasti/tormoznaja-sistema/tormoznye-kolodki/"},
+              {"id": "prochie-komplektujushhie-tormoznogo-privoda", "name": "Комплектующие тормозной системы", "url": "/catalog/avtozapchasti/tormoznaja-sistema/prochie-komplektujushhie-tormoznogo-privoda/"},
+              {"id": "komplekty-krepleniya-tormoznaya-sistema", "name": "Комплекты крепления", "url": "/catalog/avtozapchasti/tormoznaja-sistema/komplekty-krepleniya-tormoznaya-sistema/"},
+              {"id": "privod-stojanochnogo-tormoza", "name": "Привод стояночного тормоза", "url": "/catalog/avtozapchasti/tormoznaja-sistema/privod-stojanochnogo-tormoza/"},
+              {"id": "rti-tormoznoj-sistemy", "name": "Пыльники", "url": "/catalog/avtozapchasti/tormoznaja-sistema/rti-tormoznoj-sistemy/"},
+              {"id": "remkomplekty-tormoznaya-sistema", "name": "Ремкомплекты", "url": "/catalog/avtozapchasti/tormoznaja-sistema/remkomplekty-tormoznaya-sistema/"},
+              {"id": "support", "name": "Суппорт", "url": "/catalog/avtozapchasti/tormoznaja-sistema/support/"},
+              {"id": "tormoznye-barabany", "name": "Тормозные барабаны", "url": "/catalog/avtozapchasti/tormoznaja-sistema/tormoznye-barabany/"},
+              {"id": "tormoznye-trubki", "name": "Тормозные трубки", "url": "/catalog/avtozapchasti/tormoznaja-sistema/tormoznye-trubki/"},
+              {"id": "tormoznye-cilindry", "name": "Тормозные цилиндры", "url": "/catalog/avtozapchasti/tormoznaja-sistema/tormoznye-cilindry/"},
+              {"id": "vakuumnyj-usilitel", "name": "Усилитель вакуумный", "url": "/catalog/avtozapchasti/tormoznaja-sistema/vakuumnyj-usilitel/"}
+            ]
+          },
+          {
+            "id": "transmissija-avtomobilya", 
+            "name": "Трансмиссия автомобиля", 
+            "url": "/catalog/avtozapchasti/transmissija-avtomobilya/",
+            "icon": "/medias/sys_master/images/images/had/h72/8806682099742.svg",
+            "subcategories": [
+              {"id": "kardannaja-peredacha-i-komplektujushhie", "name": "Карданная передача и комплектующие", "url": "/catalog/avtozapchasti/transmissija-avtomobilya/kardannaja-peredacha-i-komplektujushhie/"},
+              {"id": "komplekty-krepleniya-transmissiya", "name": "Комплекты крепления", "url": "/catalog/avtozapchasti/transmissija-avtomobilya/komplekty-krepleniya-transmissiya/"},
+              {"id": "korobka-peredach", "name": "Коробка передач", "url": "/catalog/avtozapchasti/transmissija-avtomobilya/korobka-peredach/"},
+              {"id": "kryshki-zaglushki-transmissiya", "name": "Крышки, Заглушки", "url": "/catalog/avtozapchasti/transmissija-avtomobilya/kryshki-zaglushki-transmissiya/"},
+              {"id": "mosty-i-komplektujushhie", "name": "Мосты и комплектующие", "url": "/catalog/avtozapchasti/transmissija-avtomobilya/mosty-i-komplektujushhie/"},
+              {"id": "privod-kolesa", "name": "Привод колес", "url": "/catalog/avtozapchasti/transmissija-avtomobilya/privod-kolesa/"},
+              {"id": "razdatochnaja-korobka", "name": "Раздаточная коробка", "url": "/catalog/avtozapchasti/transmissija-avtomobilya/razdatochnaja-korobka/"},
+              {"id": "remkomplekty-transmissiya", "name": "Ремкомплекты", "url": "/catalog/avtozapchasti/transmissija-avtomobilya/remkomplekty-transmissiya/"},
+              {"id": "rti-transmissii", "name": "Сальники, пыльники", "url": "/catalog/avtozapchasti/transmissija-avtomobilya/rti-transmissii/"},
+              {"id": "sceplenie", "name": "Сцепление", "url": "/catalog/avtozapchasti/transmissija-avtomobilya/sceplenie/"}
+            ]
+          }
+        ]
+      },
+      {
+        "id": "avtokosmetika-i-avtohimija",
+        "name": "Автокосметика и автохимия",
+        "url": "/catalog/avtokosmetika-i-avtohimija/",
+        "icon": "/medias/sys_master/images/images/h0e/h2d/8806680133662.svg",
+        "subcategories": [
+          {
+            "id": "avtokosmetika", 
+            "name": "Автокосметика", 
+            "url": "/catalog/avtokosmetika-i-avtohimija/avtokosmetika/",
+            "icon": "/medias/sys_master/images/images/h0e/h2d/8806680133662.svg",
+            "subcategories": [
+              {"id": "avtoshampuni", "name": "Автошампуни", "url": "/catalog/avtokosmetika-i-avtohimija/avtokosmetika/avtoshampuni/"},
+              {"id": "antizapotevateli-antidojd", "name": "Антизапотеватели, антидождь", "url": "/catalog/avtokosmetika-i-avtohimija/avtokosmetika/antizapotevateli-antidojd/"},
+              {"id": "ochistiteli", "name": "Очистители", "url": "/catalog/avtokosmetika-i-avtohimija/avtokosmetika/ochistiteli/"},
+              {"id": "poliroli", "name": "Полироли", "url": "/catalog/avtokosmetika-i-avtohimija/avtokosmetika/poliroli/"},
+              {"id": "razmorazhivateli", "name": "Размораживатели", "url": "/catalog/avtokosmetika-i-avtohimija/avtokosmetika/razmorazhivateli/"}
+            ]
+          },
+          {
+            "id": "klei-germetiki-rastvoriteli", 
+            "name": "Клеи, герметики, пасты", 
+            "url": "/catalog/avtokosmetika-i-avtohimija/klei-germetiki-rastvoriteli/",
+            "icon": "/medias/sys_master/images/images/hc3/h1c/8806680854558.svg",
+            "subcategories": [
+              {"id": "germetiki", "name": "Герметики", "url": "/catalog/avtokosmetika-i-avtohimija/klei-germetiki-rastvoriteli/germetiki/"},
+              {"id": "klei", "name": "Клей", "url": "/catalog/avtokosmetika-i-avtohimija/klei-germetiki-rastvoriteli/klei/"},
+              {"id": "pasty", "name": "Пасты", "url": "/catalog/avtokosmetika-i-avtohimija/klei-germetiki-rastvoriteli/pasty/"}
+            ]
+          },
+          {
+            "id": "lako-krasochnye-materialy", 
+            "name": "Лако-красочные материалы", 
+            "url": "/catalog/avtokosmetika-i-avtohimija/lako-krasochnye-materialy/",
+            "icon": "/medias/sys_master/images/images/h83/h64/8806679674910.svg",
+            "subcategories": [
+              {"id": "avtojemali-avtokraski", "name": "Автоэмали, автокраски", "url": "/catalog/avtokosmetika-i-avtohimija/lako-krasochnye-materialy/avtojemali-avtokraski/"},
+              {"id": "avto-emali-karandashi-kistochki", "name": "Автоэмали-карандаши, кисточки", "url": "/catalog/avtokosmetika-i-avtohimija/lako-krasochnye-materialy/avto-emali-karandashi-kistochki/"},
+              {"id": "gruntovka", "name": "Грунтовка", "url": "/catalog/avtokosmetika-i-avtohimija/lako-krasochnye-materialy/gruntovka/"},
+              {"id": "laki", "name": "Лаки", "url": "/catalog/avtokosmetika-i-avtohimija/lako-krasochnye-materialy/laki/"},
+              {"id": "preobrazovateli-rzhavchiny", "name": "Преобразователи ржавчины", "url": "/catalog/avtokosmetika-i-avtohimija/lako-krasochnye-materialy/preobrazovateli-rzhavchiny/"},
+              {"id": "rastvoriteli", "name": "Растворители", "url": "/catalog/avtokosmetika-i-avtohimija/lako-krasochnye-materialy/rastvoriteli/"},
+              {"id": "smivka-kraski", "name": "Смывка краски", "url": "/catalog/avtokosmetika-i-avtohimija/lako-krasochnye-materialy/smivka-kraski/"},
+              {"id": "shpatlevka", "name": "Шпатлевка", "url": "/catalog/avtokosmetika-i-avtohimija/lako-krasochnye-materialy/shpatlevka/"}
+            ]
+          },
+          {
+            "id": "mastiki-antikory", 
+            "name": "Мастики, антикоры", 
+            "url": "/catalog/avtokosmetika-i-avtohimija/mastiki-antikory/",
+            "icon": "/medias/sys_master/images/images/h13/h5b/8806681215006.svg",
+            "subcategories": [
+              {"id": "antigravij", "name": "Антигравий", "url": "/catalog/avtokosmetika-i-avtohimija/mastiki-antikory/antigravij/"},
+              {"id": "antikor", "name": "Антикор", "url": "/catalog/avtokosmetika-i-avtohimija/mastiki-antikory/antikor/"},
+              {"id": "movil", "name": "Мовиль", "url": "/catalog/avtokosmetika-i-avtohimija/mastiki-antikory/movil/"}
+            ]
+          },
+          {
+            "id": "ochistiteli-tehnicheskie", 
+            "name": "Очистители технические", 
+            "url": "/catalog/avtokosmetika-i-avtohimija/ochistiteli-tehnicheskie/",
+            "icon": "/medias/sys_master/images/images/h83/h2f/8806679543838.svg"
+          }
+        ]
+      },
+      {
+        "id": "avtojelektronika",
+        "name": "Автоэлектроника",
+        "url": "/catalog/avtojelektronika/",
+        "icon": "/medias/sys_master/images/images/h8b/hac/9440357515294.svg",
+        "subcategories": [
+          {"id": "avtosignalizacii-centralnye-zamki", "name": "Автомобильные охранные системы", "url": "/catalog/avtojelektronika/avtosignalizacii-centralnye-zamki/"},
+          {"id": "audiovideotehnika", "name": "Аудио видеотехника", "url": "/catalog/avtojelektronika/audiovideotehnika/"},
+          {"id": "jelektronika-dlja-avto", "name": "Электроника для авто", "url": "/catalog/avtojelektronika/jelektronika-dlja-avto/"}
+        ]
+      },
+      {
+        "id": "akkumuljatory-i-prinadlezhnosti",
+        "name": "АКБ и аксессуары",
+        "url": "/catalog/akkumuljatory-i-prinadlezhnosti/",
+        "icon": "/medias/sys_master/images/images/h61/h95/8933945737246.svg",
+        "subcategories": [
+          {"id": "akb-asia", "name": "АКБ ASIA", "url": "/catalog/akkumuljatory-i-prinadlezhnosti/akb-asia/"},
+          {"id": "akkumuljatornye-batarei", "name": "АКБ EUROPA", "url": "/catalog/akkumuljatory-i-prinadlezhnosti/akkumuljatornye-batarei/"},
+          {"id": "akb-dlya-moto", "name": "АКБ для мото", "url": "/catalog/akkumuljatory-i-prinadlezhnosti/akb-dlya-moto/"},
+          {"id": "ustrojstva-zarjadnye-dlja-akb", "name": "Зарядные и пусковые устройства для АКБ", "url": "/catalog/akkumuljatory-i-prinadlezhnosti/ustrojstva-zarjadnye-dlja-akb/"},
+          {"id": "provoda-prikurivatelja", "name": "Провода прикуривателя", "url": "/catalog/akkumuljatory-i-prinadlezhnosti/provoda-prikurivatelja/"}
+        ]
+      },
+      {
+        "id": "avtoaksessuary",
+        "name": "Аксессуары",
+        "url": "/catalog/avtoaksessuary/",
+        "icon": "/medias/sys_master/images/images/ha5/h54/9440357351454.svg",
+        "subcategories": [
+          {"id": "avarijnye-prinadlezhnosti", "name": "Аварийные принадлежности", "url": "/catalog/avtoaksessuary/avarijnye-prinadlezhnosti/"},
+          {"id": "avtobytovaja-tehnika", "name": "Автобытовая техника", "url": "/catalog/avtoaksessuary/avtobytovaja-tehnika/"},
+          {"id": "avtokresla", "name": "Автокресла", "url": "/catalog/avtoaksessuary/avtokresla/"},
+          {"id": "aksessuari-i-suveniri", "name": "Аксессуары и сувениры", "url": "/catalog/avtoaksessuary/aksessuari-i-suveniri/"},
+          {"id": "aromatizatory", "name": "Ароматизаторы", "url": "/catalog/avtoaksessuary/aromatizatory/"},
+          {"id": "bagazhniki-i-sistemy-kreplenija-gruzov", "name": "Багажники и системы крепления грузов", "url": "/catalog/avtoaksessuary/bagazhniki-i-sistemy-kreplenija-gruzov/"},
+          {"id": "gubki-salfetki", "name": "Губки и салфетки", "url": "/catalog/avtoaksessuary/gubki-salfetki/"},
+          {"id": "dopolnitelnoe-avtooborudovanie", "name": "Дополнительное автооборудование", "url": "/catalog/avtoaksessuary/dopolnitelnoe-avtooborudovanie/"},
+          {"id": "kanistry-i-nasosy-dlja-perekachki", "name": "Канистры и насосы для перекачки", "url": "/catalog/avtoaksessuary/kanistry-i-nasosy-dlja-perekachki/"},
+          {"id": "kompressory-nasosy", "name": "Компрессоры, насосы", "url": "/catalog/avtoaksessuary/kompressory-nasosy/"},
+          {"id": "skrebok-shetka-dlya-snega-avtomobilnaya", "name": "Скребки, щетки, водосгоны", "url": "/catalog/avtoaksessuary/skrebok-shetka-dlya-snega-avtomobilnaya/"},
+          {"id": "farkopy-legkovye", "name": "Фаркопы", "url": "/catalog/avtoaksessuary/farkopy-legkovye/"},
+          {"id": "chehly-shtorki", "name": "Чехлы, шторки", "url": "/catalog/avtoaksessuary/chehly-shtorki/"}
+        ]
+      },
+      {
+        "id": "dekor-i-tuning",
+        "name": "Декор и тюнинг",
+        "url": "/catalog/dekor-i-tuning/",
+        "icon": "/medias/sys_master/images/images/h84/h54/8821295808542.svg",
+        "subcategories": [
+          {"id": "kovriki-v-avto", "name": "Коврики в авто", "url": "/catalog/dekor-i-tuning/kovriki-v-avto/"},
+          {"id": "dekor-i-tjuning-kuzova", "name": "Кузов", "url": "/catalog/dekor-i-tuning/dekor-i-tjuning-kuzova/"},
+          {"id": "dekor-i-tjuning-salona", "name": "Салон", "url": "/catalog/dekor-i-tuning/dekor-i-tjuning-salona/"},
+          {"id": "shumoizolyatsiya-avtomobilya", "name": "Шумоизоляция автомобиля", "url": "/catalog/dekor-i-tuning/shumoizolyatsiya-avtomobilya/"}
+        ]
+      },
+      {
+        "id": "instrument",
+        "name": "Инструмент",
+        "url": "/catalog/instrument/",
+        "icon": "/medias/sys_master/images/images/h3e/hf6/8806681935902.svg",
+        "subcategories": [
+          {"id": "avtoinstrumenty", "name": "Авто инструменты", "url": "/catalog/instrument/avtoinstrumenty/"},
+          {"id": "gaechnye-kljuchi-i-golovki", "name": "Гаечные ключи и головки", "url": "/catalog/instrument/gaechnye-kljuchi-i-golovki/"},
+          {"id": "gazovoe-oborudovanie", "name": "Газовое оборудование", "url": "/catalog/instrument/gazovoe-oborudovanie/"},
+          {"id": "garazhnoe-oborudovanie", "name": "Гаражное оборудование", "url": "/catalog/instrument/garazhnoe-oborudovanie/"},
+          {"id": "zazhimnoy-instrument", "name": "Зажимной инструмент", "url": "/catalog/instrument/zazhimnoy-instrument/"},
+          {"id": "izmeritelnye-i-diagnosticheskie-pribory-instrumenty", "name": "Измерительные и диагностические приборы, инструменты", "url": "/catalog/instrument/izmeritelnye-i-diagnosticheskie-pribory-instrumenty/"},
+          {"id": "instrumenty-prochie", "name": "Инструменты прочие", "url": "/catalog/instrument/instrumenty-prochie/"},
+          {"id": "krepezhniy-instrument", "name": "Крепежный инструмент", "url": "/catalog/instrument/krepezhniy-instrument/"},
+          {"id": "otvertki-bity", "name": "Отвертки, биты", "url": "/catalog/instrument/otvertki-bity/"},
+          {"id": "pnevmoinstrument", "name": "Пневмоинструмент", "url": "/catalog/instrument/pnevmoinstrument/"},
+          {"id": "raskhodnye-materialy-i-osnastka", "name": "Расходные материалы и оснастка", "url": "/catalog/instrument/raskhodnye-materialy-i-osnastka/"},
+          {"id": "rezhushchiy-instrument", "name": "Режущий инструмент", "url": "/catalog/instrument/rezhushchiy-instrument/"},
+          {"id": "ruchnye-izmeritelnye-instrumenty", "name": "Ручные измерительные инструменты", "url": "/catalog/instrument/ruchnye-izmeritelnye-instrumenty/"},
+          {"id": "instrument-dlya-vodosnabzhenie-i-kanalizatsii", "name": "Сантехнический инструмент", "url": "/catalog/instrument/instrument-dlya-vodosnabzhenie-i-kanalizatsii/"},
+          {"id": "svarochnoe-i-payalnoe-oborudovanie", "name": "Сварочное и паяльное оборудование", "url": "/catalog/instrument/svarochnoe-i-payalnoe-oborudovanie/"},
+          {"id": "silovoe-oborudovanie", "name": "Силовое оборудование", "url": "/catalog/instrument/silovoe-oborudovanie/"},
+          {"id": "skotch-izolenta", "name": "Скотч, изолента", "url": "/catalog/instrument/skotch-izolenta/"},
+          {"id": "slesarno-stolyarnyi-instrument", "name": "Слесарно-столярный инструмент", "url": "/catalog/instrument/slesarno-stolyarnyi-instrument/"},
+          {"id": "smazochnoe-i-lakokrasochnoe-oborudovanie", "name": "Смазочное и лакокрасочное оборудование", "url": "/catalog/instrument/smazochnoe-i-lakokrasochnoe-oborudovanie/"},
+          {"id": "udarno-rychazhnyi-instrument", "name": "Ударно-рычажный инструмент", "url": "/catalog/instrument/udarno-rychazhnyi-instrument/"},
+          {"id": "universalniy-nabor-instrumentov", "name": "Универсальные наборы инструментов", "url": "/catalog/instrument/universalniy-nabor-instrumentov/"},
+          {"id": "sharnirno-gubcevyj-instrument", "name": "Шарнирно-губцевый инструмент", "url": "/catalog/instrument/sharnirno-gubcevyj-instrument/"},
+          {"id": "jelektroinstrument", "name": "Электроинструмент", "url": "/catalog/instrument/jelektroinstrument/"},
+          {"id": "jashhiki-dlja-instrumenta", "name": "Ящики и сумки для инструмента", "url": "/catalog/instrument/jashhiki-dlja-instrumenta/"}
+        ]
+      },
+      {
+        "id": "krepezh-metizy",
+        "name": "Крепеж, метизы",
+        "url": "/catalog/krepezh-metizy/",
+        "icon": "/medias/sys_master/images/images/h16/h33/8806681968670.svg",
+        "subcategories": [
+          {"id": "bolty", "name": "Болты", "url": "/catalog/krepezh-metizy/bolty/", "icon": "/medias/sys_master/images/images/hdf/hd1/8806681313310.svg"},
+          {"id": "vinty", "name": "Винты", "url": "/catalog/krepezh-metizy/vinty/", "icon": "/medias/sys_master/images/images/h2d/h3c/8821297381406.svg"},
+          {"id": "gajki", "name": "Гайки", "url": "/catalog/krepezh-metizy/gajki/", "icon": "/medias/sys_master/images/images/hcd/h00/8821297774622.svg"},
+          {"id": "nabory-krepezha", "name": "Наборы крепежа", "url": "/catalog/krepezh-metizy/nabory-krepezha/", "icon": "/medias/sys_master/images/images/hed/h80/9046020915230.svg"},
+          {"id": "pistony", "name": "Пистоны", "url": "/catalog/krepezh-metizy/pistony/", "icon": "/medias/sys_master/images/images/h87/h22/8806680461342.svg"},
+          {"id": "samorezy", "name": "Саморезы", "url": "/catalog/krepezh-metizy/samorezy/", "icon": "/medias/sys_master/images/images/h23/h90/8821333032990.svg"},
+          {"id": "skoby-shplinty-shpilki", "name": "Скобы, шплинты", "url": "/catalog/krepezh-metizy/skoby-shplinty-shpilki/", "icon": "/medias/sys_master/images/images/h53/ha4/8821333458974.svg"},
+          {"id": "homuty", "name": "Хомуты", "url": "/catalog/krepezh-metizy/homuty/", "icon": "/medias/sys_master/images/images/h80/h32/8821335490590.svg"},
+          {"id": "shajby-i-kolca", "name": "Шайбы и кольца", "url": "/catalog/krepezh-metizy/shajby-i-kolca/", "icon": "/medias/sys_master/images/images/h11/h99/8821335556126.svg"},
+          {"id": "shpilki", "name": "Шпильки", "url": "/catalog/krepezh-metizy/shpilki/", "icon": "/medias/sys_master/images/images/h53/ha4/8821333458974.svg"}
+        ]
+      },
+      {
+        "id": "masla-smazki-i-zhidkosti",
+        "name": "Масла, смазки и жидкости",
+        "url": "/catalog/masla-smazki-i-zhidkosti/",
+        "icon": "/medias/sys_master/images/images/h60/hf6/8806680395806.svg",
+        "subcategories": [
+          {
+            "id": "avtomasla", 
+            "name": "Автомасла", 
+            "url": "/catalog/masla-smazki-i-zhidkosti/avtomasla/",
+            "icon": "/medias/sys_master/images/images/h07/h11/8806681346078.svg",
+            "subcategories": [
+              {"id": "motornye-masla", "name": "Моторные масла", "url": "/catalog/masla-smazki-i-zhidkosti/avtomasla/motornye-masla/"},
+              {"id": "promyvochnye-masla-i-zhidkosti", "name": "Промывочные масла и жидкости", "url": "/catalog/masla-smazki-i-zhidkosti/avtomasla/promyvochnye-masla-i-zhidkosti/"},
+              {"id": "transmissionnye-masla", "name": "Трансмиссионные масла", "url": "/catalog/masla-smazki-i-zhidkosti/avtomasla/transmissionnye-masla/"}
+            ]
+          },
+          {
+            "id": "antifrizy", 
+            "name": "Антифризы", 
+            "url": "/catalog/masla-smazki-i-zhidkosti/antifrizy/",
+            "icon": "/medias/sys_master/images/images/he8/h53/8821301510174.svg"
+          },
+          {
+            "id": "zhidkosti-omyvatelja", 
+            "name": "Жидкости омывателя", 
+            "url": "/catalog/masla-smazki-i-zhidkosti/zhidkosti-omyvatelja/",
+            "icon": "/medias/sys_master/images/images/h57/ha7/8806682198046.svg",
+            "subcategories": [
+              {"id": "nezamerzajushhaja-zhidkost", "name": "Незамерзающая жидкость", "url": "/catalog/masla-smazki-i-zhidkosti/zhidkosti-omyvatelja/nezamerzajushhaja-zhidkost/"},
+              {"id": "omyvatel-letnij-dlya-stekol", "name": "Омыватель летний", "url": "/catalog/masla-smazki-i-zhidkosti/zhidkosti-omyvatelja/omyvatel-letnij-dlya-stekol/"}
+            ]
+          },
+          {
+            "id": "masla-dlja-mototehniki", 
+            "name": "Масла для мототехники", 
+            "url": "/catalog/masla-smazki-i-zhidkosti/masla-dlja-mototehniki/",
+            "icon": "/medias/sys_master/images/images/hec/h2f/8806681280542.svg"
+          },
+          {
+            "id": "masla-industrialnye", 
+            "name": "Масла индустриальные", 
+            "url": "/catalog/masla-smazki-i-zhidkosti/masla-industrialnye/",
+            "icon": "/medias/sys_master/images/images/h35/h12/8806681083934.svg"
+          },
+          {
+            "id": "prisadki", 
+            "name": "Присадки", 
+            "url": "/catalog/masla-smazki-i-zhidkosti/prisadki/",
+            "icon": "/medias/sys_master/images/images/h3b/hc1/8806679412766.svg",
+            "subcategories": [
+              {"id": "antigel", "name": "Антигель", "url": "/catalog/masla-smazki-i-zhidkosti/prisadki/antigel/"},
+              {"id": "prisadki-v-maslo", "name": "Присадки в масло", "url": "/catalog/masla-smazki-i-zhidkosti/prisadki/prisadki-v-maslo/"},
+              {"id": "prisadki-dlya-transmissii", "name": "Присадки для трансмиссии", "url": "/catalog/masla-smazki-i-zhidkosti/prisadki/prisadki-dlya-transmissii/"},
+              {"id": "prisadki-i-zhidkosti-dlja-prochih-uzlov", "name": "Присадки и жидкости для прочих узлов", "url": "/catalog/masla-smazki-i-zhidkosti/prisadki/prisadki-i-zhidkosti-dlja-prochih-uzlov/"},
+              {"id": "prisadki-v-toplivo", "name": "Топливные присадки", "url": "/catalog/masla-smazki-i-zhidkosti/prisadki/prisadki-v-toplivo/"}
+            ]
+          },
+          {
+            "id": "smazki", 
+            "name": "Смазки", 
+            "url": "/catalog/masla-smazki-i-zhidkosti/smazki/",
+            "icon": "/medias/sys_master/images/images/h3d/hd4/9642467328030.svg"
+          },
+          {
+            "id": "tosoly", 
+            "name": "Тосолы", 
+            "url": "/catalog/masla-smazki-i-zhidkosti/tosoly/",
+            "icon": "/medias/sys_master/images/images/he8/h53/8821301510174.svg"
+          },
+          {
+            "id": "ekspluatacionnye-zhidkosti", 
+            "name": "Эксплуатационные жидкости", 
+            "url": "/catalog/masla-smazki-i-zhidkosti/ekspluatacionnye-zhidkosti/",
+            "icon": "/medias/sys_master/images/images/h06/h4c/8806681378846.svg",
+            "subcategories": [
+              {"id": "distillirovannaja-voda", "name": "Дистиллированная вода", "url": "/catalog/masla-smazki-i-zhidkosti/ekspluatacionnye-zhidkosti/distillirovannaja-voda/"},
+              {"id": "zhidkost-dlja-gidrousilitelja", "name": "Жидкость для гидроусилителя", "url": "/catalog/masla-smazki-i-zhidkosti/ekspluatacionnye-zhidkosti/zhidkost-dlja-gidrousilitelja/"},
+              {"id": "tormoznye-zhidkosti", "name": "Тормозные жидкости", "url": "/catalog/masla-smazki-i-zhidkosti/ekspluatacionnye-zhidkosti/tormoznye-zhidkosti/"},
+              {"id": "jelektrolit", "name": "Электролит", "url": "/catalog/masla-smazki-i-zhidkosti/ekspluatacionnye-zhidkosti/jelektrolit/"}
+            ]
+          }
+        ]
+      },
+      {
+        "id": "tovary-dlya-doma",
+        "name": "Товары для дома",
+        "url": "/catalog/tovary-dlya-doma/",
+        "icon": "/medias/sys_master/images/images/hd7/hb7/8954756366366.svg",
+        "subcategories": [
+          {"id": "batarejki", "name": "Батарейки", "url": "/catalog/tovary-dlya-doma/batarejki/"},
+          {"id": "bytovye-prinadlezhnosti", "name": "Бытовые принадлежности", "url": "/catalog/tovary-dlya-doma/bytovye-prinadlezhnosti/"},
+          {"id": "obogrevateli", "name": "Обогреватели", "url": "/catalog/tovary-dlya-doma/obogrevateli/"},
+          {"id": "sadovaya-tehnika", "name": "Садовая техника", "url": "/catalog/tovary-dlya-doma/sadovaya-tehnika/"},
+          {"id": "sadovyy-inventar", "name": "Садовый инвентарь", "url": "/catalog/tovary-dlya-doma/sadovyy-inventar/"}
+        ]
+      },
+      {
+        "id": "filtry-dlya-avto",
+        "name": "Фильтры для авто",
+        "url": "/catalog/filtry-dlya-avto/",
+        "icon": "/medias/sys_master/images/images/ha9/h64/8806680264734.svg",
+        "subcategories": [
+          {"id": "vozdushnyj-filtr", "name": "Воздушный фильтр", "url": "/catalog/filtry-dlya-avto/vozdushnyj-filtr/"},
+          {"id": "masljanyj-filtr", "name": "Масляный фильтр", "url": "/catalog/filtry-dlya-avto/masljanyj-filtr/"},
+          {"id": "toplivniyfiltr", "name": "Топливный фильтр", "url": "/catalog/filtry-dlya-avto/toplivniyfiltr/"},
+          {"id": "filtr-akpp", "name": "Фильтр АКПП", "url": "/catalog/filtry-dlya-avto/filtr-akpp/"},
+          {"id": "filtr-salon", "name": "Фильтр салонный", "url": "/catalog/filtry-dlya-avto/filtr-salon/"}
+        ]
+      },
+      {
+        "id": "shiny-diski",
+        "name": "Шины, диски",
+        "url": "/catalog/shiny-diski/",
+        "icon": "/medias/sys_master/images/images/h59/hb1/8806681870366.svg",
+        "subcategories": [
+          {"id": "avtorezina", "name": "Авторезина", "url": "/catalog/shiny-diski/avtorezina/"},
+          {"id": "kamery", "name": "Камеры", "url": "/catalog/shiny-diski/kamery/"},
+          {"id": "kolesnye-diski", "name": "Колесные диски", "url": "/catalog/shiny-diski/kolesnye-diski/"},
+          {"id": "kolpaki", "name": "Колпаки", "url": "/catalog/shiny-diski/kolpaki/"},
+          {"id": "krepezhi-prinadlezhnosti-koljos", "name": "Крепеж и принадлежности колес", "url": "/catalog/shiny-diski/krepezhi-prinadlezhnosti-koljos/"}
+        ]
+      },
+      {
+        "id": "schetki-stekloochistitelya",
+        "name": "Щетки стеклоочистителя",
+        "url": "/catalog/schetki-stekloochistitelya/",
+        "icon": "/medias/sys_master/images/images/h9d/hac/8806682361886.svg",
+        "subcategories": [
+          {"id": "adaptery-schetok-stekloochistitelya", "name": "Адаптеры щеток стеклоочистителя", "url": "/catalog/schetki-stekloochistitelya/adaptery-schetok-stekloochistitelya/"},
+          {"id": "rezinki-schetok-stekloochistitelya", "name": "Резинки щеток стеклоочистителя", "url": "/catalog/schetki-stekloochistitelya/rezinki-schetok-stekloochistitelya/"},
+          {"id": "avtoshhetki-stekloochistitelja", "name": "Щётки стеклоочистителя", "url": "/catalog/schetki-stekloochistitelya/avtoshhetki-stekloochistitelja/"}
+        ]
+      },
+      {
+        "id": "jelektrooborudovanie",
+        "name": "Электрооборудование",
+        "url": "/catalog/jelektrooborudovanie/",
+        "icon": "/medias/sys_master/images/images/h3e/hb4/8806680592414.svg",
+        "subcategories": [
+          {"id": "avtojelektrika", "name": "Автоэлектрика", "url": "/catalog/jelektrooborudovanie/avtojelektrika/"},
+          {"id": "voltmetry", "name": "Вольтметры", "url": "/catalog/jelektrooborudovanie/voltmetry/"},
+          {"id": "lampy", "name": "Лампы", "url": "/catalog/jelektrooborudovanie/lampy/"},
+          {"id": "osveshhenie-i-avtocignaly", "name": "Освещение и автоcигналы", "url": "/catalog/jelektrooborudovanie/osveshhenie-i-avtocignaly/"},
+          {"id": "sistema-zazhiganiya", "name": "Система зажигания", "url": "/catalog/jelektrooborudovanie/sistema-zazhiganiya/"},
+          {"id": "jelektrooborudovanie-dvigatelja", "name": "Электрооборудование двигателя", "url": "/catalog/jelektrooborudovanie/jelektrooborudovanie-dvigatelja/"}
+        ]
+      }
+    ]
+  }
+}

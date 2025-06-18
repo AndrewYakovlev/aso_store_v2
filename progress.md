@@ -277,6 +277,20 @@
 - API клиент теперь читает токен из localStorage или клиентских cookies
 - Убрано лишнее логирование из кода
 
+### Защита административных методов API (2025-06-18)
+
+- ✅ Добавлены RolesGuard и декоратор Roles для проверки ролей пользователей
+- ✅ Защищены методы создания/обновления/удаления в контроллерах:
+  - Categories - POST, PATCH, DELETE (Admin/Manager для создания и обновления, только Admin для удаления)
+  - Products - POST, PATCH, DELETE (Admin/Manager для создания и обновления, только Admin для удаления)
+  - Orders - PUT status (Admin/Manager)
+  - Attributes - все методы изменения данных (Admin для управления атрибутами, Admin/Manager для привязки к товарам)
+  - Vehicle Brands - POST, PATCH, DELETE (только Admin)
+  - Vehicle Models - POST, PATCH, DELETE (только Admin)
+  - Product Vehicles - все методы изменения связей (Admin/Manager)
+- ✅ Обновлена Swagger документация для всех защищенных методов
+- ✅ Добавлены соответствующие HTTP статусы 401 (Unauthorized) и 403 (Forbidden)
+
 ### Orders System Implementation (2025-06-18)
 
 - ✅ Backend модуль заказов:
@@ -721,3 +735,17 @@
    - Товарные предложения от менеджеров
    - Система скидок и промокодов
    - Программа лояльности
+
+### Исправление ошибок Swagger (2025-06-18)
+
+- ✅ Исправлена ошибка с отсутствующим AttributeFilterDto:
+  - Создан файл `/backend/src/products/dto/available-filters.dto.ts`
+  - Определены все необходимые DTO для endpoint `/products/filters`:
+    - AttributeFilterDto - для описания фильтров по атрибутам
+    - CategoryFilterDto - для фильтров по категориям
+    - BrandFilterDto - для фильтров по брендам
+    - PriceRangeDto - для диапазона цен
+    - AvailableFiltersDto - основной DTO ответа
+  - Обновлен экспорт в `index.ts`
+  - Добавлен тип возвращаемого значения в контроллере и сервисе
+  - Swagger документация теперь корректно отображает схему ответа

@@ -22,6 +22,9 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('product-vehicles')
 @Controller('products/:productId/vehicles')
@@ -31,10 +34,13 @@ export class ProductVehiclesController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Добавить связь товара с автомобилем' })
+  @ApiOperation({ summary: 'Добавить связь товара с автомобилем (Admin/Manager only)' })
   @ApiResponse({ status: 201, type: ProductVehicleDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   create(
     @Param('productId') productId: string,
     @Body() createProductVehicleDto: CreateProductVehicleDto,
@@ -46,10 +52,13 @@ export class ProductVehiclesController {
   }
 
   @Post('bulk')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Массовое обновление связей товара с автомобилями' })
+  @ApiOperation({ summary: 'Массовое обновление связей товара с автомобилями (Admin/Manager only)' })
   @ApiResponse({ status: 201, type: [ProductVehicleDto] })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   bulkCreate(
     @Param('productId') productId: string,
     @Body() bulkCreateProductVehicleDto: BulkCreateProductVehicleDto,
@@ -68,10 +77,13 @@ export class ProductVehiclesController {
   }
 
   @Patch(':vehicleId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Обновить связь товара с автомобилем' })
+  @ApiOperation({ summary: 'Обновить связь товара с автомобилем (Admin/Manager only)' })
   @ApiResponse({ status: 200, type: ProductVehicleDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   update(
     @Param('productId') productId: string,
     @Param('vehicleId') vehicleId: string,
@@ -85,10 +97,13 @@ export class ProductVehiclesController {
   }
 
   @Delete(':vehicleId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Удалить связь товара с автомобилем' })
+  @ApiOperation({ summary: 'Удалить связь товара с автомобилем (Admin/Manager only)' })
   @ApiResponse({ status: 204 })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   remove(
     @Param('productId') productId: string,
     @Param('vehicleId') vehicleId: string,

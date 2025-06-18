@@ -25,6 +25,9 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('vehicle-brands')
 @Controller('vehicle-brands')
@@ -32,10 +35,13 @@ export class VehicleBrandsController {
   constructor(private readonly vehicleBrandsService: VehicleBrandsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Создать новую марку автомобиля' })
+  @ApiOperation({ summary: 'Создать новую марку автомобиля (Admin only)' })
   @ApiResponse({ status: 201, type: VehicleBrandDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   create(
     @Body() createVehicleBrandDto: CreateVehicleBrandDto,
   ): Promise<VehicleBrandDto> {
@@ -82,10 +88,13 @@ export class VehicleBrandsController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Обновить марку автомобиля' })
+  @ApiOperation({ summary: 'Обновить марку автомобиля (Admin only)' })
   @ApiResponse({ status: 200, type: VehicleBrandDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   update(
     @Param('id') id: string,
     @Body() updateVehicleBrandDto: UpdateVehicleBrandDto,
@@ -94,10 +103,13 @@ export class VehicleBrandsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Удалить марку автомобиля' })
+  @ApiOperation({ summary: 'Удалить марку автомобиля (Admin only)' })
   @ApiResponse({ status: 204 })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   remove(@Param('id') id: string): Promise<void> {
     return this.vehicleBrandsService.remove(id);
   }

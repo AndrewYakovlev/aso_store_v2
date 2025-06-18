@@ -24,6 +24,10 @@ import {
   CategoryDto,
   CategoryTreeDto,
 } from './dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -31,15 +35,18 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new category (Admin only)' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a new category (Admin/Manager only)' })
   @ApiResponse({ status: 201, type: CategoryDto })
   @ApiResponse({ status: 400, description: 'Bad Request' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({
     status: 409,
     description: 'Category with this slug already exists',
   })
-  // @UseGuards(JwtAuthGuard, AdminGuard) // TODO: Add admin guard
-  // @ApiBearerAuth()
   create(@Body() createCategoryDto: CreateCategoryDto): Promise<CategoryDto> {
     return this.categoriesService.create(createCategoryDto);
   }
@@ -96,12 +103,15 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update category (Admin only)' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update category (Admin/Manager only)' })
   @ApiResponse({ status: 200, type: CategoryDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({ status: 409, description: 'Conflict' })
-  // @UseGuards(JwtAuthGuard, AdminGuard) // TODO: Add admin guard
-  // @ApiBearerAuth()
   update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -110,15 +120,18 @@ export class CategoriesController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete category (Admin only)' })
   @ApiResponse({ status: 204, description: 'Category deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Category not found' })
   @ApiResponse({
     status: 409,
     description: 'Cannot delete category with subcategories or products',
   })
-  // @UseGuards(JwtAuthGuard, AdminGuard) // TODO: Add admin guard
-  // @ApiBearerAuth()
   remove(@Param('id') id: string): Promise<void> {
     return this.categoriesService.remove(id);
   }

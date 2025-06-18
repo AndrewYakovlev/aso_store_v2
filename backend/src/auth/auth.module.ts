@@ -8,6 +8,9 @@ import { JwtService } from './services/jwt.service';
 import { AnonymousUserService } from './services/anonymous-user.service';
 import { OtpService } from './services/otp.service';
 import { JwtStrategy, AnonymousStrategy } from './strategies';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { OptionalAuthGuard } from './guards/optional-auth.guard';
 import { PrismaModule } from '../prisma/prisma.module';
 import { FavoritesModule } from '../favorites/favorites.module';
 import { CartModule } from '../cart/cart.module';
@@ -35,8 +38,11 @@ import { CartModule } from '../cart/cart.module';
     OtpService,
     JwtStrategy,
     AnonymousStrategy,
+    JwtAuthGuard,
+    RolesGuard,
+    OptionalAuthGuard,
   ],
   controllers: [AuthController],
-  exports: [AuthService, JwtService],
+  exports: [AuthService, JwtService, JwtAuthGuard, RolesGuard, OptionalAuthGuard],
 })
 export class AuthModule {}

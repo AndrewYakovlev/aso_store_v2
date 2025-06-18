@@ -24,7 +24,12 @@ import {
   ProductDto,
   ProductsFilterDto,
   PaginatedProductsDto,
+  AvailableFiltersDto,
 } from './dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('products')
 @Controller('products')
@@ -32,12 +37,17 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new product' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a new product (Admin/Manager only)' })
   @ApiResponse({
     status: 201,
     description: 'Product created successfully',
     type: ProductDto,
   })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({
     status: 409,
     description: 'Product with this SKU or slug already exists',
@@ -53,8 +63,9 @@ export class ProductsController {
   @ApiResponse({
     status: 200,
     description: 'Available filters with counts',
+    type: AvailableFiltersDto,
   })
-  async getFilters(@Query() baseFilter: ProductsFilterDto) {
+  async getFilters(@Query() baseFilter: ProductsFilterDto): Promise<AvailableFiltersDto> {
     return this.productsService.getAvailableFilters(baseFilter);
   }
 
@@ -111,12 +122,17 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update product' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update product (Admin/Manager only)' })
   @ApiResponse({
     status: 200,
     description: 'Product updated successfully',
     type: ProductDto,
   })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   @ApiResponse({
     status: 409,
@@ -130,9 +146,14 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete product' })
+  @ApiOperation({ summary: 'Delete product (Admin only)' })
   @ApiResponse({ status: 204, description: 'Product deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   async remove(@Param('id') id: string): Promise<void> {
     return this.productsService.remove(id);
