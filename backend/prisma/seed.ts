@@ -4,6 +4,8 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Clear existing data
+  await prisma.orderItem.deleteMany();
+  await prisma.order.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.cart.deleteMany();
   await prisma.favorite.deleteMany();
@@ -15,6 +17,9 @@ async function main() {
   await prisma.vehicleGeneration.deleteMany();
   await prisma.vehicleModel.deleteMany();
   await prisma.vehicleBrand.deleteMany();
+  await prisma.orderStatus.deleteMany();
+  await prisma.deliveryMethod.deleteMany();
+  await prisma.paymentMethod.deleteMany();
 
   console.log('Seeding categories...');
 
@@ -568,6 +573,124 @@ async function main() {
       { productId: brembo.id, name: 'Высота', value: '72.9 мм' },
       { productId: brembo.id, name: 'Ширина', value: '156.4 мм' },
       { productId: brembo.id, name: 'Система', value: 'ATE' },
+    ],
+  });
+
+  // Create order statuses
+  console.log('Seeding order statuses...');
+  
+  await prisma.orderStatus.createMany({
+    data: [
+      {
+        code: 'new',
+        name: 'Новый',
+        sortOrder: 1,
+        isActive: true,
+      },
+      {
+        code: 'processing',
+        name: 'В обработке',
+        sortOrder: 2,
+        isActive: true,
+      },
+      {
+        code: 'confirmed',
+        name: 'Подтвержден',
+        sortOrder: 3,
+        isActive: true,
+      },
+      {
+        code: 'shipped',
+        name: 'Отправлен',
+        sortOrder: 4,
+        isActive: true,
+      },
+      {
+        code: 'delivered',
+        name: 'Доставлен',
+        sortOrder: 5,
+        isActive: true,
+      },
+      {
+        code: 'completed',
+        name: 'Завершен',
+        sortOrder: 6,
+        isActive: true,
+      },
+      {
+        code: 'cancelled',
+        name: 'Отменен',
+        sortOrder: 7,
+        isActive: true,
+      },
+    ],
+  });
+
+  // Create delivery methods
+  console.log('Seeding delivery methods...');
+  
+  await prisma.deliveryMethod.createMany({
+    data: [
+      {
+        code: 'pickup',
+        name: 'Самовывоз',
+        description: 'Самовывоз из магазина по адресу: г. Москва, ул. Автозапчастей, д. 1',
+        price: 0,
+        isActive: true,
+      },
+      {
+        code: 'courier',
+        name: 'Курьерская доставка',
+        description: 'Доставка курьером по Москве в течение 1-2 дней',
+        price: 500,
+        isActive: true,
+      },
+      {
+        code: 'post',
+        name: 'Почта России',
+        description: 'Доставка Почтой России по всей России',
+        price: 350,
+        isActive: true,
+      },
+      {
+        code: 'cdek',
+        name: 'СДЭК',
+        description: 'Доставка транспортной компанией СДЭК',
+        price: 400,
+        isActive: true,
+      },
+    ],
+  });
+
+  // Create payment methods
+  console.log('Seeding payment methods...');
+  
+  await prisma.paymentMethod.createMany({
+    data: [
+      {
+        code: 'cash',
+        name: 'Наличными при получении',
+        description: 'Оплата наличными курьеру или в магазине',
+        isActive: true,
+      },
+      {
+        code: 'card',
+        name: 'Банковской картой',
+        description: 'Оплата банковской картой онлайн',
+        isActive: true,
+      },
+      {
+        code: 'sbp',
+        name: 'СБП (Система быстрых платежей)',
+        description: 'Оплата через систему быстрых платежей',
+        isActive: true,
+      },
+      {
+        code: 'invoice',
+        name: 'Счет для юридических лиц',
+        description: 'Выставление счета для оплаты юридическими лицами',
+        isActive: true,
+      },
     ],
   });
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddFavoriteDto, FavoriteDto } from './dto';
 
@@ -13,6 +13,11 @@ export class FavoritesService {
   ): Promise<FavoriteDto> {
     const { productId } = addFavoriteDto;
 
+    // Check if we have user identification
+    if (!userId && !anonymousUserId) {
+      throw new BadRequestException('User identification required');
+    }
+
     // Check if product exists
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
@@ -22,9 +27,12 @@ export class FavoritesService {
     }
 
     // Build where condition based on user type
-    const whereCondition = userId
-      ? { userId, productId }
-      : { anonymousUserId, productId };
+    const whereCondition: any = { productId };
+    if (userId) {
+      whereCondition.userId = userId;
+    } else {
+      whereCondition.anonymousUserId = anonymousUserId;
+    }
 
     // Check if already in favorites
     const existing = await this.prisma.favorite.findFirst({
@@ -35,9 +43,12 @@ export class FavoritesService {
     }
 
     // Create favorite
-    const data = userId
-      ? { userId, productId }
-      : { anonymousUserId: anonymousUserId!, productId };
+    const data: any = { productId };
+    if (userId) {
+      data.userId = userId;
+    } else {
+      data.anonymousUserId = anonymousUserId;
+    }
 
     const favorite = await this.prisma.favorite.create({
       data,
@@ -62,10 +73,18 @@ export class FavoritesService {
     anonymousUserId: string | undefined,
     productId: string,
   ): Promise<void> {
+    // Check if we have user identification
+    if (!userId && !anonymousUserId) {
+      throw new BadRequestException('User identification required');
+    }
+
     // Build where condition based on user type
-    const whereCondition = userId
-      ? { userId, productId }
-      : { anonymousUserId, productId };
+    const whereCondition: any = { productId };
+    if (userId) {
+      whereCondition.userId = userId;
+    } else {
+      whereCondition.anonymousUserId = anonymousUserId;
+    }
 
     const favorite = await this.prisma.favorite.findFirst({
       where: whereCondition,
@@ -84,10 +103,18 @@ export class FavoritesService {
     userId: string | undefined,
     anonymousUserId: string | undefined,
   ): Promise<FavoriteDto[]> {
+    // Check if we have user identification
+    if (!userId && !anonymousUserId) {
+      return [];
+    }
+
     // Build where condition based on user type
-    const whereCondition = userId
-      ? { userId }
-      : { anonymousUserId };
+    const whereCondition: any = {};
+    if (userId) {
+      whereCondition.userId = userId;
+    } else {
+      whereCondition.anonymousUserId = anonymousUserId;
+    }
 
     const favorites = await this.prisma.favorite.findMany({
       where: whereCondition,
@@ -114,10 +141,18 @@ export class FavoritesService {
     userId: string | undefined,
     anonymousUserId: string | undefined,
   ): Promise<string[]> {
+    // Check if we have user identification
+    if (!userId && !anonymousUserId) {
+      return [];
+    }
+
     // Build where condition based on user type
-    const whereCondition = userId
-      ? { userId }
-      : { anonymousUserId };
+    const whereCondition: any = {};
+    if (userId) {
+      whereCondition.userId = userId;
+    } else {
+      whereCondition.anonymousUserId = anonymousUserId;
+    }
 
     const favorites = await this.prisma.favorite.findMany({
       where: whereCondition,
@@ -134,10 +169,18 @@ export class FavoritesService {
     anonymousUserId: string | undefined,
     productId: string,
   ): Promise<boolean> {
+    // Check if we have user identification
+    if (!userId && !anonymousUserId) {
+      return false;
+    }
+
     // Build where condition based on user type
-    const whereCondition = userId
-      ? { userId, productId }
-      : { anonymousUserId, productId };
+    const whereCondition: any = { productId };
+    if (userId) {
+      whereCondition.userId = userId;
+    } else {
+      whereCondition.anonymousUserId = anonymousUserId;
+    }
 
     const favorite = await this.prisma.favorite.findFirst({
       where: whereCondition,

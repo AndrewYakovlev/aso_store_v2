@@ -37,10 +37,9 @@ export class FavoritesController {
   @ApiBearerAuth()
   async getFavorites(@Req() req: Request): Promise<FavoriteDto[]> {
     const user = req.user as any;
-    return this.favoritesService.getFavorites(
-      user?.id,
-      user?.anonymousUserId,
-    );
+    const userId = user?.type === 'user' ? user.id : undefined;
+    const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
+    return this.favoritesService.getFavorites(userId, anonymousUserId);
   }
 
   @Get('ids')
@@ -53,10 +52,9 @@ export class FavoritesController {
   @ApiBearerAuth()
   async getFavoriteIds(@Req() req: Request): Promise<string[]> {
     const user = req.user as any;
-    return this.favoritesService.getFavoriteIds(
-      user?.id,
-      user?.anonymousUserId,
-    );
+    const userId = user?.type === 'user' ? user.id : undefined;
+    const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
+    return this.favoritesService.getFavoriteIds(userId, anonymousUserId);
   }
 
   @Post()
@@ -74,9 +72,11 @@ export class FavoritesController {
     @Body() addFavoriteDto: AddFavoriteDto,
   ): Promise<FavoriteDto> {
     const user = req.user as any;
+    const userId = user?.type === 'user' ? user.id : undefined;
+    const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
     return this.favoritesService.addToFavorites(
-      user?.id,
-      user?.anonymousUserId,
+      userId,
+      anonymousUserId,
       addFavoriteDto,
     );
   }
@@ -92,9 +92,11 @@ export class FavoritesController {
     @Param('productId') productId: string,
   ): Promise<void> {
     const user = req.user as any;
+    const userId = user?.type === 'user' ? user.id : undefined;
+    const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
     return this.favoritesService.removeFromFavorites(
-      user?.id,
-      user?.anonymousUserId,
+      userId,
+      anonymousUserId,
       productId,
     );
   }
@@ -112,9 +114,11 @@ export class FavoritesController {
     @Param('productId') productId: string,
   ): Promise<boolean> {
     const user = req.user as any;
+    const userId = user?.type === 'user' ? user.id : undefined;
+    const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
     return this.favoritesService.isFavorite(
-      user?.id,
-      user?.anonymousUserId,
+      userId,
+      anonymousUserId,
       productId,
     );
   }

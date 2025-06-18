@@ -10,6 +10,7 @@ import { OtpService } from './services/otp.service';
 import { JwtStrategy, AnonymousStrategy } from './strategies';
 import { PrismaModule } from '../prisma/prisma.module';
 import { FavoritesModule } from '../favorites/favorites.module';
+import { CartModule } from '../cart/cart.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { FavoritesModule } from '../favorites/favorites.module';
     PassportModule,
     ConfigModule,
     forwardRef(() => FavoritesModule),
+    forwardRef(() => CartModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

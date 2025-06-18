@@ -122,6 +122,7 @@ export class ProductsService {
             category: true,
           },
         },
+        specifications: true,
       },
       orderBy: { [sortBy]: sortOrder },
       skip: (page - 1) * limit,
@@ -146,6 +147,7 @@ export class ProductsService {
             category: true,
           },
         },
+        specifications: true,
       },
     });
 
@@ -165,6 +167,7 @@ export class ProductsService {
             category: true,
           },
         },
+        specifications: true,
       },
     });
 
@@ -217,6 +220,7 @@ export class ProductsService {
             category: true,
           },
         },
+        specifications: true,
       },
     });
 
@@ -252,7 +256,7 @@ export class ProductsService {
   }
 
   private mapToDto(product: any): ProductDto {
-    return {
+    const dto: ProductDto = {
       id: product.id,
       sku: product.sku,
       name: product.name,
@@ -274,5 +278,12 @@ export class ProductsService {
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
     };
+
+    // Добавляем опциональные поля
+    if (product.specifications) {
+      dto.specifications = product.specifications;
+    }
+
+    return dto;
   }
 }

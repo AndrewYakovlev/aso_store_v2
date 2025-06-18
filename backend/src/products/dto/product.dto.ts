@@ -32,6 +32,9 @@ export class ProductDto {
   @ApiProperty({ type: [CategoryDto] })
   categories: CategoryDto[];
 
+  @ApiProperty({ type: [Object], required: false })
+  specifications?: any[];
+
   @ApiProperty()
   createdAt: Date;
 

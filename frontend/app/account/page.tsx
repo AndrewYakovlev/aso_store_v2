@@ -69,10 +69,14 @@ export default function AccountPage() {
             <CardTitle>Мои заказы</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">У вас пока нет заказов</p>
+            <p className="text-muted-foreground">История ваших заказов</p>
             <div className="pt-4">
-              <Button variant="outline" size="sm">
-                Перейти в каталог
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => router.push('/orders')}
+              >
+                Смотреть заказы
               </Button>
             </div>
           </CardContent>
@@ -83,10 +87,14 @@ export default function AccountPage() {
             <CardTitle>Избранное</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">В избранном пока пусто</p>
+            <p className="text-muted-foreground">Ваши избранные товары</p>
             <div className="pt-4">
-              <Button variant="outline" size="sm">
-                Перейти в каталог
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => router.push('/favorites')}
+              >
+                Смотреть избранное
               </Button>
             </div>
           </CardContent>

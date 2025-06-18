@@ -27,6 +27,7 @@ export async function GET() {
     // Set cookies for 365 days
     const maxAge = 365 * 24 * 60 * 60; // 365 days in seconds
     
+    // Set httpOnly cookies for security (middleware will use these)
     cookieStore.set(ANONYMOUS_TOKEN_COOKIE, response.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -37,6 +38,23 @@ export async function GET() {
 
     cookieStore.set(ANONYMOUS_USER_ID_COOKIE, response.anonymousUserId, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge,
+      path: '/',
+    });
+    
+    // Also set non-httpOnly cookies for client-side access
+    cookieStore.set(`${ANONYMOUS_TOKEN_COOKIE}_client`, response.token, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge,
+      path: '/',
+    });
+
+    cookieStore.set(`${ANONYMOUS_USER_ID_COOKIE}_client`, response.anonymousUserId, {
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge,

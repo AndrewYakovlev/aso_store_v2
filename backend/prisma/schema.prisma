@@ -27,7 +27,6 @@ model User {
   orders          Order[]
   favorites       Favorite[]
   chats           Chat[]
-  addresses       Address[]
   otpCodes        OtpCode[]
 }
 
@@ -287,7 +286,20 @@ model Order {
   paymentMethodId  String
   totalAmount      Decimal  @db.Decimal(10, 2)
   deliveryAmount   Decimal  @db.Decimal(10, 2)
-  addressId        String?
+  
+  // Contact information
+  customerName     String
+  customerPhone    String
+  customerEmail    String?
+  
+  // Delivery information
+  deliveryAddress  String?
+  deliveryCity     String?
+  deliveryStreet   String?
+  deliveryBuilding String?
+  deliveryApartment String?
+  deliveryPostalCode String?
+  
   comment          String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -297,7 +309,6 @@ model Order {
   status         OrderStatus    @relation(fields: [statusId], references: [id])
   deliveryMethod DeliveryMethod @relation(fields: [deliveryMethodId], references: [id])
   paymentMethod  PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
-  address        Address?       @relation(fields: [addressId], references: [id])
   items          OrderItem[]
 
   @@index([userId])
@@ -324,23 +335,6 @@ model OrderItem {
   @@index([offerId])
 }
 
-// Address model
-model Address {
-  id         String  @id @default(uuid())
-  userId     String
-  city       String
-  street     String
-  building   String
-  apartment  String?
-  postalCode String?
-  isDefault  Boolean @default(false)
-
-  // Relations
-  user   User    @relation(fields: [userId], references: [id])
-  orders Order[]
-
-  @@index([userId])
-}
 
 // Chat model
 model Chat {

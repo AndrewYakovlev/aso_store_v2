@@ -5,6 +5,28 @@ export interface ApiRequestOptions extends RequestInit {
   anonymousToken?: string;
 }
 
+// Helper function to get anonymous token from localStorage or cookies
+export function getAnonymousToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  
+  // First try localStorage
+  const tokenFromStorage = localStorage.getItem('anonymous_token');
+  if (tokenFromStorage) {
+    return tokenFromStorage;
+  }
+  
+  // Then try cookies
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; anonymous_token_client=`);
+  
+  if (parts.length === 2) {
+    const token = parts.pop()?.split(';').shift() || null;
+    return token;
+  }
+  
+  return null;
+}
+
 export class ApiError extends Error {
   constructor(
     public status: number,

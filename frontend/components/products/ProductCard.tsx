@@ -8,6 +8,7 @@ import { ProductImage } from './ProductImage'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { useFavoritesContext } from '@/lib/contexts/FavoritesContext'
+import { useCartContext } from '@/lib/contexts/CartContext'
 import { useState } from 'react'
 
 interface ProductCardProps {
@@ -16,7 +17,9 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { isFavorite, toggleFavorite } = useFavoritesContext()
+  const { addToCart, isInCart } = useCartContext()
   const [isToggling, setIsToggling] = useState(false)
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ru-RU', {
@@ -38,6 +41,17 @@ export function ProductCard({ product }: ProductCardProps) {
       console.error('Failed to toggle favorite:', error)
     } finally {
       setIsToggling(false)
+    }
+  }
+  
+  const handleAddToCart = async () => {
+    try {
+      setIsAddingToCart(true)
+      await addToCart({ productId: product.id, quantity: 1 })
+    } catch (error) {
+      console.error('Failed to add to cart:', error)
+    } finally {
+      setIsAddingToCart(false)
     }
   }
 
@@ -100,10 +114,11 @@ export function ProductCard({ product }: ProductCardProps) {
         <Button 
           size="sm" 
           className="flex-1"
-          disabled={!inStock}
+          disabled={!inStock || isAddingToCart}
+          onClick={handleAddToCart}
         >
           <ShoppingCartIcon className="w-4 h-4 mr-1" />
-          В корзину
+          {isInCart(product.id) ? 'В корзине' : 'В корзину'}
         </Button>
         <Button 
           size="sm" 

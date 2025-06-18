@@ -6,6 +6,7 @@ import { Logo } from './Logo'
 import { AuthModal } from './auth/AuthModal'
 import { useAuth } from '@/lib/contexts/AuthContext'
 import { useFavoritesContext } from '@/lib/contexts/FavoritesContext'
+import { useCartContext } from '@/lib/contexts/CartContext'
 import {
   Bars3Icon,
   PhoneIcon,
@@ -20,6 +21,7 @@ export function Header() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const { user, login } = useAuth()
   const { favoriteIds } = useFavoritesContext()
+  const { summary } = useCartContext()
 
   const handleAuthSuccess = (data: any) => {
     login(data.accessToken, data.refreshToken, data.user)
@@ -145,9 +147,11 @@ export function Header() {
                 <ShoppingCartIcon className="w-6 h-6" />
                 <span className="text-sm">Корзина</span>
                 {/* Счетчик товаров */}
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  0
-                </span>
+                {summary && summary.totalQuantity > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {summary.totalQuantity}
+                  </span>
+                )}
               </Link>
             </div>
           </div>
