@@ -225,7 +225,6 @@ export class ProductsService {
       }
 
       if (attributeFilters.length > 0) {
-        console.log('Attribute filters:', JSON.stringify(attributeFilters, null, 2));
         where.attributes = {
           some: {
             AND: attributeFilters,
@@ -235,7 +234,6 @@ export class ProductsService {
     }
 
     // Count total
-    console.log('Where clause:', JSON.stringify(where, null, 2));
     const total = await this.prisma.product.count({ where });
 
     // Get products
@@ -597,11 +595,11 @@ export class ProductsService {
       const { minPrice, maxPrice, ...baseFilterWithoutPrice } = baseFilterWithoutCategoriesAndBrands;
       const priceRangeFilter = await this.getPriceRange(baseFilterWithoutPrice);
       
-      // Получаем фильтры для остальных параметров с учетом ВСЕХ фильтров
-      const otherFilters = await this.getFiltersForOtherParameters(baseFilter);
+      // Для атрибутов создаем отдельные фильтры без учета каждого конкретного атрибута
+      const attributeFilters = await this.getAttributeFiltersWithoutSelf(baseFilter);
       
       return {
-        ...otherFilters,
+        attributes: attributeFilters,
         priceRange: priceRangeFilter,
         categories: categoriesAndBrandsFilters.categories,
         brands: categoriesAndBrandsFilters.brands,
@@ -621,6 +619,20 @@ export class ProductsService {
         { sku: { contains: baseFilter.search, mode: 'insensitive' } },
         { description: { contains: baseFilter.search, mode: 'insensitive' } },
       ];
+    }
+
+    // ВАЖНО: Применяем фильтр по категориям для получения правильного диапазона цен
+    if (baseFilter.categoryIds && baseFilter.categoryIds.length > 0) {
+      where.categories = {
+        some: {
+          categoryId: { in: baseFilter.categoryIds },
+        },
+      };
+    }
+
+    // Применяем фильтр по брендам
+    if (baseFilter.brandIds && baseFilter.brandIds.length > 0) {
+      where.brandId = { in: baseFilter.brandIds };
     }
 
     if (baseFilter.vehicleModelId) {
@@ -736,6 +748,15 @@ export class ProductsService {
         { sku: { contains: baseFilter.search, mode: 'insensitive' } },
         { description: { contains: baseFilter.search, mode: 'insensitive' } },
       ];
+    }
+
+    // ВАЖНО: Применяем фильтр по категориям для получения правильных брендов
+    if (baseFilter.categoryIds && baseFilter.categoryIds.length > 0) {
+      where.categories = {
+        some: {
+          categoryId: { in: baseFilter.categoryIds },
+        },
+      };
     }
 
     if (baseFilter.minPrice !== undefined || baseFilter.maxPrice !== undefined) {
@@ -1069,6 +1090,53 @@ export class ProductsService {
       ...brand,
       count: brandMap.get(brand.id) || 0,
     }));
+  }
+
+  private async getAttributeFiltersWithoutSelf(baseFilter: ProductsFilterDto) {
+    // Получаем все атрибуты, которые используются в фильтрах
+    const filterAttributeIds = baseFilter.attributes ? Object.keys(baseFilter.attributes) : [];
+    
+    // Для каждого атрибута получаем доступные значения без учета его собственного фильтра
+    const attributeFilters: any[] = [];
+    
+    // Сначала получаем все атрибуты с учетом всех остальных фильтров
+    const { attributes: currentAttributes, ...filterWithoutAttributes } = baseFilter;
+    const allAttributesFilter = await this.getFiltersForOtherParameters(filterWithoutAttributes);
+    
+    // Если есть текущие фильтры по атрибутам, обрабатываем каждый отдельно
+    if (currentAttributes && Object.keys(currentAttributes).length > 0) {
+      for (const [attributeId, _] of Object.entries(currentAttributes)) {
+        // Создаем фильтр без текущего атрибута
+        const { [attributeId]: _, ...otherAttributes } = currentAttributes;
+        const filterWithoutCurrentAttribute = {
+          ...baseFilter,
+          attributes: otherAttributes,
+        };
+        
+        // Получаем доступные значения для этого атрибута
+        const attrFilter = await this.getFiltersForOtherParameters(filterWithoutCurrentAttribute);
+        const foundAttribute = attrFilter.attributes?.find((a: any) => a.id === attributeId);
+        
+        if (foundAttribute) {
+          attributeFilters.push(foundAttribute);
+        }
+      }
+      
+      // Добавляем атрибуты, которые не используются в фильтрах
+      if (allAttributesFilter.attributes) {
+        for (const attr of allAttributesFilter.attributes) {
+          if (!filterAttributeIds.includes(attr.id)) {
+            attributeFilters.push(attr);
+          }
+        }
+      }
+    } else {
+      // Если нет фильтров по атрибутам, возвращаем все доступные
+      return allAttributesFilter.attributes || [];
+    }
+    
+    // Сортируем атрибуты для консистентности
+    return attributeFilters.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   private async getAttributesWithCounts(products: any[]) {
