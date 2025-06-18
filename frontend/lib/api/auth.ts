@@ -34,6 +34,7 @@ export interface UserProfile {
   firstName?: string;
   lastName?: string;
   middleName?: string;
+  role: 'CUSTOMER' | 'MANAGER' | 'ADMIN';
   isPhoneVerified: boolean;
   createdAt: string;
 }

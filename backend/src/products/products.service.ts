@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import {
@@ -39,7 +43,7 @@ export class ProductsService {
         images: images || [],
         ...(brandId && { brand: { connect: { id: brandId } } }),
         categories: {
-          create: categoryIds.map(categoryId => ({
+          create: categoryIds.map((categoryId) => ({
             category: { connect: { id: categoryId } },
           })),
         },
@@ -124,25 +128,19 @@ export class ProductsService {
     // Vehicle filter
     if (vehicleModelId) {
       const vehicleFilter: any = { vehicleModelId };
-      
+
       // If year is specified, filter by year range
       if (vehicleYear) {
         vehicleFilter.AND = [
           {
-            OR: [
-              { yearFrom: null },
-              { yearFrom: { lte: vehicleYear } },
-            ],
+            OR: [{ yearFrom: null }, { yearFrom: { lte: vehicleYear } }],
           },
           {
-            OR: [
-              { yearTo: null },
-              { yearTo: { gte: vehicleYear } },
-            ],
+            OR: [{ yearTo: null }, { yearTo: { gte: vehicleYear } }],
           },
         ];
       }
-      
+
       where.vehicles = {
         some: vehicleFilter,
       };
@@ -151,7 +149,7 @@ export class ProductsService {
     // Attributes filter
     if (attributes && Object.keys(attributes).length > 0) {
       const attributeFilters: any[] = [];
-      
+
       for (const [attributeId, filterData] of Object.entries(attributes)) {
         const attribute = await this.prisma.attribute.findUnique({
           where: { id: attributeId },
@@ -169,10 +167,13 @@ export class ProductsService {
             let optionValues: string[] = [];
             if (Array.isArray(filterData.values)) {
               optionValues = filterData.values as string[];
-            } else if (typeof filterData.values === 'string' && filterData.values) {
+            } else if (
+              typeof filterData.values === 'string' &&
+              filterData.values
+            ) {
               optionValues = [filterData.values];
             }
-            
+
             if (optionValues.length > 0) {
               attributeCondition = {
                 attributeId,
@@ -182,10 +183,13 @@ export class ProductsService {
               };
             }
             break;
-          
+
           case 'NUMBER':
             // Для NUMBER типа фильтруем по диапазону
-            if (Array.isArray(filterData.values) && filterData.values.length === 2) {
+            if (
+              Array.isArray(filterData.values) &&
+              filterData.values.length === 2
+            ) {
               const [min, max] = filterData.values as number[];
               attributeCondition = {
                 attributeId,
@@ -196,7 +200,7 @@ export class ProductsService {
               };
             }
             break;
-          
+
           case 'TEXT':
             // Для TEXT типа фильтруем по подстроке
             if (typeof filterData.values === 'string' && filterData.values) {
@@ -209,7 +213,7 @@ export class ProductsService {
               };
             }
             break;
-          
+
           case 'COLOR':
             // Для COLOR типа точное совпадение
             if (typeof filterData.values === 'string' && filterData.values) {
@@ -274,7 +278,7 @@ export class ProductsService {
     });
 
     return {
-      items: products.map(product => this.mapToDto(product)),
+      items: products.map((product) => this.mapToDto(product)),
       total,
       page,
       limit,
@@ -360,7 +364,10 @@ export class ProductsService {
     return this.mapToDto(product);
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto): Promise<ProductDto> {
+  async update(
+    id: string,
+    updateProductDto: UpdateProductDto,
+  ): Promise<ProductDto> {
     const { categoryIds, images, brandId, ...productData } = updateProductDto;
 
     // Check if product exists
@@ -387,13 +394,13 @@ export class ProductsService {
       data: {
         ...productData,
         ...(images !== undefined && { images }),
-        ...(brandId !== undefined && { 
-          brand: brandId ? { connect: { id: brandId } } : { disconnect: true } 
+        ...(brandId !== undefined && {
+          brand: brandId ? { connect: { id: brandId } } : { disconnect: true },
         }),
         ...(categoryIds !== undefined && {
           categories: {
             deleteMany: {},
-            create: categoryIds.map(categoryId => ({
+            create: categoryIds.map((categoryId) => ({
               category: { connect: { id: categoryId } },
             })),
           },
@@ -444,7 +451,10 @@ export class ProductsService {
     });
   }
 
-  async findByCategorySlug(categorySlug: string, filter: ProductsFilterDto): Promise<PaginatedProductsDto> {
+  async findByCategorySlug(
+    categorySlug: string,
+    filter: ProductsFilterDto,
+  ): Promise<PaginatedProductsDto> {
     const category = await this.prisma.category.findUnique({
       where: { slug: categorySlug },
     });
@@ -455,7 +465,7 @@ export class ProductsService {
 
     // Add category filter
     filter.categoryIds = [category.id];
-    
+
     return this.findAll(filter);
   }
 
@@ -471,15 +481,16 @@ export class ProductsService {
       isActive: product.isActive,
       images: product.images as string[],
       brandId: product.brandId,
-      categories: product.categories?.map((pc: any) => ({
-        id: pc.category.id,
-        name: pc.category.name,
-        slug: pc.category.slug,
-        description: pc.category.description,
-        parentId: pc.category.parentId,
-        isActive: pc.category.isActive,
-        sortOrder: pc.category.sortOrder,
-      })) || [],
+      categories:
+        product.categories?.map((pc: any) => ({
+          id: pc.category.id,
+          name: pc.category.name,
+          slug: pc.category.slug,
+          description: pc.category.description,
+          parentId: pc.category.parentId,
+          isActive: pc.category.isActive,
+          sortOrder: pc.category.sortOrder,
+        })) || [],
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
     };
@@ -529,7 +540,8 @@ export class ProductsService {
         if (pa.textValue !== null) attrValue.textValue = pa.textValue;
         if (pa.numberValue !== null) attrValue.numberValue = pa.numberValue;
         if (pa.colorValue !== null) attrValue.colorValue = pa.colorValue;
-        if (pa.optionIds && pa.optionIds.length > 0) attrValue.optionIds = pa.optionIds;
+        if (pa.optionIds && pa.optionIds.length > 0)
+          attrValue.optionIds = pa.optionIds;
 
         return attrValue;
       });
@@ -547,36 +559,40 @@ export class ProductsService {
         isUniversal: pv.isUniversal,
         createdAt: pv.createdAt,
         updatedAt: pv.updatedAt,
-        vehicleModel: pv.vehicleModel ? {
-          id: pv.vehicleModel.id,
-          externalId: pv.vehicleModel.externalId,
-          brandId: pv.vehicleModel.brandId,
-          name: pv.vehicleModel.name,
-          nameCyrillic: pv.vehicleModel.nameCyrillic,
-          slug: pv.vehicleModel.slug,
-          class: pv.vehicleModel.class,
-          yearFrom: pv.vehicleModel.yearFrom,
-          yearTo: pv.vehicleModel.yearTo,
-          image: pv.vehicleModel.image,
-          isActive: pv.vehicleModel.isActive,
-          sortOrder: pv.vehicleModel.sortOrder,
-          createdAt: pv.vehicleModel.createdAt,
-          updatedAt: pv.vehicleModel.updatedAt,
-          brand: pv.vehicleModel.brand ? {
-            id: pv.vehicleModel.brand.id,
-            externalId: pv.vehicleModel.brand.externalId,
-            name: pv.vehicleModel.brand.name,
-            nameCyrillic: pv.vehicleModel.brand.nameCyrillic,
-            slug: pv.vehicleModel.brand.slug,
-            country: pv.vehicleModel.brand.country,
-            logo: pv.vehicleModel.brand.logo,
-            popular: pv.vehicleModel.brand.popular,
-            isActive: pv.vehicleModel.brand.isActive,
-            sortOrder: pv.vehicleModel.brand.sortOrder,
-            createdAt: pv.vehicleModel.brand.createdAt,
-            updatedAt: pv.vehicleModel.brand.updatedAt,
-          } : undefined,
-        } : undefined,
+        vehicleModel: pv.vehicleModel
+          ? {
+              id: pv.vehicleModel.id,
+              externalId: pv.vehicleModel.externalId,
+              brandId: pv.vehicleModel.brandId,
+              name: pv.vehicleModel.name,
+              nameCyrillic: pv.vehicleModel.nameCyrillic,
+              slug: pv.vehicleModel.slug,
+              class: pv.vehicleModel.class,
+              yearFrom: pv.vehicleModel.yearFrom,
+              yearTo: pv.vehicleModel.yearTo,
+              image: pv.vehicleModel.image,
+              isActive: pv.vehicleModel.isActive,
+              sortOrder: pv.vehicleModel.sortOrder,
+              createdAt: pv.vehicleModel.createdAt,
+              updatedAt: pv.vehicleModel.updatedAt,
+              brand: pv.vehicleModel.brand
+                ? {
+                    id: pv.vehicleModel.brand.id,
+                    externalId: pv.vehicleModel.brand.externalId,
+                    name: pv.vehicleModel.brand.name,
+                    nameCyrillic: pv.vehicleModel.brand.nameCyrillic,
+                    slug: pv.vehicleModel.brand.slug,
+                    country: pv.vehicleModel.brand.country,
+                    logo: pv.vehicleModel.brand.logo,
+                    popular: pv.vehicleModel.brand.popular,
+                    isActive: pv.vehicleModel.brand.isActive,
+                    sortOrder: pv.vehicleModel.brand.sortOrder,
+                    createdAt: pv.vehicleModel.brand.createdAt,
+                    updatedAt: pv.vehicleModel.brand.updatedAt,
+                  }
+                : undefined,
+            }
+          : undefined,
       }));
     }
 
@@ -586,28 +602,30 @@ export class ProductsService {
   async getAvailableFilters(baseFilter: ProductsFilterDto) {
     try {
       // console.log('Getting available filters with base filter:', JSON.stringify(baseFilter, null, 2));
-      
+
       // Создаем копию фильтра без брендов для получения всех доступных брендов
       const { brandIds, ...baseFilterWithoutBrands } = baseFilter;
-      
+
       // Создаем копию фильтра без категорий для получения всех доступных категорий
       const { categoryIds, ...baseFilterWithoutCategories } = baseFilter;
-      
+
       // Получаем фильтры для категорий и брендов без учета их собственных фильтров
-      const categoriesAndBrandsFilters = await this.getFiltersForCategoriesAndBrands({
-        ...baseFilterWithoutBrands,
-        ...baseFilterWithoutCategories,
-        // Но обязательно сохраняем текущие категории для правильной фильтрации брендов
-        categoryIds: baseFilter.categoryIds,
-      });
-      
+      const categoriesAndBrandsFilters =
+        await this.getFiltersForCategoriesAndBrands({
+          ...baseFilterWithoutBrands,
+          ...baseFilterWithoutCategories,
+          // Но обязательно сохраняем текущие категории для правильной фильтрации брендов
+          categoryIds: baseFilter.categoryIds,
+        });
+
       // Для диапазона цен используем фильтр без ограничений по цене, но с категориями
       const { minPrice, maxPrice, ...baseFilterWithoutPrice } = baseFilter;
       const priceRangeFilter = await this.getPriceRange(baseFilterWithoutPrice);
-      
+
       // Для атрибутов создаем отдельные фильтры без учета каждого конкретного атрибута
-      const attributeFilters = await this.getAttributeFiltersWithoutSelf(baseFilter);
-      
+      const attributeFilters =
+        await this.getAttributeFiltersWithoutSelf(baseFilter);
+
       return {
         attributes: attributeFilters,
         priceRange: priceRangeFilter,
@@ -622,7 +640,7 @@ export class ProductsService {
 
   private async getPriceRange(baseFilter: ProductsFilterDto) {
     const where: Prisma.ProductWhereInput = {};
-    
+
     if (baseFilter.search) {
       where.OR = [
         { name: { contains: baseFilter.search, mode: 'insensitive' } },
@@ -660,10 +678,15 @@ export class ProductsService {
     }
 
     // Обработка фильтров по атрибутам
-    if (baseFilter.attributes && Object.keys(baseFilter.attributes).length > 0) {
+    if (
+      baseFilter.attributes &&
+      Object.keys(baseFilter.attributes).length > 0
+    ) {
       const attributeFilters: any[] = [];
-      
-      for (const [attributeId, filterData] of Object.entries(baseFilter.attributes)) {
+
+      for (const [attributeId, filterData] of Object.entries(
+        baseFilter.attributes,
+      )) {
         const attribute = await this.prisma.attribute.findUnique({
           where: { id: attributeId },
         });
@@ -681,19 +704,25 @@ export class ProductsService {
             let optionValues: string[] = [];
             if (Array.isArray(filterData.values)) {
               optionValues = filterData.values as string[];
-            } else if (typeof filterData.values === 'string' && filterData.values) {
+            } else if (
+              typeof filterData.values === 'string' &&
+              filterData.values
+            ) {
               optionValues = [filterData.values];
             }
-            
+
             if (optionValues.length > 0) {
               attributeCondition.optionIds = {
                 hasSome: optionValues,
               };
             }
             break;
-          
+
           case 'NUMBER':
-            if (Array.isArray(filterData.values) && filterData.values.length === 2) {
+            if (
+              Array.isArray(filterData.values) &&
+              filterData.values.length === 2
+            ) {
               const [min, max] = filterData.values as number[];
               attributeCondition.numberValue = {
                 gte: min,
@@ -701,7 +730,7 @@ export class ProductsService {
               };
             }
             break;
-          
+
           case 'TEXT':
             if (typeof filterData.values === 'string' && filterData.values) {
               attributeCondition.textValue = {
@@ -710,7 +739,7 @@ export class ProductsService {
               };
             }
             break;
-          
+
           case 'COLOR':
             if (typeof filterData.values === 'string' && filterData.values) {
               attributeCondition.colorValue = filterData.values;
@@ -749,9 +778,11 @@ export class ProductsService {
     };
   }
 
-  private async getFiltersForCategoriesAndBrands(baseFilter: ProductsFilterDto) {
+  private async getFiltersForCategoriesAndBrands(
+    baseFilter: ProductsFilterDto,
+  ) {
     const where: Prisma.ProductWhereInput = {};
-    
+
     if (baseFilter.search) {
       where.OR = [
         { name: { contains: baseFilter.search, mode: 'insensitive' } },
@@ -769,7 +800,10 @@ export class ProductsService {
       };
     }
 
-    if (baseFilter.minPrice !== undefined || baseFilter.maxPrice !== undefined) {
+    if (
+      baseFilter.minPrice !== undefined ||
+      baseFilter.maxPrice !== undefined
+    ) {
       where.price = {};
       if (baseFilter.minPrice !== undefined) {
         where.price.gte = baseFilter.minPrice;
@@ -794,10 +828,15 @@ export class ProductsService {
     }
 
     // Обработка фильтров по атрибутам
-    if (baseFilter.attributes && Object.keys(baseFilter.attributes).length > 0) {
+    if (
+      baseFilter.attributes &&
+      Object.keys(baseFilter.attributes).length > 0
+    ) {
       const attributeFilters: any[] = [];
-      
-      for (const [attributeId, filterData] of Object.entries(baseFilter.attributes)) {
+
+      for (const [attributeId, filterData] of Object.entries(
+        baseFilter.attributes,
+      )) {
         const attribute = await this.prisma.attribute.findUnique({
           where: { id: attributeId },
         });
@@ -815,19 +854,25 @@ export class ProductsService {
             let optionValues: string[] = [];
             if (Array.isArray(filterData.values)) {
               optionValues = filterData.values as string[];
-            } else if (typeof filterData.values === 'string' && filterData.values) {
+            } else if (
+              typeof filterData.values === 'string' &&
+              filterData.values
+            ) {
               optionValues = [filterData.values];
             }
-            
+
             if (optionValues.length > 0) {
               attributeCondition.optionIds = {
                 hasSome: optionValues,
               };
             }
             break;
-          
+
           case 'NUMBER':
-            if (Array.isArray(filterData.values) && filterData.values.length === 2) {
+            if (
+              Array.isArray(filterData.values) &&
+              filterData.values.length === 2
+            ) {
               const [min, max] = filterData.values as number[];
               attributeCondition.numberValue = {
                 gte: min,
@@ -835,7 +880,7 @@ export class ProductsService {
               };
             }
             break;
-          
+
           case 'TEXT':
             if (typeof filterData.values === 'string' && filterData.values) {
               attributeCondition.textValue = {
@@ -844,7 +889,7 @@ export class ProductsService {
               };
             }
             break;
-          
+
           case 'COLOR':
             if (typeof filterData.values === 'string' && filterData.values) {
               attributeCondition.colorValue = filterData.values;
@@ -889,7 +934,7 @@ export class ProductsService {
 
   private async getFiltersForOtherParameters(baseFilter: ProductsFilterDto) {
     const where: Prisma.ProductWhereInput = {};
-    
+
     // Применяем ВСЕ фильтры включая категории и бренды
     if (baseFilter.search) {
       where.OR = [
@@ -911,7 +956,10 @@ export class ProductsService {
       where.brandId = { in: baseFilter.brandIds };
     }
 
-    if (baseFilter.minPrice !== undefined || baseFilter.maxPrice !== undefined) {
+    if (
+      baseFilter.minPrice !== undefined ||
+      baseFilter.maxPrice !== undefined
+    ) {
       where.price = {};
       if (baseFilter.minPrice !== undefined) {
         where.price.gte = baseFilter.minPrice;
@@ -936,10 +984,15 @@ export class ProductsService {
     }
 
     // Обработка фильтров по атрибутам
-    if (baseFilter.attributes && Object.keys(baseFilter.attributes).length > 0) {
+    if (
+      baseFilter.attributes &&
+      Object.keys(baseFilter.attributes).length > 0
+    ) {
       const attributeFilters: any[] = [];
-      
-      for (const [attributeId, filterData] of Object.entries(baseFilter.attributes)) {
+
+      for (const [attributeId, filterData] of Object.entries(
+        baseFilter.attributes,
+      )) {
         const attribute = await this.prisma.attribute.findUnique({
           where: { id: attributeId },
         });
@@ -957,19 +1010,25 @@ export class ProductsService {
             let optionValues: string[] = [];
             if (Array.isArray(filterData.values)) {
               optionValues = filterData.values as string[];
-            } else if (typeof filterData.values === 'string' && filterData.values) {
+            } else if (
+              typeof filterData.values === 'string' &&
+              filterData.values
+            ) {
               optionValues = [filterData.values];
             }
-            
+
             if (optionValues.length > 0) {
               attributeCondition.optionIds = {
                 hasSome: optionValues,
               };
             }
             break;
-          
+
           case 'NUMBER':
-            if (Array.isArray(filterData.values) && filterData.values.length === 2) {
+            if (
+              Array.isArray(filterData.values) &&
+              filterData.values.length === 2
+            ) {
               const [min, max] = filterData.values as number[];
               attributeCondition.numberValue = {
                 gte: min,
@@ -977,7 +1036,7 @@ export class ProductsService {
               };
             }
             break;
-          
+
           case 'TEXT':
             if (typeof filterData.values === 'string' && filterData.values) {
               attributeCondition.textValue = {
@@ -986,7 +1045,7 @@ export class ProductsService {
               };
             }
             break;
-          
+
           case 'COLOR':
             if (typeof filterData.values === 'string' && filterData.values) {
               attributeCondition.colorValue = filterData.values;
@@ -1049,8 +1108,8 @@ export class ProductsService {
 
   private async getCategoriesWithCounts(products: any[]) {
     const categoryMap = new Map<string, number>();
-    
-    products.forEach(product => {
+
+    products.forEach((product) => {
       product.categories.forEach((pc: any) => {
         const count = categoryMap.get(pc.categoryId) || 0;
         categoryMap.set(pc.categoryId, count + 1);
@@ -1069,7 +1128,7 @@ export class ProductsService {
       },
     });
 
-    return categories.map(category => ({
+    return categories.map((category) => ({
       ...category,
       count: categoryMap.get(category.id) || 0,
     }));
@@ -1077,8 +1136,8 @@ export class ProductsService {
 
   private async getBrandsWithCounts(products: any[]) {
     const brandMap = new Map<string, number>();
-    
-    products.forEach(product => {
+
+    products.forEach((product) => {
       if (product.brandId) {
         const count = brandMap.get(product.brandId) || 0;
         brandMap.set(product.brandId, count + 1);
@@ -1097,7 +1156,7 @@ export class ProductsService {
       },
     });
 
-    return brands.map(brand => ({
+    return brands.map((brand) => ({
       ...brand,
       count: brandMap.get(brand.id) || 0,
     }));
@@ -1105,7 +1164,7 @@ export class ProductsService {
 
   private async getAttributeFiltersWithoutSelf(baseFilter: ProductsFilterDto) {
     const where: Prisma.ProductWhereInput = {};
-    
+
     // Применяем все фильтры КРОМЕ атрибутов
     if (baseFilter.search) {
       where.OR = [
@@ -1127,7 +1186,10 @@ export class ProductsService {
       where.brandId = { in: baseFilter.brandIds };
     }
 
-    if (baseFilter.minPrice !== undefined || baseFilter.maxPrice !== undefined) {
+    if (
+      baseFilter.minPrice !== undefined ||
+      baseFilter.maxPrice !== undefined
+    ) {
       where.price = {};
       if (baseFilter.minPrice !== undefined) {
         where.price.gte = baseFilter.minPrice;
@@ -1191,11 +1253,11 @@ export class ProductsService {
 
   private async getAttributesWithCounts(products: any[]) {
     const attributeMap = new Map<string, any>();
-    
-    products.forEach(product => {
+
+    products.forEach((product) => {
       product.attributes.forEach((pa: any) => {
         if (!pa.attribute.isFilterable) return;
-        
+
         let attrData = attributeMap.get(pa.attributeId);
         if (!attrData) {
           attrData = {
@@ -1213,7 +1275,7 @@ export class ProductsService {
               attrData.values.set(optionId, count + 1);
             });
             break;
-          
+
           case 'NUMBER':
             if (pa.numberValue !== null) {
               if (!attrData.min || pa.numberValue < attrData.min) {
@@ -1224,7 +1286,7 @@ export class ProductsService {
               }
             }
             break;
-          
+
           case 'COLOR':
             if (pa.colorValue) {
               const count = attrData.values.get(pa.colorValue) || 0;
@@ -1236,7 +1298,7 @@ export class ProductsService {
     });
 
     const result: any[] = [];
-    
+
     for (const [attributeId, attrData] of attributeMap) {
       const attribute: any = {
         id: attrData.id,
@@ -1256,19 +1318,21 @@ export class ProductsService {
               count: attrData.values.get(opt.id),
             }));
           break;
-        
+
         case 'NUMBER':
           attribute.range = {
             min: attrData.min || 0,
             max: attrData.max || 0,
           };
           break;
-        
+
         case 'COLOR':
-          attribute.colors = Array.from(attrData.values.entries()).map(([color, count]) => ({
-            value: color,
-            count,
-          }));
+          attribute.colors = Array.from(attrData.values.entries()).map(
+            ([color, count]) => ({
+              value: color,
+              count,
+            }),
+          );
           break;
       }
 

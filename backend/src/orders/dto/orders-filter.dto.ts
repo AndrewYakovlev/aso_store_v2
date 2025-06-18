@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsOptional, IsUUID, IsInt, Min, IsString, IsIn } from 'class-validator';
+import {
+  IsOptional,
+  IsUUID,
+  IsInt,
+  Min,
+  IsString,
+  IsIn,
+} from 'class-validator';
 
 export class OrdersFilterDto {
   @ApiProperty({ description: 'ID статуса заказа', required: false })
@@ -20,29 +27,33 @@ export class OrdersFilterDto {
   @IsOptional()
   page?: number = 1;
 
-  @ApiProperty({ description: 'Количество на странице', required: false, default: 20 })
+  @ApiProperty({
+    description: 'Количество на странице',
+    required: false,
+    default: 20,
+  })
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @IsOptional()
   limit?: number = 20;
 
-  @ApiProperty({ 
-    description: 'Поле для сортировки', 
-    required: false, 
+  @ApiProperty({
+    description: 'Поле для сортировки',
+    required: false,
     default: 'createdAt',
-    enum: ['createdAt', 'orderNumber', 'totalAmount'] 
+    enum: ['createdAt', 'orderNumber', 'totalAmount'],
   })
   @IsString()
   @IsIn(['createdAt', 'orderNumber', 'totalAmount'])
   @IsOptional()
   sortBy?: string = 'createdAt';
 
-  @ApiProperty({ 
-    description: 'Порядок сортировки', 
-    required: false, 
+  @ApiProperty({
+    description: 'Порядок сортировки',
+    required: false,
     default: 'desc',
-    enum: ['asc', 'desc'] 
+    enum: ['asc', 'desc'],
   })
   @IsString()
   @IsIn(['asc', 'desc'])

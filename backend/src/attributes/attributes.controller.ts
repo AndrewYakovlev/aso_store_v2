@@ -9,12 +9,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { AttributesService } from './attributes.service';
 import {
   AttributeDto,
@@ -40,7 +35,9 @@ export class AttributesController {
     type: AttributeDto,
   })
   @ApiResponse({ status: 400, description: 'Некорректные данные' })
-  create(@Body() createAttributeDto: CreateAttributeDto): Promise<AttributeDto> {
+  create(
+    @Body() createAttributeDto: CreateAttributeDto,
+  ): Promise<AttributeDto> {
     return this.attributesService.create(createAttributeDto);
   }
 
@@ -149,7 +146,10 @@ export class AttributesController {
     @Param('categoryId') categoryId: string,
     @Param('attributeId') attributeId: string,
   ): Promise<void> {
-    return this.attributesService.removeAttributeFromCategory(categoryId, attributeId);
+    return this.attributesService.removeAttributeFromCategory(
+      categoryId,
+      attributeId,
+    );
   }
 
   // Product attributes endpoints
@@ -210,6 +210,9 @@ export class AttributesController {
     @Param('productId') productId: string,
     @Param('attributeId') attributeId: string,
   ): Promise<void> {
-    return this.attributesService.removeProductAttribute(productId, attributeId);
+    return this.attributesService.removeProductAttribute(
+      productId,
+      attributeId,
+    );
   }
 }

@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from './services/jwt.service';
 import { AnonymousUserService } from './services/anonymous-user.service';
@@ -21,7 +26,8 @@ export class AuthService {
   ) {}
 
   async getAnonymousToken() {
-    const { user, token } = await this.anonymousUserService.createAnonymousUser();
+    const { user, token } =
+      await this.anonymousUserService.createAnonymousUser();
     return {
       token,
       anonymousUserId: user.id,
@@ -82,14 +88,18 @@ export class AuthService {
 
     // If anonymous token provided, merge data
     if (anonymousToken) {
-      const anonymousUser = await this.anonymousUserService.findByToken(anonymousToken);
+      const anonymousUser =
+        await this.anonymousUserService.findByToken(anonymousToken);
       if (anonymousUser && !anonymousUser.userId) {
         // Merge favorites
         await this.favoritesService.mergeFavorites(anonymousUser.id, user.id);
         // Merge cart
         await this.cartService.mergeCarts(anonymousUser.id, user.id);
         // Merge anonymous user data
-        await this.anonymousUserService.mergeWithUser(anonymousUser.id, user.id);
+        await this.anonymousUserService.mergeWithUser(
+          anonymousUser.id,
+          user.id,
+        );
       }
     }
 
@@ -100,10 +110,8 @@ export class AuthService {
     });
 
     // Generate tokens
-    const { accessToken, refreshToken } = await this.jwtService.generateUserTokens(
-      user.id,
-      user.phone,
-    );
+    const { accessToken, refreshToken } =
+      await this.jwtService.generateUserTokens(user.id, user.phone);
 
     return {
       accessToken,
@@ -121,7 +129,7 @@ export class AuthService {
   async refreshTokens(refreshToken: string): Promise<AuthTokensDto> {
     try {
       const payload = await this.jwtService.verifyRefreshToken(refreshToken);
-      
+
       if (payload.type !== 'user') {
         throw new UnauthorizedException('Invalid token type');
       }
@@ -134,7 +142,10 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
 
-      const tokens = await this.jwtService.generateUserTokens(user.id, user.phone);
+      const tokens = await this.jwtService.generateUserTokens(
+        user.id,
+        user.phone,
+      );
 
       return {
         ...tokens,
@@ -166,16 +177,20 @@ export class AuthService {
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
       middleName: user.middleName || undefined,
+      role: user.role,
       isPhoneVerified: user.isPhoneVerified,
       createdAt: user.createdAt,
     };
   }
 
-  async updateProfile(userId: string, data: {
-    firstName?: string;
-    lastName?: string;
-    middleName?: string;
-  }): Promise<UserProfileDto> {
+  async updateProfile(
+    userId: string,
+    data: {
+      firstName?: string;
+      lastName?: string;
+      middleName?: string;
+    },
+  ): Promise<UserProfileDto> {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data,

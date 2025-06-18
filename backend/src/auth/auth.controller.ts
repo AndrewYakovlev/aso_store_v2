@@ -1,12 +1,10 @@
+import { Controller, Post, Get, Put, Body, UseGuards } from '@nestjs/common';
 import {
-  Controller,
-  Post,
-  Get,
-  Put,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import {
   AnonymousTokenResponseDto,
@@ -67,7 +65,9 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, type: UserProfileDto })
-  async getProfile(@CurrentUser() user: CurrentUserData): Promise<UserProfileDto> {
+  async getProfile(
+    @CurrentUser() user: CurrentUserData,
+  ): Promise<UserProfileDto> {
     return this.authService.getProfile(user.id);
   }
 

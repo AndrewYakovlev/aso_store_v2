@@ -10,15 +10,20 @@ import {
   UseGuards,
   ParseBoolPipe,
 } from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse, 
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
-import { CreateCategoryDto, UpdateCategoryDto, CategoryDto, CategoryTreeDto } from './dto';
+import {
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  CategoryDto,
+  CategoryTreeDto,
+} from './dto';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -29,7 +34,10 @@ export class CategoriesController {
   @ApiOperation({ summary: 'Create a new category (Admin only)' })
   @ApiResponse({ status: 201, type: CategoryDto })
   @ApiResponse({ status: 400, description: 'Bad Request' })
-  @ApiResponse({ status: 409, description: 'Category with this slug already exists' })
+  @ApiResponse({
+    status: 409,
+    description: 'Category with this slug already exists',
+  })
   // @UseGuards(JwtAuthGuard, AdminGuard) // TODO: Add admin guard
   // @ApiBearerAuth()
   create(@Body() createCategoryDto: CreateCategoryDto): Promise<CategoryDto> {
@@ -42,8 +50,10 @@ export class CategoriesController {
   @ApiQuery({ name: 'includeProductCount', required: false, type: Boolean })
   @ApiResponse({ status: 200, type: [CategoryDto] })
   findAll(
-    @Query('onlyActive', new ParseBoolPipe({ optional: true })) onlyActive?: boolean,
-    @Query('includeProductCount', new ParseBoolPipe({ optional: true })) includeProductCount?: boolean,
+    @Query('onlyActive', new ParseBoolPipe({ optional: true }))
+    onlyActive?: boolean,
+    @Query('includeProductCount', new ParseBoolPipe({ optional: true }))
+    includeProductCount?: boolean,
   ): Promise<CategoryDto[]> {
     return this.categoriesService.findAll(
       onlyActive ?? true,
@@ -56,7 +66,8 @@ export class CategoriesController {
   @ApiQuery({ name: 'onlyActive', required: false, type: Boolean })
   @ApiResponse({ status: 200, type: [CategoryTreeDto] })
   findTree(
-    @Query('onlyActive', new ParseBoolPipe({ optional: true })) onlyActive?: boolean,
+    @Query('onlyActive', new ParseBoolPipe({ optional: true }))
+    onlyActive?: boolean,
   ): Promise<CategoryTreeDto[]> {
     return this.categoriesService.findTree(onlyActive ?? true);
   }
@@ -102,7 +113,10 @@ export class CategoriesController {
   @ApiOperation({ summary: 'Delete category (Admin only)' })
   @ApiResponse({ status: 204, description: 'Category deleted' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  @ApiResponse({ status: 409, description: 'Cannot delete category with subcategories or products' })
+  @ApiResponse({
+    status: 409,
+    description: 'Cannot delete category with subcategories or products',
+  })
   // @UseGuards(JwtAuthGuard, AdminGuard) // TODO: Add admin guard
   // @ApiBearerAuth()
   remove(@Param('id') id: string): Promise<void> {

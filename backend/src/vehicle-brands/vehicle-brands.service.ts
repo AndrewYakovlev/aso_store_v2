@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import {
@@ -14,13 +18,17 @@ import {
 export class VehicleBrandsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createVehicleBrandDto: CreateVehicleBrandDto): Promise<VehicleBrandDto> {
+  async create(
+    createVehicleBrandDto: CreateVehicleBrandDto,
+  ): Promise<VehicleBrandDto> {
     // Check if external ID already exists
     const existingByExternalId = await this.prisma.vehicleBrand.findUnique({
       where: { externalId: createVehicleBrandDto.externalId },
     });
     if (existingByExternalId) {
-      throw new ConflictException('Vehicle brand with this external ID already exists');
+      throw new ConflictException(
+        'Vehicle brand with this external ID already exists',
+      );
     }
 
     // Check if slug already exists
@@ -28,7 +36,9 @@ export class VehicleBrandsService {
       where: { slug: createVehicleBrandDto.slug },
     });
     if (existingBySlug) {
-      throw new ConflictException('Vehicle brand with this slug already exists');
+      throw new ConflictException(
+        'Vehicle brand with this slug already exists',
+      );
     }
 
     const brand = await this.prisma.vehicleBrand.create({
@@ -38,7 +48,9 @@ export class VehicleBrandsService {
     return this.mapToDto(brand);
   }
 
-  async findAll(filter: VehicleBrandsFilterDto): Promise<PaginatedVehicleBrandsDto> {
+  async findAll(
+    filter: VehicleBrandsFilterDto,
+  ): Promise<PaginatedVehicleBrandsDto> {
     const {
       search,
       popular,
@@ -86,19 +98,19 @@ export class VehicleBrandsService {
           select: { models: true },
         },
       },
-      orderBy: 
-        sortBy === 'name' || sortBy === 'nameCyrillic' 
+      orderBy:
+        sortBy === 'name' || sortBy === 'nameCyrillic'
           ? { [sortBy]: sortOrder }
           : [
               { popular: 'desc' }, // Popular first
-              { [sortBy]: sortOrder }
+              { [sortBy]: sortOrder },
             ],
       skip: (page - 1) * limit,
       take: limit,
     });
 
     return {
-      items: brands.map(brand => ({
+      items: brands.map((brand) => ({
         ...this.mapToDto(brand),
         modelsCount: brand._count.models,
       })),
@@ -120,7 +132,7 @@ export class VehicleBrandsService {
       orderBy: { country: 'asc' },
     });
 
-    return countries.map(c => c.country).filter(Boolean) as string[];
+    return countries.map((c) => c.country).filter(Boolean) as string[];
   }
 
   async findPopular(limit: number = 15): Promise<VehicleBrandWithCountDto[]> {
@@ -138,7 +150,7 @@ export class VehicleBrandsService {
       take: limit,
     });
 
-    return brands.map(brand => ({
+    return brands.map((brand) => ({
       ...this.mapToDto(brand),
       modelsCount: brand._count.models,
     }));
@@ -168,7 +180,10 @@ export class VehicleBrandsService {
     return this.mapToDto(brand);
   }
 
-  async update(id: string, updateVehicleBrandDto: UpdateVehicleBrandDto): Promise<VehicleBrandDto> {
+  async update(
+    id: string,
+    updateVehicleBrandDto: UpdateVehicleBrandDto,
+  ): Promise<VehicleBrandDto> {
     // Check if brand exists
     const existing = await this.prisma.vehicleBrand.findUnique({
       where: { id },
@@ -178,12 +193,17 @@ export class VehicleBrandsService {
     }
 
     // Check if slug is being updated and already exists
-    if (updateVehicleBrandDto.slug && updateVehicleBrandDto.slug !== existing.slug) {
+    if (
+      updateVehicleBrandDto.slug &&
+      updateVehicleBrandDto.slug !== existing.slug
+    ) {
       const existingBySlug = await this.prisma.vehicleBrand.findUnique({
         where: { slug: updateVehicleBrandDto.slug },
       });
       if (existingBySlug) {
-        throw new ConflictException('Vehicle brand with this slug already exists');
+        throw new ConflictException(
+          'Vehicle brand with this slug already exists',
+        );
       }
     }
 

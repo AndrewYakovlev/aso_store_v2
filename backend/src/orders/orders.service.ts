@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CartService } from '../cart/cart.service';
 import { Prisma } from '@prisma/client';
@@ -27,12 +31,14 @@ export class OrdersService {
   ): Promise<OrderDto> {
     // Orders can only be created for registered users
     if (!userId) {
-      throw new BadRequestException('User must be authenticated to create order');
+      throw new BadRequestException(
+        'User must be authenticated to create order',
+      );
     }
 
     // Get current cart
     const cart = await this.cartService.getCart(userId, anonymousUserId);
-    
+
     if (!cart.items || cart.items.length === 0) {
       throw new BadRequestException('Cart is empty');
     }
@@ -89,7 +95,7 @@ export class OrdersService {
         deliveryPostalCode: createOrderDto.deliveryPostalCode,
         comment: createOrderDto.comment,
         items: {
-          create: cart.items.map(item => ({
+          create: cart.items.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
             price: item.product.price,
@@ -195,7 +201,7 @@ export class OrdersService {
     });
 
     return {
-      items: orders.map(order => this.mapToDto(order)),
+      items: orders.map((order) => this.mapToDto(order)),
       total,
       page,
       limit,
@@ -330,7 +336,7 @@ export class OrdersService {
       orderBy: { sortOrder: 'asc' },
     });
 
-    return statuses.map(status => ({
+    return statuses.map((status) => ({
       id: status.id,
       code: status.code,
       name: status.name,
@@ -344,7 +350,7 @@ export class OrdersService {
       where: { isActive: true },
     });
 
-    return methods.map(method => ({
+    return methods.map((method) => ({
       id: method.id,
       code: method.code,
       name: method.name,
@@ -359,7 +365,7 @@ export class OrdersService {
       where: { isActive: true },
     });
 
-    return methods.map(method => ({
+    return methods.map((method) => ({
       id: method.id,
       code: method.code,
       name: method.name,
@@ -379,7 +385,7 @@ export class OrdersService {
     // Get today's order count
     const startOfDay = new Date(date.setHours(0, 0, 0, 0));
     const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-    
+
     const count = await this.prisma.order.count({
       where: {
         createdAt: {
@@ -394,7 +400,8 @@ export class OrdersService {
   }
 
   private mapToDto(order: any): OrderDto {
-    const grandTotal = order.totalAmount.toNumber() + order.deliveryAmount.toNumber();
+    const grandTotal =
+      order.totalAmount.toNumber() + order.deliveryAmount.toNumber();
 
     return {
       id: order.id,
@@ -461,15 +468,16 @@ export class OrdersService {
       stock: product.stock,
       isActive: product.isActive,
       images: product.images as string[],
-      categories: product.categories?.map((pc: any) => ({
-        id: pc.category.id,
-        name: pc.category.name,
-        slug: pc.category.slug,
-        description: pc.category.description,
-        parentId: pc.category.parentId,
-        isActive: pc.category.isActive,
-        sortOrder: pc.category.sortOrder,
-      })) || [],
+      categories:
+        product.categories?.map((pc: any) => ({
+          id: pc.category.id,
+          name: pc.category.name,
+          slug: pc.category.slug,
+          description: pc.category.description,
+          parentId: pc.category.parentId,
+          isActive: pc.category.isActive,
+          sortOrder: pc.category.sortOrder,
+        })) || [],
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
     };

@@ -38,8 +38,13 @@ export class ProductsController {
     description: 'Product created successfully',
     type: ProductDto,
   })
-  @ApiResponse({ status: 409, description: 'Product with this SKU or slug already exists' })
-  async create(@Body() createProductDto: CreateProductDto): Promise<ProductDto> {
+  @ApiResponse({
+    status: 409,
+    description: 'Product with this SKU or slug already exists',
+  })
+  async create(
+    @Body() createProductDto: CreateProductDto,
+  ): Promise<ProductDto> {
     return this.productsService.create(createProductDto);
   }
 
@@ -60,7 +65,9 @@ export class ProductsController {
     description: 'List of products',
     type: PaginatedProductsDto,
   })
-  async findAll(@Query() filter: ProductsFilterDto): Promise<PaginatedProductsDto> {
+  async findAll(
+    @Query() filter: ProductsFilterDto,
+  ): Promise<PaginatedProductsDto> {
     return this.productsService.findAll(filter);
   }
 
@@ -111,7 +118,10 @@ export class ProductsController {
     type: ProductDto,
   })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  @ApiResponse({ status: 409, description: 'Product with this slug already exists' })
+  @ApiResponse({
+    status: 409,
+    description: 'Product with this slug already exists',
+  })
   async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,

@@ -17,6 +17,7 @@ model User {
   firstName       String?
   lastName        String?
   middleName      String?
+  role            UserRole  @default(CUSTOMER)
   isPhoneVerified Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -521,4 +522,11 @@ model ProductVehicle {
   @@index([vehicleModelId])
   @@index([yearFrom])
   @@index([yearTo])
+}
+
+// User roles
+enum UserRole {
+  CUSTOMER  // Обычный покупатель
+  MANAGER   // Менеджер - может управлять заказами и чатами
+  ADMIN     // Администратор - полный доступ
 }

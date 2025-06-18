@@ -4,9 +4,9 @@ import { IsArray, ValidateNested } from 'class-validator';
 import { CreateProductVehicleDto } from './create-product-vehicle.dto';
 
 export class BulkCreateProductVehicleDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Массив связей с автомобилями',
-    type: [CreateProductVehicleDto]
+    type: [CreateProductVehicleDto],
   })
   @IsArray()
   @ValidateNested({ each: true })

@@ -1,0 +1,267 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { productsApi, Product, ProductsFilter } from '@/lib/api/products';
+import Link from 'next/link';
+import Image from 'next/image';
+import { 
+  PencilIcon, 
+  TrashIcon, 
+  MagnifyingGlassIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon 
+} from '@heroicons/react/24/outline';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+export function AdminProductsList() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  const limit = 20;
+
+  useEffect(() => {
+    const searchQuery = searchParams.get('search') || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    setSearch(searchQuery);
+    setCurrentPage(page);
+    loadProducts(searchQuery, page);
+  }, [searchParams]);
+
+  const loadProducts = async (searchQuery: string, page: number) => {
+    setLoading(true);
+    try {
+      const filter: ProductsFilter = {
+        search: searchQuery || undefined,
+        page,
+        limit,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      };
+      
+      const response = await productsApi.getAll(filter);
+      setProducts(response.items);
+      setTotal(response.total);
+    } catch (error) {
+      console.error('Failed to load products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    params.set('page', '1');
+    router.push(`/admin/products?${params.toString()}`);
+  };
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', page.toString());
+    router.push(`/admin/products?${params.toString()}`);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Вы уверены, что хотите удалить этот товар?')) {
+      return;
+    }
+
+    setDeleting(id);
+    try {
+      await productsApi.delete(id);
+      await loadProducts(search, currentPage);
+    } catch (error) {
+      console.error('Failed to delete product:', error);
+      alert('Ошибка при удалении товара');
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const totalPages = Math.ceil(total / limit);
+
+  if (loading) {
+    return (
+      <div className="bg-white shadow rounded-lg p-6">
+        <div className="animate-pulse">
+          <div className="h-10 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-20 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white shadow rounded-lg">
+      <div className="p-6 border-b">
+        <form onSubmit={handleSearch} className="flex gap-4">
+          <div className="flex-1 relative">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Поиск по названию или артикулу..."
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+            />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          </div>
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Найти
+          </button>
+        </form>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Изображение
+              </th>
+              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Название / Артикул
+              </th>
+              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Цена
+              </th>
+              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Остаток
+              </th>
+              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Статус
+              </th>
+              <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Действия
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {products.map((product) => (
+              <tr key={product.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {product.images[0] ? (
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      width={50}
+                      height={50}
+                      className="rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                  )}
+                </td>
+                <td className="px-6 py-4">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {product.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {product.sku}
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">
+                    {product.price.toLocaleString()} ₽
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className={`text-sm ${product.stock > 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                    {product.stock}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    product.isActive 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {product.isActive ? 'Активен' : 'Неактивен'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex items-center justify-end gap-2">
+                    <Link
+                      href={`/admin/products/${product.id}/edit`}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      <PencilIcon className="h-5 w-5" />
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      disabled={deleting === product.id}
+                      className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {products.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">Товары не найдены</p>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="px-6 py-4 border-t flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Показано {(currentPage - 1) * limit + 1} - {Math.min(currentPage * limit, total)} из {total}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeftIcon className="h-5 w-5" />
+            </button>
+            {[...Array(Math.min(5, totalPages))].map((_, i) => {
+              const page = i + 1;
+              return (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-1 border rounded ${
+                    page === currentPage 
+                      ? 'bg-blue-600 text-white' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRightIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AttributeType } from '@prisma/client';
 import {
@@ -22,8 +26,8 @@ export class AttributesService {
 
     // Validate that SELECT types have options
     if (
-      (attributeData.type === AttributeType.SELECT_ONE || 
-       attributeData.type === AttributeType.SELECT_MANY) &&
+      (attributeData.type === AttributeType.SELECT_ONE ||
+        attributeData.type === AttributeType.SELECT_MANY) &&
       (!options || options.length === 0)
     ) {
       throw new BadRequestException('SELECT type attributes must have options');
@@ -31,22 +35,27 @@ export class AttributesService {
 
     // Validate that only SELECT types have options
     if (
-      attributeData.type !== AttributeType.SELECT_ONE && 
+      attributeData.type !== AttributeType.SELECT_ONE &&
       attributeData.type !== AttributeType.SELECT_MANY &&
-      options && options.length > 0
+      options &&
+      options.length > 0
     ) {
-      throw new BadRequestException('Only SELECT type attributes can have options');
+      throw new BadRequestException(
+        'Only SELECT type attributes can have options',
+      );
     }
 
     const attribute = await this.prisma.attribute.create({
       data: {
         ...attributeData,
-        options: options ? {
-          create: options.map((opt, index) => ({
-            value: opt.value,
-            sortOrder: opt.sortOrder ?? index,
-          })),
-        } : undefined,
+        options: options
+          ? {
+              create: options.map((opt, index) => ({
+                value: opt.value,
+                sortOrder: opt.sortOrder ?? index,
+              })),
+            }
+          : undefined,
       },
       include: {
         options: {
@@ -68,7 +77,7 @@ export class AttributesService {
       orderBy: { sortOrder: 'asc' },
     });
 
-    return attributes.map(attr => this.mapToAttributeDto(attr));
+    return attributes.map((attr) => this.mapToAttributeDto(attr));
   }
 
   async findOne(id: string): Promise<AttributeDto> {
@@ -105,7 +114,10 @@ export class AttributesService {
     return this.mapToAttributeDto(attribute);
   }
 
-  async update(id: string, updateAttributeDto: UpdateAttributeDto): Promise<AttributeDto> {
+  async update(
+    id: string,
+    updateAttributeDto: UpdateAttributeDto,
+  ): Promise<AttributeDto> {
     const attribute = await this.prisma.attribute.findUnique({
       where: { id },
     });
@@ -121,13 +133,15 @@ export class AttributesService {
       });
 
       if (hasValues > 0) {
-        throw new BadRequestException('Cannot change attribute type when it has values');
+        throw new BadRequestException(
+          'Cannot change attribute type when it has values',
+        );
       }
     }
 
     // Отделяем options от остальных данных
     const { options, ...attributeData } = updateAttributeDto;
-    
+
     const updated = await this.prisma.attribute.update({
       where: { id },
       data: {
@@ -165,7 +179,9 @@ export class AttributesService {
   }
 
   // Category attributes
-  async getCategoryAttributes(categoryId: string): Promise<CategoryAttributeDto[]> {
+  async getCategoryAttributes(
+    categoryId: string,
+  ): Promise<CategoryAttributeDto[]> {
     const categoryAttributes = await this.prisma.categoryAttribute.findMany({
       where: { categoryId },
       include: {
@@ -180,7 +196,7 @@ export class AttributesService {
       orderBy: { sortOrder: 'asc' },
     });
 
-    return categoryAttributes.map(ca => ({
+    return categoryAttributes.map((ca) => ({
       categoryId: ca.categoryId,
       attributeId: ca.attributeId,
       attribute: this.mapToAttributeDto(ca.attribute),
@@ -219,8 +235,10 @@ export class AttributesService {
       },
     });
 
-    const existingIds = new Set(existing.map(e => e.attributeId));
-    const newAttributeIds = dto.attributeIds.filter(id => !existingIds.has(id));
+    const existingIds = new Set(existing.map((e) => e.attributeId));
+    const newAttributeIds = dto.attributeIds.filter(
+      (id) => !existingIds.has(id),
+    );
 
     // Create new assignments
     if (newAttributeIds.length > 0) {
@@ -255,7 +273,9 @@ export class AttributesService {
   }
 
   // Product attributes
-  async getProductAttributes(productId: string): Promise<ProductAttributeValueDto[]> {
+  async getProductAttributes(
+    productId: string,
+  ): Promise<ProductAttributeValueDto[]> {
     const productAttributes = await this.prisma.productAttribute.findMany({
       where: { productId },
       include: {
@@ -269,7 +289,7 @@ export class AttributesService {
       },
     });
 
-    return productAttributes.map(pa => ({
+    return productAttributes.map((pa) => ({
       attributeId: pa.attributeId,
       attribute: this.mapToAttributeDto(pa.attribute),
       textValue: pa.textValue ?? undefined,
@@ -299,7 +319,9 @@ export class AttributesService {
     });
 
     if (!attribute) {
-      throw new NotFoundException(`Attribute with ID ${dto.attributeId} not found`);
+      throw new NotFoundException(
+        `Attribute with ID ${dto.attributeId} not found`,
+      );
     }
 
     // Validate value based on attribute type
@@ -354,7 +376,7 @@ export class AttributesService {
   ): Promise<ProductAttributeValueDto[]> {
     // Set each attribute
     const results = await Promise.all(
-      dto.attributes.map(attr => this.setProductAttribute(productId, attr)),
+      dto.attributes.map((attr) => this.setProductAttribute(productId, attr)),
     );
 
     return results;
@@ -378,29 +400,40 @@ export class AttributesService {
   }
 
   // Private methods
-  private validateAttributeValue(attribute: any, dto: SetProductAttributeDto): void {
+  private validateAttributeValue(
+    attribute: any,
+    dto: SetProductAttributeDto,
+  ): void {
     switch (attribute.type) {
       case AttributeType.TEXT:
         if (!dto.textValue) {
-          throw new BadRequestException('Text value is required for TEXT type attribute');
+          throw new BadRequestException(
+            'Text value is required for TEXT type attribute',
+          );
         }
         break;
 
       case AttributeType.NUMBER:
         if (dto.numberValue === null || dto.numberValue === undefined) {
-          throw new BadRequestException('Number value is required for NUMBER type attribute');
+          throw new BadRequestException(
+            'Number value is required for NUMBER type attribute',
+          );
         }
         break;
 
       case AttributeType.COLOR:
         if (!dto.colorValue) {
-          throw new BadRequestException('Color value is required for COLOR type attribute');
+          throw new BadRequestException(
+            'Color value is required for COLOR type attribute',
+          );
         }
         break;
 
       case AttributeType.SELECT_ONE:
         if (!dto.optionIds || dto.optionIds.length !== 1) {
-          throw new BadRequestException('Exactly one option must be selected for SELECT_ONE type');
+          throw new BadRequestException(
+            'Exactly one option must be selected for SELECT_ONE type',
+          );
         }
         // Validate option exists
         const validOptionIds = new Set(attribute.options.map((o: any) => o.id));
@@ -411,7 +444,9 @@ export class AttributesService {
 
       case AttributeType.SELECT_MANY:
         if (!dto.optionIds || dto.optionIds.length === 0) {
-          throw new BadRequestException('At least one option must be selected for SELECT_MANY type');
+          throw new BadRequestException(
+            'At least one option must be selected for SELECT_MANY type',
+          );
         }
         // Validate all options exist
         const validOptions = new Set(attribute.options.map((o: any) => o.id));

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddFavoriteDto, FavoriteDto } from './dto';
 
@@ -154,7 +159,7 @@ export class FavoritesService {
       },
     });
 
-    return favorites.map(favorite => this.mapToDto(favorite));
+    return favorites.map((favorite) => this.mapToDto(favorite));
   }
 
   async getFavoriteIds(
@@ -181,7 +186,7 @@ export class FavoritesService {
       },
     });
 
-    return favorites.map(f => f.productId);
+    return favorites.map((f) => f.productId);
   }
 
   async isFavorite(
@@ -223,12 +228,12 @@ export class FavoritesService {
       select: { productId: true },
     });
 
-    const userProductIds = new Set(userFavorites.map(f => f.productId));
+    const userProductIds = new Set(userFavorites.map((f) => f.productId));
 
     // Add only new favorites
     const newFavorites = anonymousFavorites
-      .filter(f => !userProductIds.has(f.productId))
-      .map(f => ({
+      .filter((f) => !userProductIds.has(f.productId))
+      .map((f) => ({
         userId,
         productId: f.productId,
       }));
@@ -259,15 +264,16 @@ export class FavoritesService {
         stock: favorite.product.stock,
         isActive: favorite.product.isActive,
         images: favorite.product.images as string[],
-        categories: favorite.product.categories?.map((pc: any) => ({
-          id: pc.category.id,
-          name: pc.category.name,
-          slug: pc.category.slug,
-          description: pc.category.description,
-          parentId: pc.category.parentId,
-          isActive: pc.category.isActive,
-          sortOrder: pc.category.sortOrder,
-        })) || [],
+        categories:
+          favorite.product.categories?.map((pc: any) => ({
+            id: pc.category.id,
+            name: pc.category.name,
+            slug: pc.category.slug,
+            description: pc.category.description,
+            parentId: pc.category.parentId,
+            isActive: pc.category.isActive,
+            sortOrder: pc.category.sortOrder,
+          })) || [],
         createdAt: favorite.product.createdAt,
         updatedAt: favorite.product.updatedAt,
       },

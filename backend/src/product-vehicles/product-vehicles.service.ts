@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateProductVehicleDto,
@@ -11,7 +15,10 @@ import {
 export class ProductVehiclesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(productId: string, createDto: CreateProductVehicleDto): Promise<ProductVehicleDto> {
+  async create(
+    productId: string,
+    createDto: CreateProductVehicleDto,
+  ): Promise<ProductVehicleDto> {
     // Check if product exists
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
@@ -29,16 +36,28 @@ export class ProductVehiclesService {
     }
 
     // Validate year range
-    if (createDto.yearFrom && createDto.yearTo && createDto.yearFrom > createDto.yearTo) {
+    if (
+      createDto.yearFrom &&
+      createDto.yearTo &&
+      createDto.yearFrom > createDto.yearTo
+    ) {
       throw new BadRequestException('Year from cannot be greater than year to');
     }
 
     // Validate against vehicle model years
     if (createDto.yearFrom && createDto.yearFrom < vehicleModel.yearFrom) {
-      throw new BadRequestException(`Year from cannot be less than model start year (${vehicleModel.yearFrom})`);
+      throw new BadRequestException(
+        `Year from cannot be less than model start year (${vehicleModel.yearFrom})`,
+      );
     }
-    if (createDto.yearTo && vehicleModel.yearTo && createDto.yearTo > vehicleModel.yearTo) {
-      throw new BadRequestException(`Year to cannot be greater than model end year (${vehicleModel.yearTo})`);
+    if (
+      createDto.yearTo &&
+      vehicleModel.yearTo &&
+      createDto.yearTo > vehicleModel.yearTo
+    ) {
+      throw new BadRequestException(
+        `Year to cannot be greater than model end year (${vehicleModel.yearTo})`,
+      );
     }
 
     const productVehicle = await this.prisma.productVehicle.create({
@@ -58,7 +77,10 @@ export class ProductVehiclesService {
     return this.mapToDto(productVehicle);
   }
 
-  async bulkCreate(productId: string, bulkCreateDto: BulkCreateProductVehicleDto): Promise<ProductVehicleDto[]> {
+  async bulkCreate(
+    productId: string,
+    bulkCreateDto: BulkCreateProductVehicleDto,
+  ): Promise<ProductVehicleDto[]> {
     // Check if product exists
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
@@ -99,29 +121,30 @@ export class ProductVehiclesService {
       ],
     });
 
-    return productVehicles.map(pv => this.mapToDto(pv));
+    return productVehicles.map((pv) => this.mapToDto(pv));
   }
 
   async findByVehicleModel(
     vehicleModelId: string,
     year?: number,
-  ): Promise<{ productId: string; fitmentNotes?: string; yearFrom?: number; yearTo?: number }[]> {
+  ): Promise<
+    {
+      productId: string;
+      fitmentNotes?: string;
+      yearFrom?: number;
+      yearTo?: number;
+    }[]
+  > {
     const where: any = { vehicleModelId };
 
     // If year is specified, filter by year range
     if (year) {
       where.AND = [
         {
-          OR: [
-            { yearFrom: null },
-            { yearFrom: { lte: year } },
-          ],
+          OR: [{ yearFrom: null }, { yearFrom: { lte: year } }],
         },
         {
-          OR: [
-            { yearTo: null },
-            { yearTo: { gte: year } },
-          ],
+          OR: [{ yearTo: null }, { yearTo: { gte: year } }],
         },
       ];
     }
@@ -136,7 +159,7 @@ export class ProductVehiclesService {
       },
     });
 
-    return productVehicles.map(pv => ({
+    return productVehicles.map((pv) => ({
       productId: pv.productId,
       fitmentNotes: pv.fitmentNotes || undefined,
       yearFrom: pv.yearFrom || undefined,
@@ -164,25 +187,31 @@ export class ProductVehiclesService {
     if (updateDto.yearFrom !== undefined || updateDto.yearTo !== undefined) {
       const yearFrom = updateDto.yearFrom ?? existing.yearFrom;
       const yearTo = updateDto.yearTo ?? existing.yearTo;
-      
+
       if (yearFrom && yearTo && yearFrom > yearTo) {
-        throw new BadRequestException('Year from cannot be greater than year to');
+        throw new BadRequestException(
+          'Year from cannot be greater than year to',
+        );
       }
 
       // Validate against vehicle model years
       const vehicleModel = await this.prisma.vehicleModel.findUnique({
         where: { id: existing.vehicleModelId },
       });
-      
+
       if (!vehicleModel) {
         throw new BadRequestException('Vehicle model not found');
       }
-      
+
       if (yearFrom && yearFrom < vehicleModel.yearFrom) {
-        throw new BadRequestException(`Year from cannot be less than model start year (${vehicleModel.yearFrom})`);
+        throw new BadRequestException(
+          `Year from cannot be less than model start year (${vehicleModel.yearFrom})`,
+        );
       }
       if (yearTo && vehicleModel.yearTo && yearTo > vehicleModel.yearTo) {
-        throw new BadRequestException(`Year to cannot be greater than model end year (${vehicleModel.yearTo})`);
+        throw new BadRequestException(
+          `Year to cannot be greater than model end year (${vehicleModel.yearTo})`,
+        );
       }
     }
 
@@ -228,36 +257,40 @@ export class ProductVehiclesService {
       isUniversal: productVehicle.isUniversal,
       createdAt: productVehicle.createdAt,
       updatedAt: productVehicle.updatedAt,
-      vehicleModel: productVehicle.vehicleModel ? {
-        id: productVehicle.vehicleModel.id,
-        externalId: productVehicle.vehicleModel.externalId,
-        brandId: productVehicle.vehicleModel.brandId,
-        name: productVehicle.vehicleModel.name,
-        nameCyrillic: productVehicle.vehicleModel.nameCyrillic,
-        slug: productVehicle.vehicleModel.slug,
-        class: productVehicle.vehicleModel.class,
-        yearFrom: productVehicle.vehicleModel.yearFrom,
-        yearTo: productVehicle.vehicleModel.yearTo,
-        image: productVehicle.vehicleModel.image,
-        isActive: productVehicle.vehicleModel.isActive,
-        sortOrder: productVehicle.vehicleModel.sortOrder,
-        createdAt: productVehicle.vehicleModel.createdAt,
-        updatedAt: productVehicle.vehicleModel.updatedAt,
-        brand: productVehicle.vehicleModel.brand ? {
-          id: productVehicle.vehicleModel.brand.id,
-          externalId: productVehicle.vehicleModel.brand.externalId,
-          name: productVehicle.vehicleModel.brand.name,
-          nameCyrillic: productVehicle.vehicleModel.brand.nameCyrillic,
-          slug: productVehicle.vehicleModel.brand.slug,
-          country: productVehicle.vehicleModel.brand.country,
-          logo: productVehicle.vehicleModel.brand.logo,
-          popular: productVehicle.vehicleModel.brand.popular,
-          isActive: productVehicle.vehicleModel.brand.isActive,
-          sortOrder: productVehicle.vehicleModel.brand.sortOrder,
-          createdAt: productVehicle.vehicleModel.brand.createdAt,
-          updatedAt: productVehicle.vehicleModel.brand.updatedAt,
-        } : undefined,
-      } : undefined,
+      vehicleModel: productVehicle.vehicleModel
+        ? {
+            id: productVehicle.vehicleModel.id,
+            externalId: productVehicle.vehicleModel.externalId,
+            brandId: productVehicle.vehicleModel.brandId,
+            name: productVehicle.vehicleModel.name,
+            nameCyrillic: productVehicle.vehicleModel.nameCyrillic,
+            slug: productVehicle.vehicleModel.slug,
+            class: productVehicle.vehicleModel.class,
+            yearFrom: productVehicle.vehicleModel.yearFrom,
+            yearTo: productVehicle.vehicleModel.yearTo,
+            image: productVehicle.vehicleModel.image,
+            isActive: productVehicle.vehicleModel.isActive,
+            sortOrder: productVehicle.vehicleModel.sortOrder,
+            createdAt: productVehicle.vehicleModel.createdAt,
+            updatedAt: productVehicle.vehicleModel.updatedAt,
+            brand: productVehicle.vehicleModel.brand
+              ? {
+                  id: productVehicle.vehicleModel.brand.id,
+                  externalId: productVehicle.vehicleModel.brand.externalId,
+                  name: productVehicle.vehicleModel.brand.name,
+                  nameCyrillic: productVehicle.vehicleModel.brand.nameCyrillic,
+                  slug: productVehicle.vehicleModel.brand.slug,
+                  country: productVehicle.vehicleModel.brand.country,
+                  logo: productVehicle.vehicleModel.brand.logo,
+                  popular: productVehicle.vehicleModel.brand.popular,
+                  isActive: productVehicle.vehicleModel.brand.isActive,
+                  sortOrder: productVehicle.vehicleModel.brand.sortOrder,
+                  createdAt: productVehicle.vehicleModel.brand.createdAt,
+                  updatedAt: productVehicle.vehicleModel.brand.updatedAt,
+                }
+              : undefined,
+          }
+        : undefined,
     };
   }
 }

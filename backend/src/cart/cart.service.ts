@@ -1,7 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from '../auth/auth.service';
-import { AddToCartDto, UpdateCartItemDto, CartDto, CartItemDto, CartSummaryDto } from './dto';
+import {
+  AddToCartDto,
+  UpdateCartItemDto,
+  CartDto,
+  CartItemDto,
+  CartSummaryDto,
+} from './dto';
 import { ProductDto } from '../products/dto';
 
 @Injectable()
@@ -17,7 +29,7 @@ export class CartService {
     anonymousUserId: string | undefined,
   ) {
     console.log('getOrCreateCart - input:', { userId, anonymousUserId });
-    
+
     if (!userId && !anonymousUserId) {
       throw new BadRequestException('User identification required');
     }
@@ -127,7 +139,7 @@ export class CartService {
     if (existingItem) {
       // Update quantity
       const newQuantity = existingItem.quantity + addToCartDto.quantity;
-      
+
       if (product.stock < newQuantity) {
         throw new BadRequestException('Insufficient stock');
       }
@@ -271,10 +283,7 @@ export class CartService {
     };
   }
 
-  async mergeCarts(
-    anonymousUserId: string,
-    userId: string,
-  ): Promise<void> {
+  async mergeCarts(anonymousUserId: string, userId: string): Promise<void> {
     const anonymousCart = await this.prisma.cart.findFirst({
       where: { anonymousUserId },
       include: { items: true },
@@ -292,18 +301,18 @@ export class CartService {
     });
 
     const existingProductIds = new Map(
-      existingItems.map(item => [item.productId, item]),
+      existingItems.map((item) => [item.productId, item]),
     );
 
     // Merge items
     for (const item of anonymousCart.items) {
       const existingItem = existingProductIds.get(item.productId);
-      
+
       if (existingItem) {
         // Update quantity
         await this.prisma.cartItem.update({
           where: { id: existingItem.id },
-          data: { 
+          data: {
             quantity: existingItem.quantity + item.quantity,
           },
         });
@@ -323,7 +332,7 @@ export class CartService {
     await this.prisma.cartItem.deleteMany({
       where: { cartId: anonymousCart.id },
     });
-    
+
     await this.prisma.cart.delete({
       where: { id: anonymousCart.id },
     });
@@ -331,8 +340,15 @@ export class CartService {
 
   private formatCart(cart: any): CartDto {
     const items = cart.items.map((item: any) => this.formatCartItem(item));
-    const totalQuantity = items.reduce((sum: number, item: CartItemDto) => sum + item.quantity, 0);
-    const totalPrice = items.reduce((sum: number, item: CartItemDto) => sum + (item.product.price * item.quantity), 0);
+    const totalQuantity = items.reduce(
+      (sum: number, item: CartItemDto) => sum + item.quantity,
+      0,
+    );
+    const totalPrice = items.reduce(
+      (sum: number, item: CartItemDto) =>
+        sum + item.product.price * item.quantity,
+      0,
+    );
 
     return {
       id: cart.id,
@@ -420,7 +436,8 @@ export class CartService {
         if (pa.textValue !== null) attrValue.textValue = pa.textValue;
         if (pa.numberValue !== null) attrValue.numberValue = pa.numberValue;
         if (pa.colorValue !== null) attrValue.colorValue = pa.colorValue;
-        if (pa.optionIds && pa.optionIds.length > 0) attrValue.optionIds = pa.optionIds;
+        if (pa.optionIds && pa.optionIds.length > 0)
+          attrValue.optionIds = pa.optionIds;
 
         return attrValue;
       });

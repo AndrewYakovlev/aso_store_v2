@@ -39,7 +39,10 @@ export class BrandsFilterDto {
   @IsString()
   sortBy?: string = 'sortOrder';
 
-  @ApiProperty({ description: 'Направление сортировки (asc/desc)', required: false })
+  @ApiProperty({
+    description: 'Направление сортировки (asc/desc)',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc' = 'asc';

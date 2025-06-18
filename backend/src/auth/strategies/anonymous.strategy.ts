@@ -12,13 +12,13 @@ export class AnonymousStrategy extends PassportStrategy(Strategy, 'anonymous') {
 
   async validate(req: Request): Promise<any> {
     const token = req.headers['x-anonymous-token'] as string;
-    
+
     if (!token) {
       return null;
     }
 
     const user = await this.anonymousUserService.findByToken(token);
-    
+
     if (!user) {
       return null;
     }

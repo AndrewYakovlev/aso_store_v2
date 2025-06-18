@@ -33,7 +33,10 @@ export class VehicleModelsFilterDto {
   @Type(() => Number)
   yearFrom?: number;
 
-  @ApiProperty({ description: 'Максимальный год производства', required: false })
+  @ApiProperty({
+    description: 'Максимальный год производства',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   @Max(new Date().getFullYear() + 1)
@@ -65,7 +68,10 @@ export class VehicleModelsFilterDto {
   @IsString()
   sortBy?: string = 'sortOrder';
 
-  @ApiProperty({ description: 'Направление сортировки (asc/desc)', required: false })
+  @ApiProperty({
+    description: 'Направление сортировки (asc/desc)',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc' = 'asc';

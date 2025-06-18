@@ -1,19 +1,32 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsInt, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 
 export class CreateProductVehicleDto {
   @ApiProperty({ description: 'ID модели автомобиля' })
   @IsString()
   vehicleModelId: string;
 
-  @ApiProperty({ description: 'Начальный год (если не указан - с начала выпуска модели)', required: false })
+  @ApiProperty({
+    description: 'Начальный год (если не указан - с начала выпуска модели)',
+    required: false,
+  })
   @IsOptional()
   @IsInt()
   @Min(1900)
   @Max(2100)
   yearFrom?: number;
 
-  @ApiProperty({ description: 'Конечный год (если не указан - до конца выпуска модели)', required: false })
+  @ApiProperty({
+    description: 'Конечный год (если не указан - до конца выпуска модели)',
+    required: false,
+  })
   @IsOptional()
   @IsInt()
   @Min(1900)

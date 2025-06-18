@@ -25,17 +25,17 @@ export class AttributeDto {
   @ApiProperty({ description: 'Название атрибута', example: 'Бренд' })
   name: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Тип атрибута',
     enum: AttributeType,
-    example: AttributeType.SELECT_ONE 
+    example: AttributeType.SELECT_ONE,
   })
   type: AttributeType;
 
-  @ApiProperty({ 
-    description: 'Единица измерения (для числовых атрибутов)', 
+  @ApiProperty({
+    description: 'Единица измерения (для числовых атрибутов)',
     example: 'мм',
-    required: false 
+    required: false,
   })
   unit?: string;
 
@@ -48,10 +48,10 @@ export class AttributeDto {
   @ApiProperty({ description: 'Порядок сортировки' })
   sortOrder: number;
 
-  @ApiProperty({ 
-    description: 'Возможные значения (для SELECT типов)', 
+  @ApiProperty({
+    description: 'Возможные значения (для SELECT типов)',
     type: [AttributeOptionDto],
-    required: false 
+    required: false,
   })
   options?: AttributeOptionDto[];
 

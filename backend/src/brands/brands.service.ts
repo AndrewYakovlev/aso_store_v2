@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import {
@@ -80,7 +84,7 @@ export class BrandsService {
     });
 
     return {
-      items: brands.map(brand => ({
+      items: brands.map((brand) => ({
         ...this.mapToDto(brand),
         productsCount: brand._count.products,
       })),

@@ -1,18 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CartSummaryDto {
-  @ApiProperty({ 
-    description: 'Общее количество товаров в корзине' 
+  @ApiProperty({
+    description: 'Общее количество товаров в корзине',
   })
   totalQuantity: number;
 
-  @ApiProperty({ 
-    description: 'Общая стоимость корзины' 
+  @ApiProperty({
+    description: 'Общая стоимость корзины',
   })
   totalPrice: number;
 
-  @ApiProperty({ 
-    description: 'Количество уникальных товаров' 
+  @ApiProperty({
+    description: 'Количество уникальных товаров',
   })
   itemsCount: number;
 }

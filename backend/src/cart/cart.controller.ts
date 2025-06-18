@@ -9,10 +9,20 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { CartService } from './cart.service';
 import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
-import { AddToCartDto, UpdateCartItemDto, CartDto, CartSummaryDto } from './dto';
+import {
+  AddToCartDto,
+  UpdateCartItemDto,
+  CartDto,
+  CartSummaryDto,
+} from './dto';
 
 @ApiTags('cart')
 @Controller('cart')
@@ -25,7 +35,7 @@ export class CartController {
   @ApiResponse({ status: 200, description: 'Корзина', type: CartDto })
   @ApiBearerAuth()
   async getCart(@Request() req): Promise<CartDto> {
-    const user = req.user as any;
+    const user = req.user;
     const userId = user?.type === 'user' ? user.id : undefined;
     const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
     return this.cartService.getCart(userId, anonymousUserId);
@@ -33,10 +43,14 @@ export class CartController {
 
   @Get('summary')
   @ApiOperation({ summary: 'Получить сводку по корзине' })
-  @ApiResponse({ status: 200, description: 'Сводка по корзине', type: CartSummaryDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Сводка по корзине',
+    type: CartSummaryDto,
+  })
   @ApiBearerAuth()
   async getCartSummary(@Request() req): Promise<CartSummaryDto> {
-    const user = req.user as any;
+    const user = req.user;
     const userId = user?.type === 'user' ? user.id : undefined;
     const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
     return this.cartService.getCartSummary(userId, anonymousUserId);
@@ -48,18 +62,11 @@ export class CartController {
   @ApiResponse({ status: 400, description: 'Недостаточно товара на складе' })
   @ApiResponse({ status: 404, description: 'Товар не найден' })
   @ApiBearerAuth()
-  async addToCart(
-    @Request() req,
-    @Body() addToCartDto: AddToCartDto,
-  ) {
-    const user = req.user as any;
+  async addToCart(@Request() req, @Body() addToCartDto: AddToCartDto) {
+    const user = req.user;
     const userId = user?.type === 'user' ? user.id : undefined;
     const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
-    return this.cartService.addToCart(
-      userId,
-      anonymousUserId,
-      addToCartDto,
-    );
+    return this.cartService.addToCart(userId, anonymousUserId, addToCartDto);
   }
 
   @Put(':productId')
@@ -73,7 +80,7 @@ export class CartController {
     @Param('productId') productId: string,
     @Body() updateCartItemDto: UpdateCartItemDto,
   ) {
-    const user = req.user as any;
+    const user = req.user;
     const userId = user?.type === 'user' ? user.id : undefined;
     const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
     return this.cartService.updateCartItem(
@@ -89,18 +96,11 @@ export class CartController {
   @ApiResponse({ status: 200, description: 'Товар удален' })
   @ApiResponse({ status: 404, description: 'Товар не найден в корзине' })
   @ApiBearerAuth()
-  async removeFromCart(
-    @Request() req,
-    @Param('productId') productId: string,
-  ) {
-    const user = req.user as any;
+  async removeFromCart(@Request() req, @Param('productId') productId: string) {
+    const user = req.user;
     const userId = user?.type === 'user' ? user.id : undefined;
     const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
-    await this.cartService.removeFromCart(
-      userId,
-      anonymousUserId,
-      productId,
-    );
+    await this.cartService.removeFromCart(userId, anonymousUserId, productId);
     return { message: 'Item removed from cart' };
   }
 
@@ -109,7 +109,7 @@ export class CartController {
   @ApiResponse({ status: 200, description: 'Корзина очищена' })
   @ApiBearerAuth()
   async clearCart(@Request() req) {
-    const user = req.user as any;
+    const user = req.user;
     const userId = user?.type === 'user' ? user.id : undefined;
     const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
     await this.cartService.clearCart(userId, anonymousUserId);

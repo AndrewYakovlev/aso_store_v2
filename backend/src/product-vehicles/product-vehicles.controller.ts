@@ -26,7 +26,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @ApiTags('product-vehicles')
 @Controller('products/:productId/vehicles')
 export class ProductVehiclesController {
-  constructor(private readonly productVehiclesService: ProductVehiclesService) {}
+  constructor(
+    private readonly productVehiclesService: ProductVehiclesService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -37,7 +39,10 @@ export class ProductVehiclesController {
     @Param('productId') productId: string,
     @Body() createProductVehicleDto: CreateProductVehicleDto,
   ): Promise<ProductVehicleDto> {
-    return this.productVehiclesService.create(productId, createProductVehicleDto);
+    return this.productVehiclesService.create(
+      productId,
+      createProductVehicleDto,
+    );
   }
 
   @Post('bulk')
@@ -49,7 +54,10 @@ export class ProductVehiclesController {
     @Param('productId') productId: string,
     @Body() bulkCreateProductVehicleDto: BulkCreateProductVehicleDto,
   ): Promise<ProductVehicleDto[]> {
-    return this.productVehiclesService.bulkCreate(productId, bulkCreateProductVehicleDto);
+    return this.productVehiclesService.bulkCreate(
+      productId,
+      bulkCreateProductVehicleDto,
+    );
   }
 
   @Get()
@@ -69,7 +77,11 @@ export class ProductVehiclesController {
     @Param('vehicleId') vehicleId: string,
     @Body() updateProductVehicleDto: UpdateProductVehicleDto,
   ): Promise<ProductVehicleDto> {
-    return this.productVehiclesService.update(productId, vehicleId, updateProductVehicleDto);
+    return this.productVehiclesService.update(
+      productId,
+      vehicleId,
+      updateProductVehicleDto,
+    );
   }
 
   @Delete(':vehicleId')

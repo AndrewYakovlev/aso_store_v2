@@ -75,6 +75,12 @@ export interface PaginatedProducts {
 }
 
 export const productsApi = {
+  // Delete product
+  async delete(id: string): Promise<void> {
+    return apiRequest(`/products/${id}`, {
+      method: 'DELETE',
+    });
+  },
   // Get all products with filters
   async getAll(filter: ProductsFilter = {}): Promise<PaginatedProducts> {
     const params = new URLSearchParams();

@@ -35,11 +35,17 @@ export class JwtService {
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_ACCESS_SECRET', 'default-access-secret'),
+        secret: this.configService.get<string>(
+          'JWT_ACCESS_SECRET',
+          'default-access-secret',
+        ),
         expiresIn: '15m',
       }),
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET', 'default-refresh-secret'),
+        secret: this.configService.get<string>(
+          'JWT_REFRESH_SECRET',
+          'default-refresh-secret',
+        ),
         expiresIn: '7d',
       }),
     ]);
@@ -54,7 +60,10 @@ export class JwtService {
     };
 
     const token = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>('JWT_ANONYMOUS_SECRET', 'default-anonymous-secret'),
+      secret: this.configService.get<string>(
+        'JWT_ANONYMOUS_SECRET',
+        'default-anonymous-secret',
+      ),
       expiresIn: '365d',
     });
 
@@ -63,19 +72,28 @@ export class JwtService {
 
   async verifyAccessToken(token: string): Promise<JwtPayload> {
     return this.jwtService.verifyAsync(token, {
-      secret: this.configService.get<string>('JWT_ACCESS_SECRET', 'default-access-secret'),
+      secret: this.configService.get<string>(
+        'JWT_ACCESS_SECRET',
+        'default-access-secret',
+      ),
     });
   }
 
   async verifyRefreshToken(token: string): Promise<JwtPayload> {
     return this.jwtService.verifyAsync(token, {
-      secret: this.configService.get<string>('JWT_REFRESH_SECRET', 'default-refresh-secret'),
+      secret: this.configService.get<string>(
+        'JWT_REFRESH_SECRET',
+        'default-refresh-secret',
+      ),
     });
   }
 
   async verifyAnonymousToken(token: string): Promise<AnonymousJwtPayload> {
     return this.jwtService.verifyAsync(token, {
-      secret: this.configService.get<string>('JWT_ANONYMOUS_SECRET', 'default-anonymous-secret'),
+      secret: this.configService.get<string>(
+        'JWT_ANONYMOUS_SECRET',
+        'default-anonymous-secret',
+      ),
     });
   }
 }

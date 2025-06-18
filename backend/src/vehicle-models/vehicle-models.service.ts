@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import {
@@ -13,9 +18,14 @@ import {
 export class VehicleModelsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createVehicleModelDto: CreateVehicleModelDto): Promise<VehicleModelDto> {
+  async create(
+    createVehicleModelDto: CreateVehicleModelDto,
+  ): Promise<VehicleModelDto> {
     // Validate yearFrom <= yearTo
-    if (createVehicleModelDto.yearTo && createVehicleModelDto.yearFrom > createVehicleModelDto.yearTo) {
+    if (
+      createVehicleModelDto.yearTo &&
+      createVehicleModelDto.yearFrom > createVehicleModelDto.yearTo
+    ) {
       throw new BadRequestException('Year from cannot be greater than year to');
     }
 
@@ -24,7 +34,9 @@ export class VehicleModelsService {
       where: { externalId: createVehicleModelDto.externalId },
     });
     if (existingByExternalId) {
-      throw new ConflictException('Vehicle model with this external ID already exists');
+      throw new ConflictException(
+        'Vehicle model with this external ID already exists',
+      );
     }
 
     // Check if slug already exists
@@ -32,7 +44,9 @@ export class VehicleModelsService {
       where: { slug: createVehicleModelDto.slug },
     });
     if (existingBySlug) {
-      throw new ConflictException('Vehicle model with this slug already exists');
+      throw new ConflictException(
+        'Vehicle model with this slug already exists',
+      );
     }
 
     // Check if brand exists
@@ -51,7 +65,9 @@ export class VehicleModelsService {
     return this.mapToDto(model);
   }
 
-  async findAll(filter: VehicleModelsFilterDto): Promise<PaginatedVehicleModelsDto> {
+  async findAll(
+    filter: VehicleModelsFilterDto,
+  ): Promise<PaginatedVehicleModelsDto> {
     const {
       search,
       brandId,
@@ -88,7 +104,7 @@ export class VehicleModelsService {
     // Year range filter
     if (yearFrom || yearTo) {
       where.AND = [];
-      
+
       if (yearFrom) {
         where.AND.push({
           OR: [
@@ -97,7 +113,7 @@ export class VehicleModelsService {
           ],
         });
       }
-      
+
       if (yearTo) {
         where.AND.push({
           yearFrom: { lte: yearTo }, // Started before yearTo
@@ -117,7 +133,7 @@ export class VehicleModelsService {
     const models = await this.prisma.vehicleModel.findMany({
       where,
       include: { brand: true },
-      orderBy: 
+      orderBy:
         sortBy === 'name' || sortBy === 'nameCyrillic' || sortBy === 'yearFrom'
           ? { [sortBy]: sortOrder }
           : [
@@ -129,7 +145,7 @@ export class VehicleModelsService {
     });
 
     return {
-      items: models.map(model => this.mapToDto(model)),
+      items: models.map((model) => this.mapToDto(model)),
       total,
       page,
       limit,
@@ -147,18 +163,15 @@ export class VehicleModelsService {
     }
 
     const models = await this.prisma.vehicleModel.findMany({
-      where: { 
+      where: {
         brandId: brand.id,
         isActive: true,
       },
       include: { brand: true },
-      orderBy: [
-        { sortOrder: 'asc' },
-        { yearFrom: 'desc' },
-      ],
+      orderBy: [{ sortOrder: 'asc' }, { yearFrom: 'desc' }],
     });
 
-    return models.map(model => this.mapToDto(model));
+    return models.map((model) => this.mapToDto(model));
   }
 
   async findBySlug(slug: string): Promise<VehicleModelDto> {
@@ -187,7 +200,10 @@ export class VehicleModelsService {
     return this.mapToDto(model);
   }
 
-  async update(id: string, updateVehicleModelDto: UpdateVehicleModelDto): Promise<VehicleModelDto> {
+  async update(
+    id: string,
+    updateVehicleModelDto: UpdateVehicleModelDto,
+  ): Promise<VehicleModelDto> {
     // Check if model exists
     const existing = await this.prisma.vehicleModel.findUnique({
       where: { id },
@@ -204,17 +220,25 @@ export class VehicleModelsService {
     }
 
     // Check if slug is being updated and already exists
-    if (updateVehicleModelDto.slug && updateVehicleModelDto.slug !== existing.slug) {
+    if (
+      updateVehicleModelDto.slug &&
+      updateVehicleModelDto.slug !== existing.slug
+    ) {
       const existingBySlug = await this.prisma.vehicleModel.findUnique({
         where: { slug: updateVehicleModelDto.slug },
       });
       if (existingBySlug) {
-        throw new ConflictException('Vehicle model with this slug already exists');
+        throw new ConflictException(
+          'Vehicle model with this slug already exists',
+        );
       }
     }
 
     // Check if brand exists (if updating brandId)
-    if (updateVehicleModelDto.brandId && updateVehicleModelDto.brandId !== existing.brandId) {
+    if (
+      updateVehicleModelDto.brandId &&
+      updateVehicleModelDto.brandId !== existing.brandId
+    ) {
       const brand = await this.prisma.vehicleBrand.findUnique({
         where: { id: updateVehicleModelDto.brandId },
       });
@@ -265,7 +289,7 @@ export class VehicleModelsService {
       orderBy: { class: 'asc' },
     });
 
-    return classes.map(c => c.class);
+    return classes.map((c) => c.class);
   }
 
   private mapToDto(model: any): VehicleModelDto {
@@ -284,20 +308,22 @@ export class VehicleModelsService {
       sortOrder: model.sortOrder,
       createdAt: model.createdAt,
       updatedAt: model.updatedAt,
-      brand: model.brand ? {
-        id: model.brand.id,
-        externalId: model.brand.externalId,
-        name: model.brand.name,
-        nameCyrillic: model.brand.nameCyrillic,
-        slug: model.brand.slug,
-        country: model.brand.country,
-        logo: model.brand.logo,
-        popular: model.brand.popular,
-        isActive: model.brand.isActive,
-        sortOrder: model.brand.sortOrder,
-        createdAt: model.brand.createdAt,
-        updatedAt: model.brand.updatedAt,
-      } : undefined,
+      brand: model.brand
+        ? {
+            id: model.brand.id,
+            externalId: model.brand.externalId,
+            name: model.brand.name,
+            nameCyrillic: model.brand.nameCyrillic,
+            slug: model.brand.slug,
+            country: model.brand.country,
+            logo: model.brand.logo,
+            popular: model.brand.popular,
+            isActive: model.brand.isActive,
+            sortOrder: model.brand.sortOrder,
+            createdAt: model.brand.createdAt,
+            updatedAt: model.brand.updatedAt,
+          }
+        : undefined,
     };
   }
 }

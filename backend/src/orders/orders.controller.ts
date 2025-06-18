@@ -11,10 +11,10 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse, 
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
@@ -86,11 +86,11 @@ export class OrdersController {
     @Request() req,
     @Body() createOrderDto: CreateOrderDto,
   ): Promise<OrderDto> {
-    const user = req.user as any;
+    const user = req.user;
     console.log('Order create - user from request:', user);
     const userId = user?.id || user?.sub;
     console.log('Order create - userId:', userId);
-    
+
     return this.ordersService.create(
       userId,
       undefined, // Orders are only for authenticated users now
@@ -111,15 +111,11 @@ export class OrdersController {
     @Request() req,
     @Query() filter: OrdersFilterDto,
   ): Promise<PaginatedOrdersDto> {
-    const user = req.user as any;
+    const user = req.user;
     const userId = user?.type === 'user' ? user.id : undefined;
     const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
-    
-    return this.ordersService.findAll(
-      userId,
-      anonymousUserId,
-      filter,
-    );
+
+    return this.ordersService.findAll(userId, anonymousUserId, filter);
   }
 
   @Get('by-number/:orderNumber')
@@ -137,10 +133,10 @@ export class OrdersController {
     @Request() req,
     @Param('orderNumber') orderNumber: string,
   ): Promise<OrderDto> {
-    const user = req.user as any;
+    const user = req.user;
     const userId = user?.type === 'user' ? user.id : undefined;
     const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
-    
+
     return this.ordersService.findByOrderNumber(
       orderNumber,
       userId,
@@ -159,19 +155,12 @@ export class OrdersController {
   })
   @ApiResponse({ status: 404, description: 'Заказ не найден' })
   @ApiBearerAuth()
-  async findOne(
-    @Request() req,
-    @Param('id') id: string,
-  ): Promise<OrderDto> {
-    const user = req.user as any;
+  async findOne(@Request() req, @Param('id') id: string): Promise<OrderDto> {
+    const user = req.user;
     const userId = user?.type === 'user' ? user.id : undefined;
     const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
-    
-    return this.ordersService.findOne(
-      id,
-      userId,
-      anonymousUserId,
-    );
+
+    return this.ordersService.findOne(id, userId, anonymousUserId);
   }
 
   // Admin endpoint - should be protected with admin guard in production

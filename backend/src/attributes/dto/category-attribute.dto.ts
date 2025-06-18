@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsBoolean, IsOptional, IsNumber, IsArray, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsBoolean,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  IsUUID,
+} from 'class-validator';
 
 export class CategoryAttributeDto {
   @ApiProperty({ description: 'ID категории' })
@@ -19,15 +27,18 @@ export class CategoryAttributeDto {
 }
 
 export class AssignAttributesToCategoryDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Список атрибутов для привязки к категории',
-    type: [String]
+    type: [String],
   })
   @IsArray()
   @IsUUID('4', { each: true })
   attributeIds: string[];
 
-  @ApiProperty({ description: 'Сделать атрибуты обязательными', default: false })
+  @ApiProperty({
+    description: 'Сделать атрибуты обязательными',
+    default: false,
+  })
   @IsBoolean()
   @IsOptional()
   isRequired?: boolean;

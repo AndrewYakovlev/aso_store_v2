@@ -1,6 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AttributeType } from '@prisma/client';
-import { IsString, IsNotEmpty, IsEnum, IsBoolean, IsOptional, IsNumber, IsArray, ValidateNested, ArrayMinSize } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  IsBoolean,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  ValidateNested,
+  ArrayMinSize,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateAttributeOptionDto {
@@ -26,18 +36,18 @@ export class CreateAttributeDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Тип атрибута',
     enum: AttributeType,
-    example: AttributeType.SELECT_ONE 
+    example: AttributeType.SELECT_ONE,
   })
   @IsEnum(AttributeType)
   type: AttributeType;
 
-  @ApiProperty({ 
-    description: 'Единица измерения (для числовых атрибутов)', 
+  @ApiProperty({
+    description: 'Единица измерения (для числовых атрибутов)',
     example: 'мм',
-    required: false 
+    required: false,
   })
   @IsString()
   @IsOptional()
@@ -58,10 +68,10 @@ export class CreateAttributeDto {
   @IsOptional()
   sortOrder?: number;
 
-  @ApiProperty({ 
-    description: 'Возможные значения (для SELECT типов)', 
+  @ApiProperty({
+    description: 'Возможные значения (для SELECT типов)',
     type: [CreateAttributeOptionDto],
-    required: false 
+    required: false,
   })
   @IsArray()
   @ValidateNested({ each: true })

@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { 
-  IsString, 
-  IsOptional, 
-  IsBoolean, 
-  IsInt, 
-  Min, 
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  Min,
   Max,
   IsUUID,
   Matches,

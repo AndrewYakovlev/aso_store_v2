@@ -36,14 +36,18 @@ export class VehicleBrandsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Создать новую марку автомобиля' })
   @ApiResponse({ status: 201, type: VehicleBrandDto })
-  create(@Body() createVehicleBrandDto: CreateVehicleBrandDto): Promise<VehicleBrandDto> {
+  create(
+    @Body() createVehicleBrandDto: CreateVehicleBrandDto,
+  ): Promise<VehicleBrandDto> {
     return this.vehicleBrandsService.create(createVehicleBrandDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Получить список марок автомобилей' })
   @ApiResponse({ status: 200, type: PaginatedVehicleBrandsDto })
-  findAll(@Query() filter: VehicleBrandsFilterDto): Promise<PaginatedVehicleBrandsDto> {
+  findAll(
+    @Query() filter: VehicleBrandsFilterDto,
+  ): Promise<PaginatedVehicleBrandsDto> {
     return this.vehicleBrandsService.findAll(filter);
   }
 
@@ -57,7 +61,9 @@ export class VehicleBrandsController {
   @Get('popular')
   @ApiOperation({ summary: 'Получить популярные марки' })
   @ApiResponse({ status: 200, type: [VehicleBrandWithCountDto] })
-  findPopular(@Query('limit') limit?: number): Promise<VehicleBrandWithCountDto[]> {
+  findPopular(
+    @Query('limit') limit?: number,
+  ): Promise<VehicleBrandWithCountDto[]> {
     return this.vehicleBrandsService.findPopular(limit);
   }
 

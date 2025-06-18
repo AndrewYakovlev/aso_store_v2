@@ -5,10 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { CartModule } from '../cart/cart.module';
 
 @Module({
-  imports: [
-    PrismaModule,
-    forwardRef(() => CartModule),
-  ],
+  imports: [PrismaModule, forwardRef(() => CartModule)],
   controllers: [OrdersController],
   providers: [OrdersService],
   exports: [OrdersService],

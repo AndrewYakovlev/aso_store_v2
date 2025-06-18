@@ -11,10 +11,16 @@ export class ProductVehicleDto {
   @ApiProperty({ description: 'ID модели автомобиля' })
   vehicleModelId: string;
 
-  @ApiProperty({ description: 'Начальный год (если не указан - с начала выпуска модели)', required: false })
+  @ApiProperty({
+    description: 'Начальный год (если не указан - с начала выпуска модели)',
+    required: false,
+  })
   yearFrom?: number;
 
-  @ApiProperty({ description: 'Конечный год (если не указан - до конца выпуска модели)', required: false })
+  @ApiProperty({
+    description: 'Конечный год (если не указан - до конца выпуска модели)',
+    required: false,
+  })
   yearTo?: number;
 
   @ApiProperty({ description: 'Примечания по установке', required: false })
@@ -29,6 +35,10 @@ export class ProductVehicleDto {
   @ApiProperty({ description: 'Дата обновления' })
   updatedAt: Date;
 
-  @ApiProperty({ description: 'Модель автомобиля', type: VehicleModelDto, required: false })
+  @ApiProperty({
+    description: 'Модель автомобиля',
+    type: VehicleModelDto,
+    required: false,
+  })
   vehicleModel?: VehicleModelDto;
 }

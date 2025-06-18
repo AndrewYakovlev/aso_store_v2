@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray, IsHexColor, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsArray,
+  IsHexColor,
+  IsUUID,
+} from 'class-validator';
 import { AttributeDto } from './attribute.dto';
 
 export class ProductAttributeValueDto {
@@ -18,10 +26,10 @@ export class ProductAttributeValueDto {
   @ApiProperty({ description: 'Цвет (HEX)', required: false })
   colorValue?: string;
 
-  @ApiProperty({ 
-    description: 'IDs выбранных опций (для SELECT_MANY)', 
+  @ApiProperty({
+    description: 'IDs выбранных опций (для SELECT_MANY)',
     required: false,
-    type: [String]
+    type: [String],
   })
   optionIds?: string[];
 }
@@ -47,10 +55,10 @@ export class SetProductAttributeDto {
   @IsOptional()
   colorValue?: string;
 
-  @ApiProperty({ 
-    description: 'IDs выбранных опций (для SELECT_MANY)', 
+  @ApiProperty({
+    description: 'IDs выбранных опций (для SELECT_MANY)',
     required: false,
-    type: [String]
+    type: [String],
   })
   @IsArray()
   @IsUUID('4', { each: true })
@@ -59,9 +67,9 @@ export class SetProductAttributeDto {
 }
 
 export class BulkSetProductAttributesDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Список атрибутов и их значений',
-    type: [SetProductAttributeDto]
+    type: [SetProductAttributeDto],
   })
   @IsArray()
   attributes: SetProductAttributeDto[];

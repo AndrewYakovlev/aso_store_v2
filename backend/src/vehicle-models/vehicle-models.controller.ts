@@ -35,14 +35,18 @@ export class VehicleModelsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Создать новую модель автомобиля' })
   @ApiResponse({ status: 201, type: VehicleModelDto })
-  create(@Body() createVehicleModelDto: CreateVehicleModelDto): Promise<VehicleModelDto> {
+  create(
+    @Body() createVehicleModelDto: CreateVehicleModelDto,
+  ): Promise<VehicleModelDto> {
     return this.vehicleModelsService.create(createVehicleModelDto);
   }
 
   @Get()
   @ApiOperation({ summary: 'Получить список моделей автомобилей' })
   @ApiResponse({ status: 200, type: PaginatedVehicleModelsDto })
-  findAll(@Query() filter: VehicleModelsFilterDto): Promise<PaginatedVehicleModelsDto> {
+  findAll(
+    @Query() filter: VehicleModelsFilterDto,
+  ): Promise<PaginatedVehicleModelsDto> {
     return this.vehicleModelsService.findAll(filter);
   }
 
@@ -56,7 +60,9 @@ export class VehicleModelsController {
   @Get('by-brand/:brandSlug')
   @ApiOperation({ summary: 'Получить модели по slug марки' })
   @ApiResponse({ status: 200, type: [VehicleModelDto] })
-  findByBrand(@Param('brandSlug') brandSlug: string): Promise<VehicleModelDto[]> {
+  findByBrand(
+    @Param('brandSlug') brandSlug: string,
+  ): Promise<VehicleModelDto[]> {
     return this.vehicleModelsService.findByBrand(brandSlug);
   }
 

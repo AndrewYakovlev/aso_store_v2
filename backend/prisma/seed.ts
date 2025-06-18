@@ -27,6 +27,21 @@ async function main() {
   await prisma.deliveryMethod.deleteMany();
   await prisma.paymentMethod.deleteMany();
 
+  console.log('Seeding admin user...');
+  
+  // Create admin user
+  const adminUser = await prisma.user.create({
+    data: {
+      phone: '+79999999999',
+      firstName: 'Админ',
+      lastName: 'Администратор',
+      role: 'ADMIN',
+      isPhoneVerified: true,
+    },
+  });
+
+  console.log('Admin user created:', adminUser.phone);
+
   console.log('Seeding brands...');
 
   // Create brands

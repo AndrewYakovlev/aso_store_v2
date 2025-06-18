@@ -17,6 +17,7 @@ import {
   ShoppingCartIcon,
   MagnifyingGlassIcon,
   TruckIcon,
+  CogIcon,
 } from '@heroicons/react/24/outline'
 
 export function Header() {
@@ -152,6 +153,17 @@ export function Header() {
                   </span>
                 )}
               </Link>
+
+              {/* Админ панель - только для администраторов */}
+              {user && (user.role === 'ADMIN' || user.role === 'MANAGER') && (
+                <Link
+                  href="/admin"
+                  className="hidden lg:flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg text-red-600"
+                >
+                  <CogIcon className="w-6 h-6" />
+                  <span className="text-sm">Админка</span>
+                </Link>
+              )}
 
               {/* Личный кабинет */}
               <Link

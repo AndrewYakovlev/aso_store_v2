@@ -14,24 +14,42 @@ import { Type, Transform } from 'class-transformer';
 
 // Класс для фильтра по одному атрибуту
 export class AttributeFilterDto {
-  @ApiProperty({ 
-    description: 'Значения для фильтрации (для SELECT_ONE/SELECT_MANY - ID опций, для NUMBER - массив из min и max, для TEXT - строка поиска)',
+  @ApiProperty({
+    description:
+      'Значения для фильтрации (для SELECT_ONE/SELECT_MANY - ID опций, для NUMBER - массив из min и max, для TEXT - строка поиска)',
     oneOf: [
-      { type: 'array', items: { type: 'string' }, description: 'Массив ID опций для SELECT типов' },
-      { type: 'array', items: { type: 'number' }, minItems: 2, maxItems: 2, description: 'Массив [min, max] для NUMBER типа' },
-      { type: 'string', description: 'Строка поиска для TEXT типа' }
-    ]
+      {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Массив ID опций для SELECT типов',
+      },
+      {
+        type: 'array',
+        items: { type: 'number' },
+        minItems: 2,
+        maxItems: 2,
+        description: 'Массив [min, max] для NUMBER типа',
+      },
+      { type: 'string', description: 'Строка поиска для TEXT типа' },
+    ],
   })
   values: string[] | number[] | string;
 }
 
 export class ProductsFilterDto {
-  @ApiProperty({ description: 'Поиск по названию или артикулу', required: false })
+  @ApiProperty({
+    description: 'Поиск по названию или артикулу',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   search?: string;
 
-  @ApiProperty({ description: 'Фильтр по категориям', type: [String], required: false })
+  @ApiProperty({
+    description: 'Фильтр по категориям',
+    type: [String],
+    required: false,
+  })
   @IsOptional()
   @Type(() => String)
   @Transform(({ value }) => {
@@ -42,7 +60,11 @@ export class ProductsFilterDto {
   @IsUUID('4', { each: true })
   categoryIds?: string[];
 
-  @ApiProperty({ description: 'Фильтр по брендам', type: [String], required: false })
+  @ApiProperty({
+    description: 'Фильтр по брендам',
+    type: [String],
+    required: false,
+  })
   @IsOptional()
   @Type(() => String)
   @Transform(({ value }) => {
@@ -98,7 +120,10 @@ export class ProductsFilterDto {
   @IsString()
   sortBy?: string;
 
-  @ApiProperty({ description: 'Направление сортировки (asc/desc)', required: false })
+  @ApiProperty({
+    description: 'Направление сортировки (asc/desc)',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc';
@@ -108,22 +133,25 @@ export class ProductsFilterDto {
   @IsUUID()
   vehicleModelId?: string;
 
-  @ApiProperty({ description: 'Год автомобиля для фильтрации', required: false })
+  @ApiProperty({
+    description: 'Год автомобиля для фильтрации',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   @Min(1900)
   @Type(() => Number)
   vehicleYear?: number;
 
-  @ApiProperty({ 
-    description: 'Фильтры по атрибутам (ключ - ID атрибута, значение - фильтр)', 
+  @ApiProperty({
+    description: 'Фильтры по атрибутам (ключ - ID атрибута, значение - фильтр)',
     type: 'object',
     additionalProperties: { $ref: '#/components/schemas/AttributeFilterDto' },
     example: {
       'attr-id-1': { values: ['option-id-1', 'option-id-2'] },
       'attr-id-2': { values: [10, 50] },
-      'attr-id-3': { values: 'поисковый запрос' }
-    }
+      'attr-id-3': { values: 'поисковый запрос' },
+    },
   })
   @IsOptional()
   @IsObject()

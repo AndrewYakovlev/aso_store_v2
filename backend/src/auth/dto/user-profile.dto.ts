@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsPhoneNumber } from 'class-validator';
+import { UserRole } from '@prisma/client';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({
@@ -57,6 +58,13 @@ export class UserProfileDto {
     example: 'Иванович',
   })
   middleName?: string;
+
+  @ApiProperty({
+    description: 'User role',
+    enum: UserRole,
+    example: UserRole.CUSTOMER,
+  })
+  role: UserRole;
 
   @ApiProperty({
     description: 'Is phone verified',

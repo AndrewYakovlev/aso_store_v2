@@ -116,10 +116,6 @@ export class FavoritesController {
     const user = req.user as any;
     const userId = user?.type === 'user' ? user.id : undefined;
     const anonymousUserId = user?.type === 'anonymous' ? user.id : undefined;
-    return this.favoritesService.isFavorite(
-      userId,
-      anonymousUserId,
-      productId,
-    );
+    return this.favoritesService.isFavorite(userId, anonymousUserId, productId);
   }
 }
