@@ -60,6 +60,16 @@ export class FavoritesService {
                 category: true,
               },
             },
+            specifications: true,
+            attributes: {
+              include: {
+                attribute: {
+                  include: {
+                    options: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -124,6 +134,16 @@ export class FavoritesService {
             categories: {
               include: {
                 category: true,
+              },
+            },
+            specifications: true,
+            attributes: {
+              include: {
+                attribute: {
+                  include: {
+                    options: true,
+                  },
+                },
               },
             },
           },

@@ -1,5 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CategoryDto } from '../../categories/dto';
+import { ProductAttributeValueDto } from '../../attributes/dto';
+import { BrandDto } from '../../brands/dto';
+import { ProductVehicleDto } from '../../product-vehicles/dto';
 
 export class ProductDto {
   @ApiProperty()
@@ -29,11 +32,23 @@ export class ProductDto {
   @ApiProperty({ type: [String] })
   images: string[];
 
+  @ApiProperty({ required: false })
+  brandId?: string;
+
+  @ApiProperty({ type: BrandDto, required: false })
+  brand?: BrandDto;
+
   @ApiProperty({ type: [CategoryDto] })
   categories: CategoryDto[];
 
   @ApiProperty({ type: [Object], required: false })
   specifications?: any[];
+
+  @ApiProperty({ type: [ProductAttributeValueDto], required: false })
+  attributes?: ProductAttributeValueDto[];
+
+  @ApiProperty({ type: [ProductVehicleDto], required: false })
+  vehicles?: ProductVehicleDto[];
 
   @ApiProperty()
   createdAt: Date;

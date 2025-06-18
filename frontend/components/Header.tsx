@@ -15,6 +15,7 @@ import {
   HeartIcon,
   ShoppingCartIcon,
   MagnifyingGlassIcon,
+  TruckIcon,
 } from '@heroicons/react/24/outline'
 
 export function Header() {
@@ -73,11 +74,23 @@ export function Header() {
               {/* Логотип */}
               <Logo className="h-8 md:h-10" width={160} height={40} />
               
-              {/* Кнопка Каталог для десктопа */}
-              <button className="hidden lg:flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                <Bars3Icon className="w-5 h-5" />
-                <span>Каталог</span>
-              </button>
+              {/* Кнопки Каталог и Подбор по авто для десктопа */}
+              <div className="hidden lg:flex items-center gap-2">
+                <Link
+                  href="/catalog"
+                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  <Bars3Icon className="w-5 h-5" />
+                  <span>Каталог</span>
+                </Link>
+                <Link
+                  href="/vehicles"
+                  className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700"
+                >
+                  <TruckIcon className="w-5 h-5" />
+                  <span>Подбор по авто</span>
+                </Link>
+              </div>
 
               {/* Адрес для планшета */}
               <div className="hidden md:flex lg:hidden items-center gap-2 text-sm text-gray-600">

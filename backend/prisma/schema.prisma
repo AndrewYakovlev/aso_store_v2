@@ -65,6 +65,27 @@ model OtpCode {
   @@index([code])
 }
 
+// Brand model - product manufacturers
+model Brand {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  logo        String?  // URL логотипа
+  website     String?  // Сайт производителя
+  country     String?  // Страна производителя
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  products Product[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
 // Category model - hierarchical structure
 model Category {
   id          String  @id @default(uuid())
@@ -76,9 +97,10 @@ model Category {
   sortOrder   Int     @default(0)
 
   // Relations
-  parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryToCategory")
-  products ProductCategory[]
+  parent      Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryToCategory")
+  products    ProductCategory[]
+  attributes  CategoryAttribute[]
 
   @@index([parentId])
   @@index([slug])
@@ -95,19 +117,23 @@ model Product {
   stock        Int     @default(0)
   isActive     Boolean @default(true)
   images       Json    @default("[]") // Array of image URLs
+  brandId      String? // Необязательная связь с брендом
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relations
+  brand          Brand?             @relation(fields: [brandId], references: [id])
   categories     ProductCategory[]
   specifications Specification[]
-  vehicleLinks   ProductVehicle[]
   cartItems      CartItem[]
   orderItems     OrderItem[]
   favorites      Favorite[]
+  attributes     ProductAttribute[]
+  vehicles       ProductVehicle[]
 
   @@index([sku])
   @@index([slug])
+  @@index([brandId])
 }
 
 // Many-to-many relation between products and categories
@@ -139,53 +165,6 @@ model Specification {
   @@index([productId])
 }
 
-// Vehicle models - for linking products to cars
-model VehicleBrand {
-  id     String @id @default(uuid())
-  name   String @unique
-  models VehicleModel[]
-}
-
-model VehicleModel {
-  id           String @id @default(uuid())
-  brandId      String
-  name         String
-  generations  VehicleGeneration[]
-
-  // Relations
-  brand VehicleBrand @relation(fields: [brandId], references: [id])
-
-  @@unique([brandId, name])
-}
-
-model VehicleGeneration {
-  id       String @id @default(uuid())
-  modelId  String
-  name     String
-  yearFrom Int
-  yearTo   Int?
-
-  // Relations
-  model    VehicleModel     @relation(fields: [modelId], references: [id])
-  products ProductVehicle[]
-
-  @@index([modelId])
-}
-
-// Many-to-many relation between products and vehicles
-model ProductVehicle {
-  id           String @id @default(uuid())
-  productId    String
-  generationId String
-
-  // Relations
-  product    Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
-  generation VehicleGeneration @relation(fields: [generationId], references: [id])
-
-  @@unique([productId, generationId])
-  @@index([productId])
-  @@index([generationId])
-}
 
 // Cart model
 model Cart {
@@ -392,4 +371,154 @@ model ProductOffer {
 
   @@index([chatId])
   @@index([managerId])
+}
+
+// Attribute system for products
+enum AttributeType {
+  SELECT_ONE    // Single select from list
+  SELECT_MANY   // Multiple select from list  
+  NUMBER        // Numeric value
+  TEXT          // Text value
+  COLOR         // Color (HEX)
+}
+
+// Attribute definition
+model Attribute {
+  id            String              @id @default(uuid())
+  code          String              @unique
+  name          String
+  type          AttributeType
+  unit          String?             // Unit of measurement (for numeric)
+  isRequired    Boolean             @default(false)
+  isFilterable  Boolean             @default(false)
+  sortOrder     Int                 @default(0)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  
+  // Relations
+  options       AttributeOption[]
+  categories    CategoryAttribute[]
+  productValues ProductAttribute[]
+}
+
+// Possible values for SELECT_ONE and SELECT_MANY attributes
+model AttributeOption {
+  id          String   @id @default(uuid())
+  attributeId String
+  value       String
+  sortOrder   Int      @default(0)
+  
+  // Relations
+  attribute   Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  
+  @@index([attributeId])
+}
+
+// Link attributes to categories
+model CategoryAttribute {
+  id          String   @id @default(uuid())
+  categoryId  String
+  attributeId String
+  isRequired  Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  
+  // Relations
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  attribute   Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  
+  @@unique([categoryId, attributeId])
+  @@index([categoryId])
+  @@index([attributeId])
+}
+
+// Product attribute values
+model ProductAttribute {
+  id          String   @id @default(uuid())
+  productId   String
+  attributeId String
+  
+  // Values based on attribute type
+  textValue   String?
+  numberValue Float?
+  colorValue  String?  // HEX color
+  optionIds   String[] // Array of option IDs for SELECT_MANY
+  
+  // Relations
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attribute   Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  
+  @@unique([productId, attributeId])
+  @@index([productId])
+  @@index([attributeId])
+}
+
+// Vehicle Brands (Car Makes)
+model VehicleBrand {
+  id           String   @id @default(uuid())
+  externalId   String   @unique // ID из cars.json (например: "ABARTH")
+  name         String   // Английское название
+  nameCyrillic String   // Кириллическое название
+  slug         String   @unique
+  country      String?
+  logo         String?
+  popular      Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  models VehicleModel[]
+
+  @@index([slug])
+  @@index([popular])
+  @@index([isActive])
+}
+
+// Vehicle Models
+model VehicleModel {
+  id           String   @id @default(uuid())
+  externalId   String   @unique // ID из cars.json (например: "ABARTH_124_SPIDER")
+  brandId      String
+  name         String   // Английское название
+  nameCyrillic String   // Кириллическое название
+  slug         String   @unique
+  class        String   // Класс автомобиля (A, B, C, D, E, S и т.д.)
+  yearFrom     Int      // Год начала производства
+  yearTo       Int?     // Год окончания производства (null если еще производится)
+  image        String?
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  brand    VehicleBrand    @relation(fields: [brandId], references: [id])
+  products ProductVehicle[]
+
+  @@index([brandId])
+  @@index([slug])
+  @@index([class])
+  @@index([yearFrom, yearTo])
+  @@index([isActive])
+}
+
+// Product to Vehicle relationship
+model ProductVehicle {
+  id               String   @id @default(uuid())
+  productId        String
+  vehicleModelId   String
+  yearFrom         Int?     // Начальный год (если не указан - с начала выпуска модели)
+  yearTo           Int?     // Конечный год (если не указан - до конца выпуска модели)
+  fitmentNotes     String?  // Примечания по установке
+  isUniversal      Boolean  @default(false) // Подходит для всех модификаций
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vehicleModel VehicleModel @relation(fields: [vehicleModelId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, vehicleModelId, yearFrom, yearTo])
+  @@index([productId])
+  @@index([vehicleModelId])
+  @@index([yearFrom])
+  @@index([yearTo])
 }

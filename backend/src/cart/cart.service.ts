@@ -69,6 +69,15 @@ export class CartService {
                   },
                 },
                 specifications: true,
+                attributes: {
+                  include: {
+                    attribute: {
+                      include: {
+                        options: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -386,6 +395,36 @@ export class CartService {
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
     };
+
+    // Добавляем атрибуты если они есть
+    if (product.attributes && product.attributes.length > 0) {
+      formatted.attributes = product.attributes.map((pa: any) => {
+        const attrValue: any = {
+          attributeId: pa.attributeId,
+          attribute: {
+            id: pa.attribute.id,
+            code: pa.attribute.code,
+            name: pa.attribute.name,
+            type: pa.attribute.type,
+            unit: pa.attribute.unit,
+            isRequired: pa.attribute.isRequired,
+            isFilterable: pa.attribute.isFilterable,
+            sortOrder: pa.attribute.sortOrder,
+            options: pa.attribute.options,
+            createdAt: pa.attribute.createdAt,
+            updatedAt: pa.attribute.updatedAt,
+          },
+        };
+
+        // Добавляем значения в зависимости от типа
+        if (pa.textValue !== null) attrValue.textValue = pa.textValue;
+        if (pa.numberValue !== null) attrValue.numberValue = pa.numberValue;
+        if (pa.colorValue !== null) attrValue.colorValue = pa.colorValue;
+        if (pa.optionIds && pa.optionIds.length > 0) attrValue.optionIds = pa.optionIds;
+
+        return attrValue;
+      });
+    }
 
     return formatted;
   }

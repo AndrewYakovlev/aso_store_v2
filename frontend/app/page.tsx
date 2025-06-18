@@ -1,5 +1,6 @@
 import { categoriesApi } from '@/lib/api/categories';
 import { CategoriesGrid } from '@/components/categories/CategoriesGrid';
+import { VehicleSelector } from '@/components/VehicleSelector';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { TruckIcon, ShieldCheckIcon, CreditCardIcon } from '@heroicons/react/24/outline';
@@ -27,6 +28,13 @@ export default async function Home() {
               </Button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Vehicle Selector */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <VehicleSelector />
         </div>
       </section>
 

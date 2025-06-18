@@ -8,7 +8,7 @@ import {
   IsArray,
   IsUUID,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class ProductsFilterDto {
   @ApiProperty({ description: 'Поиск по названию или артикулу', required: false })
@@ -18,9 +18,25 @@ export class ProductsFilterDto {
 
   @ApiProperty({ description: 'Фильтр по категориям', type: [String], required: false })
   @IsOptional()
+  @Type(() => String)
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return [value];
+    return value;
+  })
   @IsArray()
   @IsUUID('4', { each: true })
   categoryIds?: string[];
+
+  @ApiProperty({ description: 'Фильтр по брендам', type: [String], required: false })
+  @IsOptional()
+  @Type(() => String)
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return [value];
+    return value;
+  })
+  @IsArray()
+  @IsUUID('4', { each: true })
+  brandIds?: string[];
 
   @ApiProperty({ description: 'Минимальная цена', required: false })
   @IsOptional()
@@ -71,4 +87,16 @@ export class ProductsFilterDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc';
+
+  @ApiProperty({ description: 'Фильтр по модели автомобиля', required: false })
+  @IsOptional()
+  @IsUUID()
+  vehicleModelId?: string;
+
+  @ApiProperty({ description: 'Год автомобиля для фильтрации', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(1900)
+  @Type(() => Number)
+  vehicleYear?: number;
 }

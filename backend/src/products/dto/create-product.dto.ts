@@ -51,6 +51,11 @@ export class CreateProductDto {
   @IsBoolean()
   isActive?: boolean = true;
 
+  @ApiProperty({ description: 'ID бренда', required: false })
+  @IsOptional()
+  @IsUUID('4')
+  brandId?: string;
+
   @ApiProperty({
     description: 'Массив ID категорий',
     type: [String],

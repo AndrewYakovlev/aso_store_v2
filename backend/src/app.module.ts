@@ -9,6 +9,11 @@ import { ProductsModule } from './products/products.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
+import { AttributesModule } from './attributes/attributes.module';
+import { BrandsModule } from './brands/brands.module';
+import { VehicleBrandsModule } from './vehicle-brands/vehicle-brands.module';
+import { VehicleModelsModule } from './vehicle-models/vehicle-models.module';
+import { ProductVehiclesModule } from './product-vehicles/product-vehicles.module';
 
 @Module({
   imports: [
@@ -22,6 +27,11 @@ import { OrdersModule } from './orders/orders.module';
     FavoritesModule,
     CartModule,
     OrdersModule,
+    AttributesModule,
+    BrandsModule,
+    VehicleBrandsModule,
+    VehicleModelsModule,
+    ProductVehiclesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

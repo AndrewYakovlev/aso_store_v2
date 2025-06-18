@@ -1,4 +1,20 @@
 import { apiRequest } from './client';
+import { ProductAttributeValueDto } from '@/lib/api/attributes/types';
+import { BrandDto } from '@/lib/api/brands/types';
+import { VehicleModel } from '@/lib/api/vehicles';
+
+export interface ProductVehicle {
+  id: string;
+  productId: string;
+  vehicleModelId: string;
+  yearFrom?: number;
+  yearTo?: number;
+  fitmentNotes?: string;
+  isUniversal: boolean;
+  createdAt: string;
+  updatedAt: string;
+  vehicleModel?: VehicleModel;
+}
 
 export interface Product {
   id: string;
@@ -10,7 +26,11 @@ export interface Product {
   stock: number;
   isActive: boolean;
   images: string[];
+  brandId?: string;
+  brand?: BrandDto;
   categories: Category[];
+  attributes?: ProductAttributeValueDto[];
+  vehicles?: ProductVehicle[];
   createdAt: string;
   updatedAt: string;
 }
@@ -28,10 +48,13 @@ export interface Category {
 export interface ProductsFilter {
   search?: string;
   categoryIds?: string[];
+  brandIds?: string[];
   minPrice?: number;
   maxPrice?: number;
   onlyActive?: boolean;
   inStock?: boolean;
+  vehicleModelId?: string;
+  vehicleYear?: number;
   page?: number;
   limit?: number;
   sortBy?: string;

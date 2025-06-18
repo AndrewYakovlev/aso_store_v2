@@ -98,6 +98,17 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
         
+        {product.vehicles && product.vehicles.length > 0 && (
+          <div className="mb-2">
+            <p className="text-xs text-muted-foreground">
+              Подходит для: {product.vehicles.slice(0, 2).map(v => 
+                v.vehicleModel?.brand?.name + ' ' + (v.vehicleModel?.nameCyrillic || v.vehicleModel?.name)
+              ).join(', ')}
+              {product.vehicles.length > 2 && ` и еще ${product.vehicles.length - 2}`}
+            </p>
+          </div>
+        )}
+        
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-bold">{formatPrice(product.price)}</p>

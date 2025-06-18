@@ -6,6 +6,8 @@ import { Metadata } from "next"
 import { productsApi } from "@/lib/api/products"
 import { ProductImage } from "@/components/products/ProductImage"
 import { ProductActions } from "@/components/products/ProductActions"
+import { ProductAttributes } from "@/components/ProductAttributes"
+import { ProductVehicles } from "@/components/products/ProductVehicles"
 import { Card } from "@/components/ui/card"
 import { 
   ShoppingCartIcon, 
@@ -47,6 +49,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   try {
     product = await productsApi.getBySlug(slug)
+    console.log('Product received:', product)
+    console.log('Product attributes:', product.attributes)
   } catch (error) {
     notFound()
   }
@@ -140,6 +144,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
           <p className="text-muted-foreground mb-4">Артикул: {product.sku}</p>
 
+          {/* Brand */}
+          {product.brand && (
+            <div className="mb-4">
+              <Link
+                href={`/brands/${product.brand.slug}`}
+                className="text-primary hover:underline"
+              >
+                Производитель: {product.brand.name}
+              </Link>
+            </div>
+          )}
+
           {/* Categories */}
           {product.categories.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
@@ -184,9 +200,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <ProductActions productId={product.id} inStock={inStock} />
           </Card>
 
+          {/* Attributes */}
+          {product.attributes && product.attributes.length > 0 && (
+            <ProductAttributes attributes={product.attributes} />
+          )}
+
+          {/* Compatible Vehicles */}
+          {product.vehicles && product.vehicles.length > 0 && (
+            <div className="mt-6">
+              <ProductVehicles vehicles={product.vehicles} />
+            </div>
+          )}
+
           {/* Description */}
           {product.description && (
-            <div className="prose prose-sm max-w-none">
+            <div className="prose prose-sm max-w-none mt-6">
               <h2 className="text-xl font-semibold mb-3">Описание</h2>
               <p className="text-muted-foreground">{product.description}</p>
             </div>
