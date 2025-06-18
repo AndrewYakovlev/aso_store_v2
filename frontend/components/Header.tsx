@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Logo } from './Logo'
 import { AuthModal } from './auth/AuthModal'
 import { useAuth } from '@/lib/contexts/AuthContext'
+import { useFavoritesContext } from '@/lib/contexts/FavoritesContext'
 import {
   Bars3Icon,
   PhoneIcon,
@@ -18,6 +19,7 @@ import {
 export function Header() {
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const { user, login } = useAuth()
+  const { favoriteIds } = useFavoritesContext()
 
   const handleAuthSuccess = (data: any) => {
     login(data.accessToken, data.refreshToken, data.user)
@@ -113,9 +115,14 @@ export function Header() {
               {/* Избранное - только десктоп */}
               <Link
                 href="/favorites"
-                className="hidden lg:flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg"
+                className="hidden lg:flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg relative"
               >
                 <HeartIcon className="w-6 h-6" />
+                {favoriteIds.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {favoriteIds.length}
+                  </span>
+                )}
               </Link>
 
               {/* Личный кабинет */}

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -9,12 +9,14 @@ import { AnonymousUserService } from './services/anonymous-user.service';
 import { OtpService } from './services/otp.service';
 import { JwtStrategy, AnonymousStrategy } from './strategies';
 import { PrismaModule } from '../prisma/prisma.module';
+import { FavoritesModule } from '../favorites/favorites.module';
 
 @Module({
   imports: [
     PrismaModule,
     PassportModule,
     ConfigModule,
+    forwardRef(() => FavoritesModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

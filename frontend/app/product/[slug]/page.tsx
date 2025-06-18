@@ -5,11 +5,10 @@ import Image from "next/image"
 import { Metadata } from "next"
 import { productsApi } from "@/lib/api/products"
 import { ProductImage } from "@/components/products/ProductImage"
-import { Button } from "@/components/ui/button"
+import { ProductActions } from "@/components/products/ProductActions"
 import { Card } from "@/components/ui/card"
 import { 
   ShoppingCartIcon, 
-  HeartIcon, 
   ChevronRightIcon,
   CheckCircleIcon,
   XCircleIcon 
@@ -182,22 +181,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <Button 
-                size="lg" 
-                className="flex-1"
-                disabled={!inStock}
-              >
-                <ShoppingCartIcon className="w-5 h-5 mr-2" />
-                Добавить в корзину
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
-              >
-                <HeartIcon className="w-5 h-5" />
-              </Button>
-            </div>
+            <ProductActions productId={product.id} inStock={inStock} />
           </Card>
 
           {/* Description */}

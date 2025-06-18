@@ -1,8 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from './services/jwt.service';
 import { AnonymousUserService } from './services/anonymous-user.service';
 import { OtpService } from './services/otp.service';
+import { FavoritesService } from '../favorites/favorites.service';
 import { AuthTokensDto, UserProfileDto } from './dto';
 
 @Injectable()
@@ -12,6 +13,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly anonymousUserService: AnonymousUserService,
     private readonly otpService: OtpService,
+    @Inject(forwardRef(() => FavoritesService))
+    private readonly favoritesService: FavoritesService,
   ) {}
 
   async getAnonymousToken() {
@@ -78,6 +81,9 @@ export class AuthService {
     if (anonymousToken) {
       const anonymousUser = await this.anonymousUserService.findByToken(anonymousToken);
       if (anonymousUser && !anonymousUser.userId) {
+        // Merge favorites
+        await this.favoritesService.mergeFavorites(anonymousUser.id, user.id);
+        // Merge anonymous user data
         await this.anonymousUserService.mergeWithUser(anonymousUser.id, user.id);
       }
     }

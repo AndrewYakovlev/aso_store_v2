@@ -2,16 +2,22 @@
 
 import Link from 'next/link'
 import { ShoppingCartIcon, HeartIcon } from '@heroicons/react/24/outline'
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import { Product } from '@/lib/api/products'
 import { ProductImage } from './ProductImage'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { useFavoritesContext } from '@/lib/contexts/FavoritesContext'
+import { useState } from 'react'
 
 interface ProductCardProps {
   product: Product
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const { isFavorite, toggleFavorite } = useFavoritesContext()
+  const [isToggling, setIsToggling] = useState(false)
+  
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',
@@ -22,6 +28,18 @@ export function ProductCard({ product }: ProductCardProps) {
   }
 
   const inStock = product.stock > 0
+  const isInFavorites = isFavorite(product.id)
+  
+  const handleToggleFavorite = async () => {
+    try {
+      setIsToggling(true)
+      await toggleFavorite(product.id)
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error)
+    } finally {
+      setIsToggling(false)
+    }
+  }
 
   return (
     <Card className="group relative overflow-hidden hover:shadow-lg transition-shadow">
@@ -91,8 +109,14 @@ export function ProductCard({ product }: ProductCardProps) {
           size="sm" 
           variant="outline"
           className="px-2"
+          onClick={handleToggleFavorite}
+          disabled={isToggling}
         >
-          <HeartIcon className="w-4 h-4" />
+          {isInFavorites ? (
+            <HeartIconSolid className="w-4 h-4 text-red-500" />
+          ) : (
+            <HeartIcon className="w-4 h-4" />
+          )}
         </Button>
       </CardFooter>
     </Card>

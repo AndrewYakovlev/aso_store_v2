@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { AnonymousTokenProvider } from "@/components/AnonymousTokenProvider";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
+import { FavoritesProvider } from "@/lib/contexts/FavoritesContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,10 +42,12 @@ export default function RootLayout({
       >
         <AnonymousTokenProvider>
           <AuthProvider>
-            <Header />
-            <main className="min-h-screen">
-              {children}
-            </main>
+            <FavoritesProvider>
+              <Header />
+              <main className="min-h-screen">
+                {children}
+              </main>
+            </FavoritesProvider>
           </AuthProvider>
         </AnonymousTokenProvider>
       </body>
