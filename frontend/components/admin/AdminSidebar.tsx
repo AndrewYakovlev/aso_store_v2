@@ -13,7 +13,7 @@ import {
   TruckIcon,
   ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 const menuItems = [
   { 

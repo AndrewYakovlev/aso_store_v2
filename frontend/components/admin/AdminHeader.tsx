@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/lib/auth/AuthContext';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import Link from 'next/link';
 import { ArrowLeftIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
