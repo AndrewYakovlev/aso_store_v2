@@ -45,6 +45,10 @@ export interface Category {
   sortOrder: number;
 }
 
+export interface AttributeFilter {
+  values: string[] | number[] | string;
+}
+
 export interface ProductsFilter {
   search?: string;
   categoryIds?: string[];
@@ -55,6 +59,7 @@ export interface ProductsFilter {
   inStock?: boolean;
   vehicleModelId?: string;
   vehicleYear?: number;
+  attributes?: Record<string, AttributeFilter>;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -76,7 +81,10 @@ export const productsApi = {
     
     Object.entries(filter).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        if (Array.isArray(value)) {
+        if (key === 'attributes' && typeof value === 'object') {
+          // Для атрибутов передаем как JSON строку
+          params.append(key, JSON.stringify(value));
+        } else if (Array.isArray(value)) {
           value.forEach(v => params.append(key, v));
         } else {
           params.append(key, String(value));
@@ -85,6 +93,25 @@ export const productsApi = {
     });
 
     return apiRequest<PaginatedProducts>(`/products?${params}`);
+  },
+
+  // Get available filters
+  async getFilters(baseFilter: ProductsFilter = {}) {
+    const params = new URLSearchParams();
+    
+    Object.entries(baseFilter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (key === 'attributes' && typeof value === 'object') {
+          params.append(key, JSON.stringify(value));
+        } else if (Array.isArray(value)) {
+          value.forEach(v => params.append(key, v));
+        } else {
+          params.append(key, String(value));
+        }
+      }
+    });
+
+    return apiRequest(`/products/filters?${params}`);
   },
 
   // Get product by slug

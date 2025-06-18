@@ -68,6 +68,7 @@ export class ProductsService {
       inStock,
       vehicleModelId,
       vehicleYear,
+      attributes,
       page = 1,
       limit = 20,
       sortBy = 'createdAt',
@@ -145,6 +146,75 @@ export class ProductsService {
       where.vehicles = {
         some: vehicleFilter,
       };
+    }
+
+    // Attributes filter
+    if (attributes && Object.keys(attributes).length > 0) {
+      const attributeFilters = [];
+      
+      for (const [attributeId, filterData] of Object.entries(attributes)) {
+        const attribute = await this.prisma.attribute.findUnique({
+          where: { id: attributeId },
+        });
+
+        if (!attribute) continue;
+
+        const attributeFilter: any = {
+          attributeId,
+        };
+
+        switch (attribute.type) {
+          case 'SELECT_ONE':
+          case 'SELECT_MANY':
+            // Для SELECT типов фильтруем по ID опций
+            if (Array.isArray(filterData.values) && filterData.values.length > 0) {
+              attributeFilter.optionIds = {
+                hasSome: filterData.values as string[],
+              };
+            }
+            break;
+          
+          case 'NUMBER':
+            // Для NUMBER типа фильтруем по диапазону
+            if (Array.isArray(filterData.values) && filterData.values.length === 2) {
+              const [min, max] = filterData.values as number[];
+              attributeFilter.numberValue = {
+                gte: min,
+                lte: max,
+              };
+            }
+            break;
+          
+          case 'TEXT':
+            // Для TEXT типа фильтруем по подстроке
+            if (typeof filterData.values === 'string' && filterData.values) {
+              attributeFilter.textValue = {
+                contains: filterData.values,
+                mode: 'insensitive',
+              };
+            }
+            break;
+          
+          case 'COLOR':
+            // Для COLOR типа точное совпадение
+            if (typeof filterData.values === 'string' && filterData.values) {
+              attributeFilter.colorValue = filterData.values;
+            }
+            break;
+        }
+
+        if (Object.keys(attributeFilter).length > 1) {
+          attributeFilters.push(attributeFilter);
+        }
+      }
+
+      if (attributeFilters.length > 0) {
+        where.attributes = {
+          some: {
+            AND: attributeFilters,
+          },
+        };
+      }
     }
 
     // Count total
@@ -493,5 +563,245 @@ export class ProductsService {
     }
 
     return dto;
+  }
+
+  async getAvailableFilters(baseFilter: ProductsFilterDto) {
+    // Создаем базовый where условие из существующих фильтров
+    const where: Prisma.ProductWhereInput = {};
+    
+    if (baseFilter.search) {
+      where.OR = [
+        { name: { contains: baseFilter.search, mode: 'insensitive' } },
+        { sku: { contains: baseFilter.search, mode: 'insensitive' } },
+        { description: { contains: baseFilter.search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (baseFilter.categoryIds && baseFilter.categoryIds.length > 0) {
+      where.categories = {
+        some: {
+          categoryId: { in: baseFilter.categoryIds },
+        },
+      };
+    }
+
+    if (baseFilter.vehicleModelId) {
+      where.vehicles = {
+        some: { vehicleModelId: baseFilter.vehicleModelId },
+      };
+    }
+
+    if (baseFilter.onlyActive) {
+      where.isActive = true;
+    }
+
+    if (baseFilter.inStock) {
+      where.stock = { gt: 0 };
+    }
+
+    // Получаем все товары с учетом базовых фильтров
+    const products = await this.prisma.product.findMany({
+      where,
+      select: {
+        id: true,
+        price: true,
+        brandId: true,
+        categories: {
+          select: {
+            categoryId: true,
+          },
+        },
+        attributes: {
+          select: {
+            attributeId: true,
+            optionIds: true,
+            numberValue: true,
+            textValue: true,
+            colorValue: true,
+            attribute: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                type: true,
+                unit: true,
+                isFilterable: true,
+                options: {
+                  select: {
+                    id: true,
+                    value: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Собираем статистику по фильтрам
+    const filters = {
+      // Диапазон цен
+      priceRange: {
+        min: Math.min(...products.map(p => p.price)),
+        max: Math.max(...products.map(p => p.price)),
+      },
+      
+      // Категории с количеством товаров
+      categories: await this.getCategoriesWithCounts(products),
+      
+      // Бренды с количеством товаров
+      brands: await this.getBrandsWithCounts(products),
+      
+      // Атрибуты с вариантами и количеством
+      attributes: await this.getAttributesWithCounts(products),
+    };
+
+    return filters;
+  }
+
+  private async getCategoriesWithCounts(products: any[]) {
+    const categoryMap = new Map<string, number>();
+    
+    products.forEach(product => {
+      product.categories.forEach((pc: any) => {
+        const count = categoryMap.get(pc.categoryId) || 0;
+        categoryMap.set(pc.categoryId, count + 1);
+      });
+    });
+
+    const categories = await this.prisma.category.findMany({
+      where: {
+        id: { in: Array.from(categoryMap.keys()) },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+    });
+
+    return categories.map(category => ({
+      ...category,
+      count: categoryMap.get(category.id) || 0,
+    }));
+  }
+
+  private async getBrandsWithCounts(products: any[]) {
+    const brandMap = new Map<string, number>();
+    
+    products.forEach(product => {
+      if (product.brandId) {
+        const count = brandMap.get(product.brandId) || 0;
+        brandMap.set(product.brandId, count + 1);
+      }
+    });
+
+    const brands = await this.prisma.brand.findMany({
+      where: {
+        id: { in: Array.from(brandMap.keys()) },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+    });
+
+    return brands.map(brand => ({
+      ...brand,
+      count: brandMap.get(brand.id) || 0,
+    }));
+  }
+
+  private async getAttributesWithCounts(products: any[]) {
+    const attributeMap = new Map<string, any>();
+    
+    products.forEach(product => {
+      product.attributes.forEach((pa: any) => {
+        if (!pa.attribute.isFilterable) return;
+        
+        let attrData = attributeMap.get(pa.attributeId);
+        if (!attrData) {
+          attrData = {
+            ...pa.attribute,
+            values: new Map(),
+          };
+          attributeMap.set(pa.attributeId, attrData);
+        }
+
+        switch (pa.attribute.type) {
+          case 'SELECT_ONE':
+          case 'SELECT_MANY':
+            pa.optionIds?.forEach((optionId: string) => {
+              const count = attrData.values.get(optionId) || 0;
+              attrData.values.set(optionId, count + 1);
+            });
+            break;
+          
+          case 'NUMBER':
+            if (pa.numberValue !== null) {
+              if (!attrData.min || pa.numberValue < attrData.min) {
+                attrData.min = pa.numberValue;
+              }
+              if (!attrData.max || pa.numberValue > attrData.max) {
+                attrData.max = pa.numberValue;
+              }
+            }
+            break;
+          
+          case 'COLOR':
+            if (pa.colorValue) {
+              const count = attrData.values.get(pa.colorValue) || 0;
+              attrData.values.set(pa.colorValue, count + 1);
+            }
+            break;
+        }
+      });
+    });
+
+    const result = [];
+    
+    for (const [attributeId, attrData] of attributeMap) {
+      const attribute: any = {
+        id: attrData.id,
+        name: attrData.name,
+        code: attrData.code,
+        type: attrData.type,
+        unit: attrData.unit,
+      };
+
+      switch (attrData.type) {
+        case 'SELECT_ONE':
+        case 'SELECT_MANY':
+          attribute.options = attrData.options
+            .filter((opt: any) => attrData.values.has(opt.id))
+            .map((opt: any) => ({
+              ...opt,
+              count: attrData.values.get(opt.id),
+            }));
+          break;
+        
+        case 'NUMBER':
+          attribute.range = {
+            min: attrData.min || 0,
+            max: attrData.max || 0,
+          };
+          break;
+        
+        case 'COLOR':
+          attribute.colors = Array.from(attrData.values.entries()).map(([color, count]) => ({
+            value: color,
+            count,
+          }));
+          break;
+      }
+
+      result.push(attribute);
+    }
+
+    return result;
   }
 }

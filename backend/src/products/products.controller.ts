@@ -43,6 +43,16 @@ export class ProductsController {
     return this.productsService.create(createProductDto);
   }
 
+  @Get('filters')
+  @ApiOperation({ summary: 'Get available filters for products' })
+  @ApiResponse({
+    status: 200,
+    description: 'Available filters with counts',
+  })
+  async getFilters(@Query() baseFilter: ProductsFilterDto) {
+    return this.productsService.getAvailableFilters(baseFilter);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Get all products with filters' })
   @ApiResponse({

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Logo } from './Logo'
 import { AuthModal } from './auth/AuthModal'
 import { useAuth } from '@/lib/contexts/AuthContext'
@@ -19,7 +20,9 @@ import {
 } from '@heroicons/react/24/outline'
 
 export function Header() {
+  const router = useRouter()
   const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const { user, login } = useAuth()
   const { favoriteIds } = useFavoritesContext()
   const { summary } = useCartContext()
@@ -99,11 +102,21 @@ export function Header() {
               </div>
 
               {/* Поисковая форма для десктопа */}
-              <form className="hidden lg:flex flex-1 max-w-xl">
+              <form 
+                className="hidden lg:flex flex-1 max-w-xl"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (searchQuery.trim()) {
+                    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+                  }
+                }}
+              >
                 <div className="relative w-full">
                   <input
                     type="search"
                     placeholder="Поиск по каталогу..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:border-blue-500"
                   />
                   <button
@@ -168,6 +181,35 @@ export function Header() {
               </Link>
             </div>
           </div>
+        </div>
+        
+        {/* Поисковая форма для мобильных устройств */}
+        <div className="lg:hidden border-t">
+          <form 
+            className="p-4"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (searchQuery.trim()) {
+                router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+              }
+            }}
+          >
+            <div className="relative">
+              <input
+                type="search"
+                placeholder="Поиск по каталогу..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:border-blue-500"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+              >
+                <MagnifyingGlassIcon className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+          </form>
         </div>
       </header>
 
