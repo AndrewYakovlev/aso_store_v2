@@ -583,7 +583,7 @@ export class ProductsService {
 
   async getAvailableFilters(baseFilter: ProductsFilterDto) {
     try {
-      // console.log('Getting available filters with base filter:', baseFilter);
+      // console.log('Getting available filters with base filter:', JSON.stringify(baseFilter, null, 2));
       
       // Создаем копию фильтра без категорий и брендов для получения всех доступных опций
       const { categoryIds, brandIds, ...baseFilterWithoutCategoriesAndBrands } = baseFilter;
@@ -1093,14 +1093,89 @@ export class ProductsService {
   }
 
   private async getAttributeFiltersWithoutSelf(baseFilter: ProductsFilterDto) {
-    // Создаем фильтр без атрибутов для получения всех доступных опций
-    // Это работает так же, как для категорий и брендов
-    const { attributes, ...filterWithoutAttributes } = baseFilter;
+    const where: Prisma.ProductWhereInput = {};
     
-    // Получаем все доступные атрибуты без учета фильтров по самим атрибутам
-    const result = await this.getFiltersForOtherParameters(filterWithoutAttributes);
-    
-    return result.attributes || [];
+    // Применяем все фильтры КРОМЕ атрибутов
+    if (baseFilter.search) {
+      where.OR = [
+        { name: { contains: baseFilter.search, mode: 'insensitive' } },
+        { sku: { contains: baseFilter.search, mode: 'insensitive' } },
+        { description: { contains: baseFilter.search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (baseFilter.categoryIds && baseFilter.categoryIds.length > 0) {
+      where.categories = {
+        some: {
+          categoryId: { in: baseFilter.categoryIds },
+        },
+      };
+    }
+
+    if (baseFilter.brandIds && baseFilter.brandIds.length > 0) {
+      where.brandId = { in: baseFilter.brandIds };
+    }
+
+    if (baseFilter.minPrice !== undefined || baseFilter.maxPrice !== undefined) {
+      where.price = {};
+      if (baseFilter.minPrice !== undefined) {
+        where.price.gte = baseFilter.minPrice;
+      }
+      if (baseFilter.maxPrice !== undefined) {
+        where.price.lte = baseFilter.maxPrice;
+      }
+    }
+
+    if (baseFilter.vehicleModelId) {
+      where.vehicles = {
+        some: { vehicleModelId: baseFilter.vehicleModelId },
+      };
+    }
+
+    if (baseFilter.onlyActive) {
+      where.isActive = true;
+    }
+
+    if (baseFilter.inStock) {
+      where.stock = { gt: 0 };
+    }
+
+    // НЕ применяем фильтры по атрибутам!
+
+    // Получаем товары
+    const products = await this.prisma.product.findMany({
+      where,
+      select: {
+        id: true,
+        attributes: {
+          select: {
+            attributeId: true,
+            optionIds: true,
+            numberValue: true,
+            textValue: true,
+            colorValue: true,
+            attribute: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+                type: true,
+                unit: true,
+                isFilterable: true,
+                options: {
+                  select: {
+                    id: true,
+                    value: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return this.getAttributesWithCounts(products);
   }
 
   private async getAttributesWithCounts(products: any[]) {
