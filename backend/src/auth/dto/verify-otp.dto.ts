@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsPhoneNumber, IsOptional, Length } from 'class-validator';
+import { UserRole } from '@prisma/client';
 
 export class VerifyOtpDto {
   @ApiProperty({
@@ -49,5 +50,6 @@ export class AuthTokensDto {
     firstName?: string;
     lastName?: string;
     middleName?: string;
+    role: UserRole;
   };
 }

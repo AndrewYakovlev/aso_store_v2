@@ -122,6 +122,7 @@ export class AuthService {
         firstName: user.firstName || undefined,
         lastName: user.lastName || undefined,
         middleName: user.middleName || undefined,
+        role: user.role,
       },
     };
   }
@@ -202,6 +203,7 @@ export class AuthService {
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
       middleName: user.middleName || undefined,
+      role: user.role,
       isPhoneVerified: user.isPhoneVerified,
       createdAt: user.createdAt,
     };
