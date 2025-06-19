@@ -48,6 +48,7 @@ export interface Order {
   totalAmount: number;
   deliveryAmount: number;
   grandTotal: number;
+  deliveryComment?: string;
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
@@ -160,12 +161,37 @@ export const ordersApi = {
   },
 
   // Update order status (admin only)
-  async updateStatus(id: string, statusId: string): Promise<Order> {
-    const anonymousToken = getAnonymousToken();
+  async updateStatus(id: string, statusId: string, accessToken: string): Promise<Order> {
     return apiRequest<Order>(`/orders/${id}/status`, {
       method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
       body: JSON.stringify({ statusId }),
-      anonymousToken: anonymousToken || undefined,
+    });
+  },
+
+  // Get all orders (admin only)
+  async getAllOrders(filter?: OrdersFilter, accessToken?: string): Promise<PaginatedOrders> {
+    const params = new URLSearchParams();
+    
+    if (filter) {
+      if (filter.statusId) params.append('statusId', filter.statusId);
+      if (filter.orderNumber) params.append('orderNumber', filter.orderNumber);
+      if (filter.page) params.append('page', filter.page.toString());
+      if (filter.limit) params.append('limit', filter.limit.toString());
+      if (filter.sortBy) params.append('sortBy', filter.sortBy);
+      if (filter.sortOrder) params.append('sortOrder', filter.sortOrder);
+    }
+
+    const queryString = params.toString();
+    const url = `/orders/admin${queryString ? `?${queryString}` : ''}`;
+
+    return apiRequest<PaginatedOrders>(url, {
+      headers: accessToken ? {
+        'Authorization': `Bearer ${accessToken}`,
+      } : undefined,
     });
   },
 };

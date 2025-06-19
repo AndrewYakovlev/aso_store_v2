@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: UserProfile | null;
+  accessToken: string | null;
   loading: boolean;
   login: (accessToken: string, refreshToken: string, user: any) => void;
   logout: () => void;
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -25,17 +27,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const loadUser = async () => {
-    const accessToken = localStorage.getItem('access_token');
+    const storedAccessToken = localStorage.getItem('access_token');
     const refreshToken = localStorage.getItem('refresh_token');
 
-    if (!accessToken || !refreshToken) {
+    if (!storedAccessToken || !refreshToken) {
       setLoading(false);
       return;
     }
 
+    setAccessToken(storedAccessToken);
+
     try {
       // Try to get user profile
-      const profile = await authApi.getProfile(accessToken);
+      const profile = await authApi.getProfile(storedAccessToken);
       setUser(profile);
     } catch (error) {
       // Token might be expired, try to refresh
@@ -61,14 +65,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     localStorage.setItem('access_token', response.accessToken);
     localStorage.setItem('refresh_token', response.refreshToken);
+    setAccessToken(response.accessToken);
     
     const profile = await authApi.getProfile(response.accessToken);
     setUser(profile);
   };
 
-  const login = (accessToken: string, refreshToken: string, userData: any) => {
-    localStorage.setItem('access_token', accessToken);
+  const login = (newAccessToken: string, refreshToken: string, userData: any) => {
+    localStorage.setItem('access_token', newAccessToken);
     localStorage.setItem('refresh_token', refreshToken);
+    setAccessToken(newAccessToken);
     
     // Convert user data to profile format
     const profile: UserProfile = {
@@ -83,12 +89,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    setAccessToken(null);
     setUser(null);
     router.push('/');
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshAuth }}>
+    <AuthContext.Provider value={{ user, accessToken, loading, login, logout, refreshAuth }}>
       {children}
     </AuthContext.Provider>
   );

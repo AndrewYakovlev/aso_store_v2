@@ -77,26 +77,34 @@ export const categoriesApi = {
     });
   },
 
-  async create(data: CreateCategoryDto, token: string): Promise<Category> {
+  async create(data: CreateCategoryDto, accessToken: string): Promise<Category> {
     return apiRequest<Category>('/categories', {
       method: 'POST',
-      token,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
       body: JSON.stringify(data),
     });
   },
 
-  async update(id: string, data: UpdateCategoryDto, token: string): Promise<Category> {
+  async update(id: string, data: UpdateCategoryDto, accessToken: string): Promise<Category> {
     return apiRequest<Category>(`/categories/${id}`, {
       method: 'PATCH',
-      token,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
       body: JSON.stringify(data),
     });
   },
 
-  async delete(id: string, token: string): Promise<void> {
+  async delete(id: string, accessToken: string): Promise<void> {
     return apiRequest<void>(`/categories/${id}`, {
       method: 'DELETE',
-      token,
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
     });
   },
 };

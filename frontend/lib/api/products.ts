@@ -49,6 +49,34 @@ export interface AttributeFilter {
   values: string[] | number[] | string;
 }
 
+export interface CreateProductDto {
+  sku: string;
+  name: string;
+  slug: string;
+  description?: string;
+  price: number;
+  stock: number;
+  isActive?: boolean;
+  images?: string[];
+  brandId?: string;
+  brand?: string;
+  categoryIds?: string[];
+}
+
+export interface UpdateProductDto {
+  sku?: string;
+  name?: string;
+  slug?: string;
+  description?: string;
+  price?: number;
+  stock?: number;
+  isActive?: boolean;
+  images?: string[];
+  brandId?: string;
+  brand?: string;
+  categoryIds?: string[];
+}
+
 export interface ProductsFilter {
   search?: string;
   categoryIds?: string[];
@@ -150,5 +178,39 @@ export const productsApi = {
   // Search products
   async search(query: string, filter: Omit<ProductsFilter, 'search'> = {}): Promise<PaginatedProducts> {
     return this.getAll({ ...filter, search: query });
+  },
+
+  // Create product (requires auth)
+  async create(data: CreateProductDto, accessToken: string): Promise<Product> {
+    return apiRequest<Product>('/products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Update product (requires auth)
+  async update(id: string, data: UpdateProductDto, accessToken: string): Promise<Product> {
+    return apiRequest<Product>(`/products/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Delete product (requires auth)
+  async delete(id: string, accessToken: string): Promise<void> {
+    return apiRequest<void>(`/products/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
   },
 };
