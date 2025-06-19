@@ -1,39 +1,17 @@
 'use client';
 
-import { apiRequest, getAnonymousToken } from './client';
+import { UnifiedApiClient } from './unified-client';
 import { CreateOrderData, Order, PaginatedOrders, OrdersFilter } from './orders';
-
-// Helper to get auth token from localStorage
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('access_token');
-}
 
 export const ordersClientApi = {
   // Create new order - requires authentication
   async create(data: CreateOrderData): Promise<Order> {
-    const authToken = getAuthToken();
-    const anonymousToken = getAnonymousToken();
-    
-    console.log('Creating order with tokens:', {
-      authToken: authToken ? 'present' : 'missing',
-      anonymousToken: anonymousToken ? 'present' : 'missing',
-    });
-    
-    // Orders require authentication, so only send auth token
-    return apiRequest<Order>('/orders', {
-      method: 'POST',
-      body: JSON.stringify(data),
-      token: authToken || undefined,
-      // Don't send anonymous token for orders
-    });
+    // UnifiedApiClient will automatically use JWT token if available
+    return UnifiedApiClient.post<Order>('/orders', data);
   },
 
   // Get user orders
   async getOrders(filter?: OrdersFilter): Promise<PaginatedOrders> {
-    const authToken = getAuthToken();
-    const anonymousToken = getAnonymousToken();
-    
     const params = new URLSearchParams();
     
     if (filter) {
@@ -48,34 +26,16 @@ export const ordersClientApi = {
     const queryString = params.toString();
     const url = `/orders${queryString ? `?${queryString}` : ''}`;
 
-    // If user is authenticated, don't send anonymous token
-    return apiRequest<PaginatedOrders>(url, {
-      token: authToken || undefined,
-      anonymousToken: authToken ? undefined : (anonymousToken || undefined),
-    });
+    return UnifiedApiClient.get<PaginatedOrders>(url);
   },
 
   // Get order by ID
   async getById(id: string): Promise<Order> {
-    const authToken = getAuthToken();
-    const anonymousToken = getAnonymousToken();
-    
-    // If user is authenticated, don't send anonymous token
-    return apiRequest<Order>(`/orders/${id}`, {
-      token: authToken || undefined,
-      anonymousToken: authToken ? undefined : (anonymousToken || undefined),
-    });
+    return UnifiedApiClient.get<Order>(`/orders/${id}`);
   },
 
   // Get order by order number
   async getByOrderNumber(orderNumber: string): Promise<Order> {
-    const authToken = getAuthToken();
-    const anonymousToken = getAnonymousToken();
-    
-    // If user is authenticated, don't send anonymous token
-    return apiRequest<Order>(`/orders/by-number/${orderNumber}`, {
-      token: authToken || undefined,
-      anonymousToken: authToken ? undefined : (anonymousToken || undefined),
-    });
+    return UnifiedApiClient.get<Order>(`/orders/by-number/${orderNumber}`);
   },
 };

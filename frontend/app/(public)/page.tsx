@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { TruckIcon, ShieldCheckIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 
+// Force dynamic rendering to avoid API calls during build
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   // Fetch root categories
   const categories = await categoriesApi.getTree(true);

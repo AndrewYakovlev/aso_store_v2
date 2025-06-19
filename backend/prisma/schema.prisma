@@ -339,18 +339,23 @@ model Chat {
 
 // Chat messages
 model ChatMessage {
-  id        String   @id @default(uuid())
-  chatId    String
-  senderId  String
-  content   String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id           String    @id @default(uuid())
+  chatId       String
+  senderId     String
+  content      String
+  isDelivered  Boolean   @default(false)
+  deliveredAt  DateTime?
+  isRead       Boolean   @default(false)
+  readAt       DateTime?
+  createdAt    DateTime  @default(now())
 
   // Relations
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   @@index([chatId])
   @@index([senderId])
+  @@index([isDelivered])
+  @@index([isRead])
 }
 
 // Product offers from managers

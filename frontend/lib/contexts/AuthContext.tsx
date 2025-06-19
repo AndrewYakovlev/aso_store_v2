@@ -65,6 +65,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     localStorage.setItem('access_token', response.accessToken);
     localStorage.setItem('refresh_token', response.refreshToken);
+    
+    // Also update cookies
+    document.cookie = `access_token=${response.accessToken}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+    document.cookie = `refresh_token=${response.refreshToken}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
+    
     setAccessToken(response.accessToken);
     
     const profile = await authApi.getProfile(response.accessToken);
@@ -74,6 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = (newAccessToken: string, refreshToken: string, userData: any) => {
     localStorage.setItem('access_token', newAccessToken);
     localStorage.setItem('refresh_token', refreshToken);
+    
+    // Also set in cookies for server components
+    document.cookie = `access_token=${newAccessToken}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+    document.cookie = `refresh_token=${refreshToken}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
+    
     setAccessToken(newAccessToken);
     
     // Convert user data to profile format
@@ -89,6 +99,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    
+    // Also remove from cookies
+    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    
     setAccessToken(null);
     setUser(null);
     router.push('/');

@@ -5,6 +5,9 @@ import { Card } from "@/components/ui/card"
 import { ChevronRightIcon } from "@heroicons/react/24/outline"
 import { brandsApi, BrandWithProductsCount } from "@/lib/api/brands"
 
+// Force dynamic rendering to avoid API calls during build
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Производители автозапчастей - интернет-магазин АСО',
   description: 'Каталог производителей автозапчастей. Оригинальные запчасти и аналоги от ведущих мировых брендов.',

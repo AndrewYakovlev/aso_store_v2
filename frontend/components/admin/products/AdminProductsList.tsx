@@ -82,7 +82,7 @@ export function AdminProductsList() {
 
     setDeleting(id)
     try {
-      await productsApi.delete(id, accessToken!)
+      await productsApi.deleteWithAuth(id, accessToken!)
       await loadProducts(search, currentPage)
     } catch (error) {
       console.error("Failed to delete product:", error)

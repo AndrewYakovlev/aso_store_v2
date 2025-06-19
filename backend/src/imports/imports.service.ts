@@ -406,7 +406,7 @@ export class ImportsService {
         const slug = await this.generateSlug(product.name);
         
         // Если есть категория, получаем все родительские
-        let categoriesToCreate = [];
+        let categoriesToCreate: { categoryId: string }[] = [];
         if (categoryId) {
           const allCategoryIds = await this.getCategoryWithParents(categoryId);
           categoriesToCreate = allCategoryIds.map(catId => ({

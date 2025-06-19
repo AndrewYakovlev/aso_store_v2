@@ -203,7 +203,7 @@ export const productsApi = {
   },
 
   // Delete product (requires auth)
-  async delete(id: string, accessToken: string): Promise<void> {
+  async deleteWithAuth(id: string, accessToken: string): Promise<void> {
     return apiRequest<void>(`/products/${id}`, {
       method: 'DELETE',
       headers: {

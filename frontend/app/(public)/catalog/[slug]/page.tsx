@@ -8,18 +8,13 @@ import { CategoryTree } from "@/components/categories/CategoryTree"
 import { CategoryContent } from "./CategoryContent"
 import { ChevronRightIcon } from "@heroicons/react/24/outline"
 
+// Force dynamic rendering to avoid API calls during build
+export const dynamic = 'force-dynamic'
+
 interface CategoryPageProps {
   params: Promise<{
     slug: string
   }>
-}
-
-export async function generateStaticParams() {
-  const categories = await categoriesApi.getAll({ onlyActive: true });
-  
-  return categories.map((category) => ({
-    slug: category.slug,
-  }));
 }
 
 export async function generateMetadata({

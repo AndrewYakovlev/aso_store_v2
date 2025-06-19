@@ -1,6 +1,12 @@
 import { apiRequest } from './client';
-import { BrandDto } from '@/lib/api/brands/types';
 import { PaginatedProducts } from './products';
+
+// Import and re-export types
+export type { BrandDto } from '@/lib/api/brands/types';
+import type { BrandDto } from '@/lib/api/brands/types';
+
+export type CreateBrandDto = Omit<BrandDto, 'id' | 'createdAt' | 'updatedAt'>;
+export type UpdateBrandDto = Partial<Omit<BrandDto, 'id' | 'createdAt' | 'updatedAt'>>;
 
 export interface BrandWithProductsCount extends BrandDto {
   productsCount?: number;

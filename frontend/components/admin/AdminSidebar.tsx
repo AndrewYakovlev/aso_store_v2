@@ -17,6 +17,7 @@ import {
   ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline"
 import { useAuth } from "@/lib/contexts/AuthContext"
+import { useNotifications } from "@/lib/contexts/NotificationContext"
 
 const menuItems = [
   {
@@ -96,6 +97,7 @@ const menuItems = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const { user } = useAuth()
+  const { totalUnread } = useNotifications()
 
   const isActive = (href: string, exact: boolean = false) => {
     if (exact) {
@@ -135,6 +137,11 @@ export function AdminSidebar() {
               }`}>
               <Icon className="h-5 w-5" />
               <span>{item.label}</span>
+              {item.href === '/panel/chats' && totalUnread > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                  {totalUnread > 99 ? '99+' : totalUnread}
+                </span>
+              )}
             </Link>
           )
         })}

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { AnonymousTokenProvider } from '@/components/AnonymousTokenProvider';
+import { NotificationProvider } from '@/lib/contexts/NotificationContext';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
@@ -17,7 +19,11 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={inter.className}>
-        {children}
+        <AnonymousTokenProvider>
+          <NotificationProvider>
+            {children}
+          </NotificationProvider>
+        </AnonymousTokenProvider>
       </body>
     </html>
   );

@@ -49,7 +49,7 @@ export function VehicleModelSheet({ model, onSave, onCancel }: VehicleModelSheet
         slug: model.slug,
         class: model.class,
         yearFrom: model.yearFrom,
-        yearTo: model.yearTo,
+        yearTo: model.yearTo ?? null,
         image: model.image || "",
         isActive: model.isActive,
         sortOrder: model.sortOrder,

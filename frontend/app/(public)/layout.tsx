@@ -3,6 +3,7 @@ import { AnonymousTokenProvider } from "@/components/AnonymousTokenProvider";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { FavoritesProvider } from "@/lib/contexts/FavoritesContext";
 import { CartProvider } from "@/lib/contexts/CartContext";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 export default function PublicLayout({
   children,
@@ -18,6 +19,7 @@ export default function PublicLayout({
             <main className="min-h-screen">
               {children}
             </main>
+            <ChatWidget />
           </CartProvider>
         </FavoritesProvider>
       </AuthProvider>

@@ -1,13 +1,15 @@
 'use client';
 
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { useNotifications } from '@/lib/contexts/NotificationContext';
 import Link from 'next/link';
-import { ArrowLeftIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, UserCircleIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import { formatPhoneForDisplay } from '@/lib/utils/phone';
 
 export function AdminHeader() {
   const { user, logout } = useAuth();
+  const { soundEnabled, toggleSound } = useNotifications();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -29,6 +31,18 @@ export function AdminHeader() {
         </div>
         
         <div className="flex items-center">
+          <button
+            onClick={toggleSound}
+            className="mr-4 p-2 text-gray-600 hover:text-gray-900 transition-colors"
+            title={soundEnabled ? 'Выключить звук уведомлений' : 'Включить звук уведомлений'}
+          >
+            {soundEnabled ? (
+              <SpeakerWaveIcon className="h-5 w-5" />
+            ) : (
+              <SpeakerXMarkIcon className="h-5 w-5" />
+            )}
+          </button>
+          
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}

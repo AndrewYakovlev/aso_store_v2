@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,10 @@ import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { ordersApi, Order } from '@/lib/api/orders';
 import { ordersClientApi } from '@/lib/api/orders-client';
 
-export default function CheckoutSuccessPage() {
+// Force dynamic rendering to avoid static generation issues
+export const dynamic = 'force-dynamic';
+
+function CheckoutSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get('order');
@@ -130,5 +134,17 @@ export default function CheckoutSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">Загрузка...</div>
+      </div>
+    }>
+      <CheckoutSuccessContent />
+    </Suspense>
   );
 }

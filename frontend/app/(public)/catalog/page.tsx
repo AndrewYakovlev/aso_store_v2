@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { categoriesApi } from '@/lib/api/categories';
 import { Metadata } from 'next';
 
+// Force dynamic rendering to avoid API calls during build
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Каталог автозапчастей - АСО',
   description: 'Широкий выбор автозапчастей и расходных материалов. Масла, фильтры, тормозные системы и многое другое.',

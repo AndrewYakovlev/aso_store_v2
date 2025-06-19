@@ -15,6 +15,7 @@ import { VehicleBrandsModule } from './vehicle-brands/vehicle-brands.module';
 import { VehicleModelsModule } from './vehicle-models/vehicle-models.module';
 import { ProductVehiclesModule } from './product-vehicles/product-vehicles.module';
 import { ImportsModule } from './imports/imports.module';
+import { ChatsModule } from './chats/chats.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ImportsModule } from './imports/imports.module';
     VehicleModelsModule,
     ProductVehiclesModule,
     ImportsModule,
+    ChatsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
