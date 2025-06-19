@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { productsApi, Product, CreateProductDto, UpdateProductDto } from '@/lib/api/products';
 import { categoriesApi, Category } from '@/lib/api/categories';
+import { brandsApi, BrandWithProductsCount } from '@/lib/api/brands';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<BrandWithProductsCount[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -27,7 +29,7 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
     price: '',
     stock: '',
     categoryIds: [] as string[],
-    brand: '',
+    brandId: '',
     images: [] as string[],
     isActive: true,
   });
@@ -36,6 +38,7 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
 
   useEffect(() => {
     loadCategories();
+    loadBrands();
     if (productId) {
       loadProduct();
     }
@@ -47,6 +50,15 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
       setCategories(data);
     } catch (error) {
       console.error('Failed to load categories:', error);
+    }
+  };
+
+  const loadBrands = async () => {
+    try {
+      const response = await brandsApi.getAll({ onlyActive: true });
+      setBrands(response.items);
+    } catch (error) {
+      console.error('Failed to load brands:', error);
     }
   };
 
@@ -64,7 +76,7 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
         price: data.price.toString(),
         stock: data.stock.toString(),
         categoryIds: data.categories.map(c => c.id),
-        brand: typeof data.brand === 'string' ? data.brand : data.brand?.name || '',
+        brandId: data.brandId || '',
         images: data.images,
         isActive: data.isActive,
       });
@@ -136,7 +148,7 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         categoryIds: formData.categoryIds,
-        brand: formData.brand || undefined,
+        brandId: formData.brandId || undefined,
         images: formData.images,
         isActive: formData.isActive,
       };
@@ -219,12 +231,18 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Бренд
             </label>
-            <input
-              type="text"
-              value={formData.brand}
-              onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
+            <select
+              value={formData.brandId}
+              onChange={(e) => setFormData(prev => ({ ...prev, brandId: e.target.value }))}
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-            />
+            >
+              <option value="">Выберите бренд</option>
+              {brands.map(brand => (
+                <option key={brand.id} value={brand.id}>
+                  {brand.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

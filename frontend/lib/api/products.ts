@@ -59,7 +59,6 @@ export interface CreateProductDto {
   isActive?: boolean;
   images?: string[];
   brandId?: string;
-  brand?: string;
   categoryIds?: string[];
 }
 
@@ -73,7 +72,6 @@ export interface UpdateProductDto {
   isActive?: boolean;
   images?: string[];
   brandId?: string;
-  brand?: string;
   categoryIds?: string[];
 }
 

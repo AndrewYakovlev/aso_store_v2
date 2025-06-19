@@ -61,26 +61,37 @@ export const brandsApi = {
     return apiRequest(`/products?${params.toString()}`);
   },
 
-  // Create new brand
-  async create(data: Omit<BrandDto, 'id' | 'createdAt' | 'updatedAt'>): Promise<BrandDto> {
+  // Create new brand (requires auth)
+  async create(data: Omit<BrandDto, 'id' | 'createdAt' | 'updatedAt'>, accessToken: string): Promise<BrandDto> {
     return apiRequest('/brands', {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
       body: JSON.stringify(data),
     });
   },
 
-  // Update brand
-  async update(id: string, data: Partial<Omit<BrandDto, 'id' | 'createdAt' | 'updatedAt'>>): Promise<BrandDto> {
+  // Update brand (requires auth)
+  async update(id: string, data: Partial<Omit<BrandDto, 'id' | 'createdAt' | 'updatedAt'>>, accessToken: string): Promise<BrandDto> {
     return apiRequest(`/brands/${id}`, {
       method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
       body: JSON.stringify(data),
     });
   },
 
-  // Delete brand
-  async delete(id: string): Promise<void> {
+  // Delete brand (requires auth)
+  async delete(id: string, accessToken: string): Promise<void> {
     return apiRequest(`/brands/${id}`, {
       method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
     });
   },
 };
