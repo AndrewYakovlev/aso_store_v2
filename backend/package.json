@@ -23,6 +23,7 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:import-vehicles": "ts-node prisma/import-vehicles.ts",
+    "import:categories": "ts-node scripts/import-categories.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

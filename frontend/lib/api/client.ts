@@ -45,9 +45,13 @@ export async function apiRequest<T = any>(
   const { token, anonymousToken, headers = {}, ...fetchOptions } = options;
 
   const requestHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(headers as Record<string, string>),
   };
+
+  // Only set Content-Type if not sending FormData
+  if (!(fetchOptions.body instanceof FormData)) {
+    requestHeaders['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     requestHeaders['Authorization'] = `Bearer ${token}`;
@@ -67,7 +71,20 @@ export async function apiRequest<T = any>(
       headers: requestHeaders,
     });
 
-    const data = await response.json().catch(() => null);
+    let data;
+    const contentType = response.headers.get('content-type');
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      // Try to parse as JSON anyway, but if it fails, get text
+      const text = await response.text();
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { message: text };
+      }
+    }
 
     if (!response.ok) {
       throw new ApiError(

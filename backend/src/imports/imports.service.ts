@@ -2,13 +2,13 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CategoriesService } from '../categories/categories.service';
 import { BrandsService } from '../brands/brands.service';
-import { 
-  ImportResultDto, 
-  ImportDetailDto, 
-  ImportPreviewDto, 
+import {
+  ImportResultDto,
+  ImportDetailDto,
+  ImportPreviewDto,
   ImportPreviewItemDto,
   CategoryMatchStatsDto,
-  BrandMatchStatsDto
+  BrandMatchStatsDto,
 } from './dto/import-result.dto';
 import { ImportOptionsDto } from './dto/import-options.dto';
 import * as XLSX from 'xlsx';
@@ -44,14 +44,14 @@ export class ImportsService {
   async previewImport(buffer: Buffer): Promise<ImportPreviewDto> {
     try {
       const parsedData = this.parseExcelFile(buffer);
-      
+
       if (parsedData.length === 0) {
         throw new BadRequestException('Файл не содержит данных для импорта');
       }
 
       // Анализируем первые 50 записей для предварительного просмотра
       const previewData = parsedData.slice(0, 50);
-      
+
       // Загружаем категории и бренды для сопоставления
       const categories = await this.categoriesService.findAll(false);
       const brandsResponse = await this.brandsService.findAll({});
@@ -62,7 +62,10 @@ export class ImportsService {
       const brandStats = new Map<string, number>();
 
       for (const product of previewData) {
-        const categoryMatch = this.findBestCategoryMatch(product.name, categories);
+        const categoryMatch = this.findBestCategoryMatch(
+          product.name,
+          categories,
+        );
         const brandMatch = this.findBestBrandMatch(product.name, brands);
 
         preview.push({
@@ -79,15 +82,23 @@ export class ImportsService {
 
         // Собираем статистику
         if (categoryMatch && categoryMatch.confidence >= 70) {
-          categoryStats.set(categoryMatch.name, (categoryStats.get(categoryMatch.name) || 0) + 1);
+          categoryStats.set(
+            categoryMatch.name,
+            (categoryStats.get(categoryMatch.name) || 0) + 1,
+          );
         }
         if (brandMatch && brandMatch.confidence >= 70) {
-          brandStats.set(brandMatch.name, (brandStats.get(brandMatch.name) || 0) + 1);
+          brandStats.set(
+            brandMatch.name,
+            (brandStats.get(brandMatch.name) || 0) + 1,
+          );
         }
       }
 
       // Формируем статистику категорий
-      const categoryMatches: CategoryMatchStatsDto[] = Array.from(categoryStats.entries())
+      const categoryMatches: CategoryMatchStatsDto[] = Array.from(
+        categoryStats.entries(),
+      )
         .map(([name, count]) => ({
           categoryName: name,
           count,
@@ -96,7 +107,9 @@ export class ImportsService {
         .sort((a, b) => b.count - a.count);
 
       // Формируем статистику брендов
-      const brandMatches: BrandMatchStatsDto[] = Array.from(brandStats.entries())
+      const brandMatches: BrandMatchStatsDto[] = Array.from(
+        brandStats.entries(),
+      )
         .map(([name, count]) => ({
           brandName: name,
           count,
@@ -110,17 +123,21 @@ export class ImportsService {
         categoryMatches,
         brandMatches,
       };
-
     } catch (error) {
       this.logger.error('Ошибка при предварительном просмотре импорта', error);
-      throw new BadRequestException(`Ошибка при анализе файла: ${error.message}`);
+      throw new BadRequestException(
+        `Ошибка при анализе файла: ${error.message}`,
+      );
     }
   }
 
   /**
    * Импорт товаров из Excel файла
    */
-  async importProducts(buffer: Buffer, options: ImportOptionsDto = {}): Promise<ImportResultDto> {
+  async importProducts(
+    buffer: Buffer,
+    options: ImportOptionsDto = {},
+  ): Promise<ImportResultDto> {
     const result: ImportResultDto = {
       totalRecords: 0,
       createdProducts: 0,
@@ -147,7 +164,12 @@ export class ImportsService {
       // Обрабатываем каждый товар
       for (const product of parsedData) {
         try {
-          const detail = await this.processProduct(product, categories, brands, options);
+          const detail = await this.processProduct(
+            product,
+            categories,
+            brands,
+            options,
+          );
           result.details.push(detail);
 
           switch (detail.status) {
@@ -162,23 +184,25 @@ export class ImportsService {
               break;
             case 'error':
               result.errors++;
-              result.errorMessages.push(`Строка ${detail.row}: ${detail.message}`);
+              result.errorMessages.push(
+                `Строка ${detail.row}: ${detail.message}`,
+              );
               break;
           }
-
         } catch (error) {
           result.errors++;
           result.errorMessages.push(`Строка ${product.row}: ${error.message}`);
-          
+
           if (!options.skipErrors) {
             throw error;
           }
         }
       }
 
-      this.logger.log(`Импорт завершен: создано ${result.createdProducts}, обновлено ${result.updatedProducts}, ошибок ${result.errors}`);
+      this.logger.log(
+        `Импорт завершен: создано ${result.createdProducts}, обновлено ${result.updatedProducts}, ошибок ${result.errors}`,
+      );
       return result;
-
     } catch (error) {
       this.logger.error('Ошибка при импорте товаров', error);
       throw new BadRequestException(`Ошибка при импорте: ${error.message}`);
@@ -191,18 +215,18 @@ export class ImportsService {
   private parseExcelFile(buffer: Buffer): ParsedProduct[] {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    
+
     // Читаем данные начиная с 4-й строки (где начинаются реальные данные)
-    const data = XLSX.utils.sheet_to_json(worksheet, { 
+    const data = XLSX.utils.sheet_to_json(worksheet, {
       range: 3, // Начинаем с строки 4 (индекс 3)
-      defval: null 
+      defval: null,
     });
 
     const products: ParsedProduct[] = [];
-    
+
     for (let i = 0; i < data.length; i++) {
       const row = data[i] as any;
-      
+
       // Пропускаем строки без артикула или названия
       // Данные находятся в полях __EMPTY и __EMPTY_5
       if (!row['__EMPTY'] || !row['__EMPTY_5']) {
@@ -210,7 +234,11 @@ export class ImportsService {
       }
 
       // Пропускаем служебные строки
-      if (row['__EMPTY'] === 'RUB' || row['__EMPTY'] === 'Включает НДС' || row['__EMPTY'] === 'Остаток') {
+      if (
+        row['__EMPTY'] === 'RUB' ||
+        row['__EMPTY'] === 'Включает НДС' ||
+        row['__EMPTY'] === 'Остаток'
+      ) {
         continue;
       }
 
@@ -235,6 +263,27 @@ export class ImportsService {
     }
 
     return products;
+  }
+
+  /**
+   * Получение всех родительских категорий включая саму категорию
+   */
+  private async getCategoryWithParents(categoryId: string): Promise<string[]> {
+    const categoryIds: string[] = [];
+    let currentCategoryId: string | null = categoryId;
+    
+    while (currentCategoryId) {
+      categoryIds.push(currentCategoryId);
+      
+      const category = await this.prisma.category.findUnique({
+        where: { id: currentCategoryId },
+        select: { parentId: true },
+      });
+      
+      currentCategoryId = category?.parentId || null;
+    }
+    
+    return categoryIds;
   }
 
   /**
@@ -278,8 +327,14 @@ export class ImportsService {
     let matchedBrand: string | undefined;
 
     if (options.autoMatchCategories) {
-      const categoryMatch = this.findBestCategoryMatch(product.name, categories);
-      if (categoryMatch && categoryMatch.confidence >= (options.confidenceThreshold || 70)) {
+      const categoryMatch = this.findBestCategoryMatch(
+        product.name,
+        categories,
+      );
+      if (
+        categoryMatch &&
+        categoryMatch.confidence >= (options.confidenceThreshold || 70)
+      ) {
         categoryId = categoryMatch.id;
         matchedCategory = categoryMatch.name;
       }
@@ -287,23 +342,27 @@ export class ImportsService {
 
     if (options.autoMatchBrands) {
       const brandMatch = this.findBestBrandMatch(product.name, brands);
-      if (brandMatch && brandMatch.confidence >= (options.confidenceThreshold || 70)) {
+      if (
+        brandMatch &&
+        brandMatch.confidence >= (options.confidenceThreshold || 70)
+      ) {
         brandId = brandMatch.id;
         matchedBrand = brandMatch.name;
       }
     }
 
     // Подготавливаем данные для создания/обновления
-    const productData = {
+    const productData: any = {
       name: product.name,
       sku: product.sku,
       price: product.price,
       stock: product.stock,
       isActive: true,
-      categoryId,
       brandId,
-      ...(existingProduct && !options.updatePrices && { price: existingProduct.price }),
-      ...(existingProduct && !options.updateStock && { stock: existingProduct.stock }),
+      ...(existingProduct &&
+        !options.updatePrices && { price: existingProduct.price }),
+      ...(existingProduct &&
+        !options.updateStock && { stock: existingProduct.stock }),
     };
 
     try {
@@ -313,6 +372,25 @@ export class ImportsService {
           where: { id: existingProduct.id },
           data: productData,
         });
+
+        // Обновляем категории, если нужно
+        if (categoryId) {
+          // Получаем все категории включая родительские
+          const allCategoryIds = await this.getCategoryWithParents(categoryId);
+          
+          // Удаляем старые связи с категориями
+          await this.prisma.productCategory.deleteMany({
+            where: { productId: existingProduct.id },
+          });
+          
+          // Создаем новые связи со всеми категориями
+          await this.prisma.productCategory.createMany({
+            data: allCategoryIds.map(catId => ({
+              productId: existingProduct.id,
+              categoryId: catId,
+            })),
+          });
+        }
 
         return {
           row: product.row,
@@ -325,10 +403,27 @@ export class ImportsService {
         };
       } else {
         // Создаем новый товар
-        await this.prisma.product.create({
+        const slug = await this.generateSlug(product.name);
+        
+        // Если есть категория, получаем все родительские
+        let categoriesToCreate = [];
+        if (categoryId) {
+          const allCategoryIds = await this.getCategoryWithParents(categoryId);
+          categoriesToCreate = allCategoryIds.map(catId => ({
+            categoryId: catId,
+          }));
+        }
+        
+        const createdProduct = await this.prisma.product.create({
           data: {
             ...productData,
-            slug: this.generateSlug(product.name),
+            slug,
+            // Создаем связи со всеми категориями
+            ...(categoriesToCreate.length > 0 && {
+              categories: {
+                create: categoriesToCreate,
+              },
+            }),
           },
         });
 
@@ -343,6 +438,15 @@ export class ImportsService {
         };
       }
     } catch (error) {
+      // Более подробная информация об ошибке
+      if (error.code === 'P2002') {
+        const target = error.meta?.target;
+        if (target?.includes('sku')) {
+          throw new Error(`Товар с артикулом ${product.sku} уже существует`);
+        } else if (target?.includes('slug')) {
+          throw new Error(`Ошибка создания уникального URL для товара "${product.name}"`);
+        }
+      }
       throw new Error(`Ошибка при сохранении товара: ${error.message}`);
     }
   }
@@ -350,7 +454,10 @@ export class ImportsService {
   /**
    * Поиск наиболее подходящей категории
    */
-  private findBestCategoryMatch(productName: string, categories: any[]): MatchResult | null {
+  private findBestCategoryMatch(
+    productName: string,
+    categories: any[],
+  ): MatchResult | null {
     const name = productName.toLowerCase();
     let bestMatch: MatchResult | null = null;
     let bestScore = 0;
@@ -373,7 +480,10 @@ export class ImportsService {
   /**
    * Поиск наиболее подходящего бренда
    */
-  private findBestBrandMatch(productName: string, brands: any[]): MatchResult | null {
+  private findBestBrandMatch(
+    productName: string,
+    brands: any[],
+  ): MatchResult | null {
     const name = productName.toLowerCase();
     let bestMatch: MatchResult | null = null;
     let bestScore = 0;
@@ -381,10 +491,13 @@ export class ImportsService {
     for (const brand of brands) {
       // Проверяем основное название бренда
       let score = this.calculateMatchScore(name, brand.name.toLowerCase());
-      
+
       // Также проверяем альтернативные названия если есть
       if (brand.slug) {
-        const slugScore = this.calculateMatchScore(name, brand.slug.toLowerCase());
+        const slugScore = this.calculateMatchScore(
+          name,
+          brand.slug.toLowerCase(),
+        );
         score = Math.max(score, slugScore);
       }
 
@@ -413,16 +526,19 @@ export class ImportsService {
     // Совпадение слов
     const productWords = productName.split(/\s+/);
     const targetWords = targetName.split(/\s+/);
-    
+
     let matchingWords = 0;
     for (const word of targetWords) {
-      if (word.length > 2 && productWords.some(pw => pw.includes(word) || word.includes(pw))) {
+      if (
+        word.length > 2 &&
+        productWords.some((pw) => pw.includes(word) || word.includes(pw))
+      ) {
         matchingWords++;
       }
     }
 
     if (matchingWords === 0) return 0;
-    
+
     // Процент совпадающих слов
     return Math.min(95, (matchingWords / targetWords.length) * 100);
   }
@@ -442,16 +558,44 @@ export class ImportsService {
   /**
    * Генерация slug для товара
    */
-  private generateSlug(name: string): string {
-    return name
+  private async generateSlug(name: string): Promise<string> {
+    const baseSlug = name
       .toLowerCase()
       .replace(/[а-я]/g, (char) => {
         const map: { [key: string]: string } = {
-          'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
-          'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
-          'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
-          'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
-          'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+          а: 'a',
+          б: 'b',
+          в: 'v',
+          г: 'g',
+          д: 'd',
+          е: 'e',
+          ё: 'yo',
+          ж: 'zh',
+          з: 'z',
+          и: 'i',
+          й: 'y',
+          к: 'k',
+          л: 'l',
+          м: 'm',
+          н: 'n',
+          о: 'o',
+          п: 'p',
+          р: 'r',
+          с: 's',
+          т: 't',
+          у: 'u',
+          ф: 'f',
+          х: 'h',
+          ц: 'ts',
+          ч: 'ch',
+          ш: 'sh',
+          щ: 'sch',
+          ъ: '',
+          ы: 'y',
+          ь: '',
+          э: 'e',
+          ю: 'yu',
+          я: 'ya',
         };
         return map[char] || char;
       })
@@ -459,6 +603,33 @@ export class ImportsService {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
-      .substring(0, 100);
+      .substring(0, 90); // Оставляем место для суффикса
+
+    // Проверяем уникальность slug
+    let slug = baseSlug;
+    let counter = 1;
+    
+    while (true) {
+      const existing = await this.prisma.product.findUnique({
+        where: { slug },
+      });
+      
+      if (!existing) {
+        break;
+      }
+      
+      // Если slug уже существует, добавляем числовой суффикс
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+      
+      // Защита от бесконечного цикла
+      if (counter > 100) {
+        // Используем timestamp для уникальности
+        slug = `${baseSlug}-${Date.now()}`;
+        break;
+      }
+    }
+    
+    return slug;
   }
 }
