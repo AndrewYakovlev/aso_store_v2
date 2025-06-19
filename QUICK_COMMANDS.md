@@ -65,8 +65,8 @@ su - aso_store
 ```bash
 cd /var/www/aso_store
 git clone git@github.com:AndrewYakovlev/aso_store_v2.git .
-cp backend/.env.production backend/.env
-cp frontend/.env.production frontend/.env.local
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
 nano backend/.env      # Отредактируйте файл
 nano frontend/.env.local  # Отредактируйте файл
 chmod +x deploy/*.sh

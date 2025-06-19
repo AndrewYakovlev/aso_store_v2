@@ -153,19 +153,33 @@ git clone git@github.com:AndrewYakovlev/aso_store_v2.git .
 ### Шаг 8: Настройка переменных окружения
 
 ```bash
-# Копируем файлы окружения
-cp backend/.env.production backend/.env
-cp frontend/.env.production frontend/.env.local
+# Создаем файлы окружения из примеров
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
 
 # Редактируем backend/.env
 nano backend/.env
 ```
 
-В файле измените:
-- `DATABASE_URL="postgresql://aso_user:true!false@@localhost:5432/aso_store_prod?schema=public"`
-- `JWT_SECRET="сгенерируйте-случайную-строку-32-символа"`
-- `JWT_REFRESH_SECRET="другая-случайная-строка-32-символа"`
-- `CORS_ORIGIN="http://ваш-домен.com"` (или оставьте `http://ВАШ_IP_АДРЕС` если нет домена)
+В файле измените следующие строки:
+
+1. Найдите строку с `DATABASE_URL` и замените на:
+   ```
+   DATABASE_URL="postgresql://aso_user:true!false@@localhost:5432/aso_store_prod?schema=public"
+   ```
+
+2. Для JWT секретов сгенерируйте случайные строки. Можете использовать эти команды в другом терминале:
+   ```bash
+   # Генерация JWT_SECRET
+   openssl rand -base64 32
+   # Генерация JWT_REFRESH_SECRET  
+   openssl rand -base64 32
+   ```
+   И вставьте полученные значения в соответствующие строки.
+
+3. Найдите `CORS_ORIGIN` и замените на:
+   - Если у вас есть домен: `CORS_ORIGIN="http://ваш-домен.com"`
+   - Если только IP: `CORS_ORIGIN="http://ВАШ_IP_АДРЕС"`
 
 Сохраните: `Ctrl+X`, `Y`, `Enter`
 
@@ -174,8 +188,12 @@ nano backend/.env
 nano frontend/.env.local
 ```
 
-В файле измените:
-- Замените `your-domain.com` на ваш домен или IP адрес
+В файле измените ВСЕ места где написано `localhost`:
+- `NEXT_PUBLIC_API_URL=http://ВАШ_IP_АДРЕС:4000/api`
+- `NEXT_PUBLIC_SITE_URL=http://ВАШ_IP_АДРЕС`
+- `NEXT_PUBLIC_WS_URL=http://ВАШ_IP_АДРЕС:4000`
+
+Если у вас есть домен, используйте его вместо IP адреса.
 
 Сохраните: `Ctrl+X`, `Y`, `Enter`
 
