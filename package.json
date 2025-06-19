@@ -17,7 +17,7 @@
     "start:frontend": "npm run start --workspace=frontend"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^9.1.2"
   },
   "engines": {
     "node": ">=18.0.0",
