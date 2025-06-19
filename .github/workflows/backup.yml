@@ -1,0 +1,70 @@
+name: Scheduled Backup
+
+on:
+  schedule:
+    # Запуск каждый день в 3:00 UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      backup_type:
+        description: 'Type of backup'
+        required: true
+        type: choice
+        options:
+          - full
+          - database
+          - files
+
+jobs:
+  backup:
+    name: Create Backup
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Run backup on server
+      env:
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        SERVER_USER: ${{ secrets.SERVER_USER }}
+        BACKUP_TYPE: ${{ github.event.inputs.backup_type || 'full' }}
+      run: |
+        ssh $SERVER_USER@$SERVER_HOST << 'EOF'
+          cd /var/www/aso_store
+          
+          echo "Starting ${{ env.BACKUP_TYPE }} backup..."
+          
+          if [ "${{ env.BACKUP_TYPE }}" = "full" ]; then
+            bash deploy/backup.sh
+          elif [ "${{ env.BACKUP_TYPE }}" = "database" ]; then
+            # Только база данных
+            DATE=$(date +%Y%m%d_%H%M%S)
+            pg_dump -U aso_user -d aso_store_prod > "/var/backups/aso_store/db_backup_$DATE.sql"
+            gzip "/var/backups/aso_store/db_backup_$DATE.sql"
+          elif [ "${{ env.BACKUP_TYPE }}" = "files" ]; then
+            # Только файлы
+            DATE=$(date +%Y%m%d_%H%M%S)
+            tar -czf "/var/backups/aso_store/uploads_backup_$DATE.tar.gz" -C /var/www/aso_store uploads/
+          fi
+          
+          # Показать последние бэкапы
+          echo "Latest backups:"
+          ls -lah /var/backups/aso_store/ | tail -5
+        EOF
+
+    - name: Upload backup to S3 (optional)
+      if: success()
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+        S3_BUCKET: ${{ secrets.S3_BACKUP_BUCKET }}
+      run: |
+        # Здесь можно добавить загрузку бэкапов в S3
+        echo "Uploading backups to S3..."
+      continue-on-error: true

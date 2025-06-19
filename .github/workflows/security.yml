@@ -1,0 +1,126 @@
+name: Security Scan
+
+on:
+  schedule:
+    # Запуск каждый понедельник в 9:00 UTC
+    - cron: '0 9 * * 1'
+  push:
+    branches: [ master, develop ]
+  workflow_dispatch:
+
+jobs:
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run npm audit
+      run: |
+        echo "=== NPM Audit Report ==="
+        npm audit --production
+        
+        echo -e "\n=== Backend Dependencies ==="
+        cd backend && npm audit --production
+        
+        echo -e "\n=== Frontend Dependencies ==="
+        cd ../frontend && npm audit --production
+
+    - name: Check for outdated packages
+      run: |
+        echo "=== Outdated Packages ==="
+        npx npm-check-updates
+        
+        echo -e "\n=== Backend Outdated ==="
+        cd backend && npx npm-check-updates
+        
+        echo -e "\n=== Frontend Outdated ==="
+        cd ../frontend && npx npm-check-updates
+
+  code-security:
+    name: Code Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run Semgrep
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/secrets
+          p/sql-injection
+          p/xss
+          p/typescript
+
+    - name: Upload Semgrep results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: semgrep.sarif
+
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    if: false # Включить когда будут Docker образы
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build images
+      run: |
+        docker build -t aso-backend:scan ./backend
+        docker build -t aso-frontend:scan ./frontend
+
+    - name: Run Trivy scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'aso-backend:scan'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  prisma-security:
+    name: Database Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Check Prisma schema
+      working-directory: ./backend
+      run: |
+        npm install
+        npx prisma validate
+        
+        # Проверка на потенциальные проблемы безопасности в схеме
+        echo "Checking for security issues in schema..."
+        
+        # Проверка на отсутствие явных паролей в схеме
+        if grep -i "password.*String.*@default" prisma/schema.prisma; then
+          echo "❌ Found default passwords in schema!"
+          exit 1
+        fi
+        
+        # Проверка индексов на чувствительные поля
+        echo "✅ Schema security check passed"

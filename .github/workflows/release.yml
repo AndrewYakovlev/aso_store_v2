@@ -1,0 +1,122 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Получаем предыдущий тег
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        CURRENT_TAG="${{ github.event.inputs.version || github.ref_name }}"
+        
+        echo "Generating changelog from $PREVIOUS_TAG to $CURRENT_TAG"
+        
+        # Генерируем changelog
+        if [ -z "$PREVIOUS_TAG" ]; then
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+        else
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges $PREVIOUS_TAG..$CURRENT_TAG)
+        fi
+        
+        # Группируем по типам коммитов
+        echo "## What's Changed" > changelog.md
+        echo "" >> changelog.md
+        
+        # Features
+        FEATURES=$(echo "$CHANGELOG" | grep -E "^- feat(\(.*\))?:" || true)
+        if [ -n "$FEATURES" ]; then
+          echo "### ✨ New Features" >> changelog.md
+          echo "$FEATURES" | sed 's/^- feat\(([^)]*)\)\?: /- /' >> changelog.md
+          echo "" >> changelog.md
+        fi
+        
+        # Bug fixes
+        FIXES=$(echo "$CHANGELOG" | grep -E "^- fix(\(.*\))?:" || true)
+        if [ -n "$FIXES" ]; then
+          echo "### 🐛 Bug Fixes" >> changelog.md
+          echo "$FIXES" | sed 's/^- fix\(([^)]*)\)\?: /- /' >> changelog.md
+          echo "" >> changelog.md
+        fi
+        
+        # Other changes
+        OTHERS=$(echo "$CHANGELOG" | grep -vE "^- (feat|fix)(\(.*\))?:" || true)
+        if [ -n "$OTHERS" ]; then
+          echo "### 🔧 Other Changes" >> changelog.md
+          echo "$OTHERS" >> changelog.md
+          echo "" >> changelog.md
+        fi
+        
+        # Contributors
+        echo "### 👥 Contributors" >> changelog.md
+        git log --pretty=format:"- @%an" $PREVIOUS_TAG..$CURRENT_TAG | sort -u >> changelog.md
+        
+        # Сохраняем в переменную для GitHub
+        {
+          echo 'CHANGELOG<<EOF'
+          cat changelog.md
+          echo EOF
+        } >> "$GITHUB_ENV"
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.event.inputs.version || github.ref_name }}
+        release_name: Release ${{ github.event.inputs.version || github.ref_name }}
+        body: ${{ env.CHANGELOG }}
+        draft: false
+        prerelease: ${{ contains(github.event.inputs.version || github.ref_name, '-beta') || contains(github.event.inputs.version || github.ref_name, '-alpha') }}
+
+    - name: Build artifacts
+      run: |
+        # Сборка production версий
+        npm ci
+        npm run build
+        
+        # Создание архивов
+        tar -czf aso-store-backend-${{ github.event.inputs.version || github.ref_name }}.tar.gz -C backend/dist .
+        tar -czf aso-store-frontend-${{ github.event.inputs.version || github.ref_name }}.tar.gz -C frontend/.next .
+
+    - name: Upload artifacts
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./aso-store-backend-${{ github.event.inputs.version || github.ref_name }}.tar.gz
+        asset_name: aso-store-backend-${{ github.event.inputs.version || github.ref_name }}.tar.gz
+        asset_content_type: application/gzip
+
+  deploy-release:
+    name: Deploy Release
+    needs: create-release
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.inputs.version || github.ref_name, '-beta') && !contains(github.event.inputs.version || github.ref_name, '-alpha') }}
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Deploy to production
+      uses: ./.github/workflows/deploy.yml
+      with:
+        skip_tests: false
