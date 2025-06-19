@@ -4,9 +4,8 @@ import {
   UseInterceptors,
   UploadedFile,
   Body,
-  ParseFilePipeBuilder,
-  HttpStatus,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
@@ -17,6 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
+import { multerConfig } from './multer.config';
 
 @ApiTags('Импорт данных')
 @Controller('imports')
@@ -27,7 +27,7 @@ export class ImportsController {
 
   @Post('products/preview')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', multerConfig))
   @ApiOperation({ 
     summary: 'Предварительный просмотр импорта товаров',
     description: 'Анализирует Excel файл и показывает предварительный результат импорта с автоматическим сопоставлением категорий и брендов'
@@ -47,26 +47,17 @@ export class ImportsController {
     }
   })
   async previewProductsImport(
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addFileTypeValidator({
-          fileType: /(xlsx|xls)$/,
-        })
-        .addMaxSizeValidator({
-          maxSize: 10 * 1024 * 1024, // 10MB
-        })
-        .build({
-          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        }),
-    )
-    file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<ImportPreviewDto> {
+    if (!file) {
+      throw new BadRequestException('Файл не загружен');
+    }
     return this.importsService.previewImport(file.buffer);
   }
 
   @Post('products')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', multerConfig))
   @ApiOperation({ 
     summary: 'Импорт товаров из Excel файла',
     description: 'Импортирует товары из Excel файла с автоматическим сопоставлением категорий и брендов'
@@ -90,21 +81,12 @@ export class ImportsController {
     }
   })
   async importProducts(
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addFileTypeValidator({
-          fileType: /(xlsx|xls)$/,
-        })
-        .addMaxSizeValidator({
-          maxSize: 10 * 1024 * 1024, // 10MB
-        })
-        .build({
-          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        }),
-    )
-    file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
     @Body('options') optionsJson?: string,
   ): Promise<ImportResultDto> {
+    if (!file) {
+      throw new BadRequestException('Файл не загружен');
+    }
     let options: ImportOptionsDto = {};
     
     if (optionsJson) {
