@@ -13,7 +13,7 @@ cd $DEPLOY_DIR
 
 # Получение последних изменений
 echo "Получение изменений из репозитория..."
-git pull origin master
+git pull origin main
 
 # Установка зависимостей если package.json изменился
 if git diff HEAD@{1} --name-only | grep -E "package.*\.json|package-lock\.json"; then

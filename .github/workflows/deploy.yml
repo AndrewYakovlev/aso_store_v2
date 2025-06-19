@@ -2,7 +2,7 @@ name: Deploy to Production
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   workflow_dispatch:
     inputs:
       skip_tests:
@@ -48,8 +48,8 @@ jobs:
           echo "Current commit: $CURRENT_COMMIT"
           
           # Обновляем код
-          git fetch origin master
-          git reset --hard origin/master
+          git fetch origin main
+          git reset --hard origin/main
           
           # Запускаем скрипт обновления
           if bash deploy/update.sh; then

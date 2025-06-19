@@ -2,7 +2,7 @@
 -- Выполнять от имени postgres: sudo -u postgres psql
 
 -- Создание пользователя
-CREATE USER aso_user WITH PASSWORD 'your_secure_password_here';
+CREATE USER aso_user WITH PASSWORD 'true!false@';
 
 -- Создание базы данных
 CREATE DATABASE aso_store_prod OWNER aso_user;
