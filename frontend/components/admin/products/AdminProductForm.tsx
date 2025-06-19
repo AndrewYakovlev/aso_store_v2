@@ -6,7 +6,13 @@ import { productsApi, Product, CreateProductDto, UpdateProductDto } from '@/lib/
 import { categoriesApi, Category } from '@/lib/api/categories';
 import { brandsApi, BrandWithProductsCount } from '@/lib/api/brands';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { generateSlug } from '@/lib/utils/slug';
 import { Loader2 } from 'lucide-react';
+
+interface CategoryWithLevel extends Category {
+  level: number;
+  children?: CategoryWithLevel[];
+}
 
 interface AdminProductFormProps {
   productId?: string;
@@ -17,7 +23,7 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
   const { accessToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryWithLevel[]>([]);
   const [brands, setBrands] = useState<BrandWithProductsCount[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +53,44 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
   const loadCategories = async () => {
     try {
       const data = await categoriesApi.getAll();
-      setCategories(data);
+      
+      // Создаем древовидную структуру и плоский список с уровнями
+      const categoriesMap = new Map<string, CategoryWithLevel>();
+      const rootCategories: CategoryWithLevel[] = [];
+
+      // Сначала создаем все узлы
+      data.forEach(category => {
+        categoriesMap.set(category.id, { ...category, children: [], level: 0 });
+      });
+
+      // Затем строим дерево
+      data.forEach(category => {
+        const categoryNode = categoriesMap.get(category.id)!;
+        if (category.parentId) {
+          const parent = categoriesMap.get(category.parentId);
+          if (parent) {
+            categoryNode.level = parent.level + 1;
+            parent.children!.push(categoryNode);
+          }
+        } else {
+          rootCategories.push(categoryNode);
+        }
+      });
+
+      // Создаем плоский список с правильным порядком
+      const flatCategories: CategoryWithLevel[] = [];
+      const addToFlat = (cats: CategoryWithLevel[]) => {
+        cats.sort((a, b) => a.sortOrder - b.sortOrder);
+        cats.forEach(cat => {
+          flatCategories.push(cat);
+          if (cat.children && cat.children.length > 0) {
+            addToFlat(cat.children);
+          }
+        });
+      };
+
+      addToFlat(rootCategories);
+      setCategories(flatCategories);
     } catch (error) {
       console.error('Failed to load categories:', error);
     }
@@ -88,17 +131,6 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
     }
   };
 
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[а-яё]/g, (match) => {
-        const ru = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
-        const en = ['a','b','v','g','d','e','yo','zh','z','i','y','k','l','m','n','o','p','r','s','t','u','f','h','ts','ch','sh','sch','','y','','e','yu','ya'];
-        return en[ru.indexOf(match)] || match;
-      })
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
 
   const handleNameChange = (name: string) => {
     setFormData(prev => ({
@@ -303,16 +335,21 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Категории</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-4">
           {categories.map(category => (
             <label key={category.id} className="flex items-center">
               <input
                 type="checkbox"
                 checked={formData.categoryIds.includes(category.id)}
                 onChange={() => handleCategoryToggle(category.id)}
-                className="mr-2"
+                className="mr-2 flex-shrink-0"
               />
-              <span className="text-sm">{category.name}</span>
+              <span 
+                className="text-sm flex-1" 
+                style={{ paddingLeft: `${(category.level || 0) * 16}px` }}
+              >
+                {category.level > 0 && '└─ '}{category.name}
+              </span>
             </label>
           ))}
         </div>

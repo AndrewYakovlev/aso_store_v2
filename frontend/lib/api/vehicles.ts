@@ -41,7 +41,7 @@ export interface VehicleModel {
 export interface VehicleBrandsFilter {
   search?: string;
   country?: string;
-  onlyPopular?: boolean;
+  popular?: boolean;
   onlyActive?: boolean;
   page?: number;
   limit?: number;
@@ -86,7 +86,7 @@ export const vehicleBrandsApi = {
     
     if (filter.search) params.append('search', filter.search);
     if (filter.country) params.append('country', filter.country);
-    if (filter.onlyPopular !== undefined) params.append('onlyPopular', String(filter.onlyPopular));
+    if (filter.popular !== undefined) params.append('popular', String(filter.popular));
     if (filter.onlyActive !== undefined) params.append('onlyActive', String(filter.onlyActive));
     if (filter.page) params.append('page', String(filter.page));
     if (filter.limit) params.append('limit', String(filter.limit));

@@ -55,6 +55,12 @@ export class AttributeDto {
   })
   options?: AttributeOptionDto[];
 
+  @ApiProperty({
+    description: 'Связи атрибута с категориями',
+    required: false,
+  })
+  categoryAttributes?: any[];
+
   @ApiProperty({ description: 'Дата создания' })
   createdAt: Date;
 

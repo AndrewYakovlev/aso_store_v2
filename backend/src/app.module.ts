@@ -14,6 +14,7 @@ import { BrandsModule } from './brands/brands.module';
 import { VehicleBrandsModule } from './vehicle-brands/vehicle-brands.module';
 import { VehicleModelsModule } from './vehicle-models/vehicle-models.module';
 import { ProductVehiclesModule } from './product-vehicles/product-vehicles.module';
+import { ImportsModule } from './imports/imports.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ProductVehiclesModule } from './product-vehicles/product-vehicles.modul
     VehicleBrandsModule,
     VehicleModelsModule,
     ProductVehiclesModule,
+    ImportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

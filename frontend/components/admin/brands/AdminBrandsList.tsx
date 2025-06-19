@@ -5,8 +5,6 @@ import { brandsApi, BrandWithProductsCount, BrandsFilter } from '@/lib/api/brand
 import { BrandDto } from '@/lib/api/brands/types';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { 
-  PencilIcon, 
-  TrashIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
@@ -14,6 +12,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet";
+import { BrandSheet } from './BrandSheet';
+import { DataTable } from '../DataTable';
+import { createBrandsColumns } from './columns';
 
 export function AdminBrandsList() {
   const router = useRouter();
@@ -25,7 +30,7 @@ export function AdminBrandsList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<BrandDto | null>(null);
 
   const limit = 20;
@@ -93,22 +98,22 @@ export function AdminBrandsList() {
 
   const handleEdit = (brand: BrandDto) => {
     setEditingBrand(brand);
-    setShowModal(true);
+    setSheetOpen(true);
   };
 
   const handleCreate = () => {
     setEditingBrand(null);
-    setShowModal(true);
+    setSheetOpen(true);
   };
 
-  const handleModalClose = () => {
-    setShowModal(false);
+  const handleSheetClose = () => {
+    setSheetOpen(false);
     setEditingBrand(null);
   };
 
-  const handleModalSave = async () => {
+  const handleSheetSave = async () => {
     await loadBrands(search, currentPage);
-    handleModalClose();
+    handleSheetClose();
   };
 
   const totalPages = Math.ceil(total / limit);
@@ -157,101 +162,14 @@ export function AdminBrandsList() {
           </form>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Логотип
-                </th>
-                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Название
-                </th>
-                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Страна
-                </th>
-                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Товаров
-                </th>
-                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Статус
-                </th>
-                <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Действия
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {brands.map((brand) => (
-                <tr key={brand.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {brand.logo ? (
-                      <img
-                        src={brand.logo}
-                        alt={brand.name}
-                        className="h-10 w-10 object-contain"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 bg-gray-200 rounded"></div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {brand.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {brand.slug}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {brand.country || '—'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {brand.productsCount || 0}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      brand.isActive 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {brand.isActive ? 'Активен' : 'Неактивен'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(brand)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        <PencilIcon className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(brand.id)}
-                        disabled={deleting === brand.id}
-                        className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {brands.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Бренды не найдены</p>
-          </div>
-        )}
+        <DataTable
+          columns={createBrandsColumns({
+            onEdit: handleEdit,
+            onDelete: handleDelete,
+            deleting,
+          })}
+          data={brands}
+        />
 
         {totalPages > 1 && (
           <div className="px-6 py-4 border-t flex items-center justify-between">
@@ -294,209 +212,15 @@ export function AdminBrandsList() {
         )}
       </div>
 
-      {showModal && (
-        <BrandModal
-          brand={editingBrand}
-          onClose={handleModalClose}
-          onSave={handleModalSave}
-        />
-      )}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="w-[400px] sm:w-[500px]">
+          <BrandSheet
+            brand={editingBrand}
+            onSave={handleSheetSave}
+            onCancel={handleSheetClose}
+          />
+        </SheetContent>
+      </Sheet>
     </>
-  );
-}
-
-interface BrandModalProps {
-  brand: BrandDto | null;
-  onClose: () => void;
-  onSave: () => void;
-}
-
-function BrandModal({ brand, onClose, onSave }: BrandModalProps) {
-  const { accessToken } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: brand?.name || '',
-    slug: brand?.slug || '',
-    description: brand?.description || '',
-    logo: brand?.logo || '',
-    website: brand?.website || '',
-    country: brand?.country || '',
-    isActive: brand?.isActive ?? true,
-    sortOrder: brand?.sortOrder || 0,
-  });
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[а-яё]/g, (match) => {
-        const ru = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
-        const en = ['a','b','v','g','d','e','yo','zh','z','i','y','k','l','m','n','o','p','r','s','t','u','f','h','ts','ch','sh','sch','','y','','e','yu','ya'];
-        return en[ru.indexOf(match)] || match;
-      })
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
-
-  const handleNameChange = (name: string) => {
-    setFormData(prev => ({
-      ...prev,
-      name,
-      slug: !brand ? generateSlug(name) : prev.slug,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (brand) {
-        await brandsApi.update(brand.id, formData, accessToken!);
-      } else {
-        await brandsApi.create(formData, accessToken!);
-      }
-      onSave();
-    } catch (error: any) {
-      console.error('Failed to save brand:', error);
-      alert(error.response?.data?.message || 'Ошибка при сохранении бренда');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-        <form onSubmit={handleSubmit}>
-          <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-            {brand ? 'Редактирование бренда' : 'Создание бренда'}
-          </h3>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Название <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Описание
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL логотипа
-              </label>
-              <input
-                type="url"
-                value={formData.logo}
-                onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Веб-сайт
-              </label>
-              <input
-                type="url"
-                value={formData.website}
-                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Страна
-              </label>
-              <input
-                type="text"
-                value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Порядок сортировки
-              </label>
-              <input
-                type="number"
-                value={formData.sortOrder}
-                onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="mr-2"
-                />
-                <span className="text-sm font-medium text-gray-700">Активен</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="mt-6 flex gap-3 justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="inline-block w-4 h-4 mr-2 animate-spin" />
-                  Сохранение...
-                </>
-              ) : (
-                'Сохранить'
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   );
 }

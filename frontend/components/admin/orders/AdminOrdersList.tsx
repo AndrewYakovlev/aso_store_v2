@@ -7,7 +7,6 @@ import { formatPhoneForDisplay } from '@/lib/utils/phone';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { 
-  EyeIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon 
@@ -15,6 +14,8 @@ import {
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { DataTable } from '../DataTable';
+import { createOrdersColumns } from './columns';
 
 export function AdminOrdersList() {
   const router = useRouter();
@@ -105,6 +106,10 @@ export function AdminOrdersList() {
     }
   };
 
+  const handleViewOrder = (order: Order) => {
+    router.push(`/panel/orders/${order.id}`);
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   if (loading) {
@@ -150,89 +155,12 @@ export function AdminOrdersList() {
         </form>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead>
-            <tr>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Номер заказа
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Дата
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Клиент
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Сумма
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Статус
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Действия
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {orders.map((order) => (
-              <tr key={order.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {order.orderNumber}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">
-                    {format(new Date(order.createdAt), 'dd MMM yyyy HH:mm', { locale: ru })}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {order.customerName}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {formatPhoneForDisplay(order.customerPhone)}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">
-                    {order.grandTotal.toLocaleString()} ₽
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <select
-                    value={order.status.id}
-                    onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                    disabled={updatingStatus === order.id}
-                    className="text-sm border rounded px-2 py-1 focus:outline-none focus:border-blue-500"
-                  >
-                    {statuses.map(status => (
-                      <option key={status.id} value={status.id}>{status.name}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link
-                    href={`/panel/orders/${order.id}`}
-                    className="text-blue-600 hover:text-blue-900"
-                  >
-                    <EyeIcon className="h-5 w-5" />
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {orders.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Заказы не найдены</p>
-        </div>
-      )}
+      <DataTable
+        columns={createOrdersColumns({
+          onView: handleViewOrder,
+        })}
+        data={orders}
+      />
 
       {totalPages > 1 && (
         <div className="px-6 py-4 border-t flex items-center justify-between">

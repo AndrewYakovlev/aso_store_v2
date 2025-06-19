@@ -1,93 +1,118 @@
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import { productsApi, Product, ProductsFilter } from '@/lib/api/products';
-import Link from 'next/link';
-import Image from 'next/image';
-import { 
-  PencilIcon, 
-  TrashIcon, 
+import { useState, useEffect } from "react"
+import { productsApi, Product, ProductsFilter } from "@/lib/api/products"
+import Image from "next/image"
+import {
   MagnifyingGlassIcon,
   ChevronLeftIcon,
-  ChevronRightIcon 
-} from '@heroicons/react/24/outline';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/lib/contexts/AuthContext';
+  ChevronRightIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useAuth } from "@/lib/contexts/AuthContext"
+import { Loader2 } from "lucide-react"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { ProductSheet } from "./ProductSheet"
+import { DataTable } from "../DataTable"
+import { createProductsColumns } from "./columns"
 
 export function AdminProductsList() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { accessToken } = useAuth();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { accessToken } = useAuth()
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [total, setTotal] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [search, setSearch] = useState("")
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
-  const limit = 20;
+  const limit = 20
 
   useEffect(() => {
-    const searchQuery = searchParams.get('search') || '';
-    const page = parseInt(searchParams.get('page') || '1');
-    setSearch(searchQuery);
-    setCurrentPage(page);
-    loadProducts(searchQuery, page);
-  }, [searchParams]);
+    const searchQuery = searchParams.get("search") || ""
+    const page = parseInt(searchParams.get("page") || "1")
+    setSearch(searchQuery)
+    setCurrentPage(page)
+    loadProducts(searchQuery, page)
+  }, [searchParams])
 
   const loadProducts = async (searchQuery: string, page: number) => {
-    setLoading(true);
+    setLoading(true)
     try {
       const filter: ProductsFilter = {
         search: searchQuery || undefined,
         page,
         limit,
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
-      };
-      
-      const response = await productsApi.getAll(filter);
-      setProducts(response.items);
-      setTotal(response.total);
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      }
+
+      const response = await productsApi.getAll(filter)
+      setProducts(response.items)
+      setTotal(response.total)
     } catch (error) {
-      console.error('Failed to load products:', error);
+      console.error("Failed to load products:", error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (search) params.set('search', search);
-    params.set('page', '1');
-    router.push(`/panel/products?${params.toString()}`);
-  };
+    e.preventDefault()
+    const params = new URLSearchParams()
+    if (search) params.set("search", search)
+    params.set("page", "1")
+    router.push(`/panel/products?${params.toString()}`)
+  }
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('page', page.toString());
-    router.push(`/panel/products?${params.toString()}`);
-  };
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("page", page.toString())
+    router.push(`/panel/products?${params.toString()}`)
+  }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Вы уверены, что хотите удалить этот товар?')) {
-      return;
+    if (!confirm("Вы уверены, что хотите удалить этот товар?")) {
+      return
     }
 
-    setDeleting(id);
+    setDeleting(id)
     try {
-      await productsApi.delete(id, accessToken!);
-      await loadProducts(search, currentPage);
+      await productsApi.delete(id, accessToken!)
+      await loadProducts(search, currentPage)
     } catch (error) {
-      console.error('Failed to delete product:', error);
-      alert('Ошибка при удалении товара');
+      console.error("Failed to delete product:", error)
+      alert("Ошибка при удалении товара")
     } finally {
-      setDeleting(null);
+      setDeleting(null)
     }
-  };
+  }
 
-  const totalPages = Math.ceil(total / limit);
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product)
+    setSheetOpen(true)
+  }
+
+  const handleCreate = () => {
+    setEditingProduct(null)
+    setSheetOpen(true)
+  }
+
+  const handleSheetClose = () => {
+    setSheetOpen(false)
+    setEditingProduct(null)
+  }
+
+  const handleSheetSave = async () => {
+    await loadProducts(search, currentPage)
+    handleSheetClose()
+  }
+
+  const totalPages = Math.ceil(total / limit)
 
   if (loading) {
     return (
@@ -101,7 +126,7 @@ export function AdminProductsList() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -109,22 +134,19 @@ export function AdminProductsList() {
       <div className="p-6 border-b">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Управление товарами</h2>
-          <Link
-            href="/panel/products/new"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+            <PlusIcon className="h-5 w-5" />
             Добавить товар
-          </Link>
+          </button>
         </div>
         <form onSubmit={handleSearch} className="flex gap-4">
           <div className="flex-1 relative">
             <input
               type="search"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={e => setSearch(e.target.value)}
               placeholder="Поиск по названию или артикулу..."
               className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
             />
@@ -132,150 +154,68 @@ export function AdminProductsList() {
           </div>
           <button
             type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-          >
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
             Найти
           </button>
         </form>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead>
-            <tr>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Изображение
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Название / Артикул
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Цена
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Остаток
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Статус
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Действия
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((product) => (
-              <tr key={product.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {product.images[0] ? (
-                    <Image
-                      src={product.images[0]}
-                      alt={product.name}
-                      width={50}
-                      height={50}
-                      className="rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                  )}
-                </td>
-                <td className="px-6 py-4">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {product.name}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {product.sku}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">
-                    {product.price.toLocaleString()} ₽
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className={`text-sm ${product.stock > 0 ? 'text-gray-900' : 'text-red-600'}`}>
-                    {product.stock}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    product.isActive 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {product.isActive ? 'Активен' : 'Неактивен'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end gap-2">
-                    <Link
-                      href={`/panel/products/${product.id}/edit`}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      <PencilIcon className="h-5 w-5" />
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      disabled={deleting === product.id}
-                      className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {products.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Товары не найдены</p>
-        </div>
-      )}
+      <DataTable
+        columns={createProductsColumns({
+          onEdit: handleEdit,
+          onDelete: handleDelete,
+          deleting,
+        })}
+        data={products}
+      />
 
       {totalPages > 1 && (
         <div className="px-6 py-4 border-t flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            Показано {(currentPage - 1) * limit + 1} - {Math.min(currentPage * limit, total)} из {total}
+            Показано {(currentPage - 1) * limit + 1} -{" "}
+            {Math.min(currentPage * limit, total)} из {total}
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+              className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
               <ChevronLeftIcon className="h-5 w-5" />
             </button>
             {[...Array(Math.min(5, totalPages))].map((_, i) => {
-              const page = i + 1;
+              const page = i + 1
               return (
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
                   className={`px-3 py-1 border rounded ${
-                    page === currentPage 
-                      ? 'bg-blue-600 text-white' 
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
+                    page === currentPage
+                      ? "bg-blue-600 text-white"
+                      : "hover:bg-gray-50"
+                  }`}>
                   {page}
                 </button>
-              );
+              )
             })}
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+              className="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
               <ChevronRightIcon className="h-5 w-5" />
             </button>
           </div>
         </div>
       )}
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="w-[50vw] max-w-none">
+          <ProductSheet
+            product={editingProduct}
+            onSave={handleSheetSave}
+            onCancel={handleSheetClose}
+          />
+        </SheetContent>
+      </Sheet>
     </div>
-  );
+  )
 }

@@ -61,6 +61,18 @@ export class AttributesService {
         options: {
           orderBy: { sortOrder: 'asc' },
         },
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
+          orderBy: { sortOrder: 'asc' },
+        },
       },
     });
 
@@ -71,6 +83,18 @@ export class AttributesService {
     const attributes = await this.prisma.attribute.findMany({
       include: {
         options: {
+          orderBy: { sortOrder: 'asc' },
+        },
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
           orderBy: { sortOrder: 'asc' },
         },
       },
@@ -85,6 +109,18 @@ export class AttributesService {
       where: { id },
       include: {
         options: {
+          orderBy: { sortOrder: 'asc' },
+        },
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
           orderBy: { sortOrder: 'asc' },
         },
       },
@@ -102,6 +138,18 @@ export class AttributesService {
       where: { code },
       include: {
         options: {
+          orderBy: { sortOrder: 'asc' },
+        },
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
           orderBy: { sortOrder: 'asc' },
         },
       },
@@ -156,6 +204,18 @@ export class AttributesService {
       },
       include: {
         options: {
+          orderBy: { sortOrder: 'asc' },
+        },
+        categories: {
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
+            },
+          },
           orderBy: { sortOrder: 'asc' },
         },
       },
@@ -474,6 +534,14 @@ export class AttributesService {
         attributeId: opt.attributeId,
         value: opt.value,
         sortOrder: opt.sortOrder,
+      })),
+      categoryAttributes: attribute.categories?.map((ca: any) => ({
+        categoryId: ca.categoryId,
+        attributeId: ca.attributeId,
+        attribute: undefined, // Avoid circular reference
+        isRequired: ca.isRequired,
+        sortOrder: ca.sortOrder,
+        category: ca.category,
       })),
       createdAt: attribute.createdAt,
       updatedAt: attribute.updatedAt,

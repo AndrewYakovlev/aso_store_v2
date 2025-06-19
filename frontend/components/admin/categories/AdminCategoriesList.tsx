@@ -1,243 +1,161 @@
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import { categoriesApi, Category, CreateCategoryDto, UpdateCategoryDto } from '@/lib/api/categories';
-import { useAuth } from '@/lib/contexts/AuthContext';
-import { 
-  PencilIcon, 
-  TrashIcon,
-  ChevronRightIcon,
+import { useState, useEffect } from "react"
+import {
+  categoriesApi,
+  Category,
+  CreateCategoryDto,
+  UpdateCategoryDto,
+} from "@/lib/api/categories"
+import { useAuth } from "@/lib/contexts/AuthContext"
+import {
   PlusIcon,
-  XMarkIcon,
-  CheckIcon
-} from '@heroicons/react/24/outline';
-import { Loader2 } from 'lucide-react';
+} from "@heroicons/react/24/outline"
+import { Loader2 } from "lucide-react"
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet"
+import { CategorySheet } from "./CategorySheet"
+import { DataTable } from "../DataTable"
+import { createCategoriesColumns } from "./columns"
+
+interface CategoryWithChildren extends Category {
+  children?: CategoryWithChildren[]
+  level?: number
+}
 
 export function AdminCategoriesList() {
-  const { accessToken } = useAuth();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [creatingNew, setCreatingNew] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [editForm, setEditForm] = useState<UpdateCategoryDto>({});
-  const [newForm, setNewForm] = useState<CreateCategoryDto>({
-    name: '',
-    slug: '',
-    description: '',
-    isActive: true,
-    sortOrder: 0,
-  });
+  const { accessToken } = useAuth()
+  const [categories, setCategories] = useState<CategoryWithChildren[]>([])
+  const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
 
   useEffect(() => {
-    loadCategories();
-  }, []);
+    loadCategories()
+  }, [])
 
   const loadCategories = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const data = await categoriesApi.getAll({ 
-        onlyActive: false, 
-        includeProductCount: true 
-      });
-      setCategories(data);
-    } catch (error) {
-      console.error('Failed to load categories:', error);
-      setError('Не удалось загрузить категории');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[а-яё]/g, (match) => {
-        const ru = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
-        const en = ['a','b','v','g','d','e','yo','zh','z','i','y','k','l','m','n','o','p','r','s','t','u','f','h','ts','ch','sh','sch','','y','','e','yu','ya'];
-        return en[ru.indexOf(match)] || match;
+      const data = await categoriesApi.getAll({
+        onlyActive: false,
+        includeProductCount: true,
       })
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
 
-  const handleEdit = (category: Category) => {
-    setEditingId(category.id);
-    setEditForm({
-      name: category.name,
-      slug: category.slug,
-      description: category.description || '',
-      parentId: category.parentId || undefined,
-      isActive: category.isActive,
-      sortOrder: category.sortOrder,
-    });
-  };
+      // Создаем древовидную структуру
+      const categoriesMap = new Map<string, CategoryWithChildren>()
+      const rootCategories: CategoryWithChildren[] = []
 
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditForm({});
-  };
+      // Сначала создаем все узлы
+      data.forEach(category => {
+        categoriesMap.set(category.id, { ...category, children: [] })
+      })
 
-  const handleSaveEdit = async (id: string) => {
-    try {
-      await categoriesApi.update(id, editForm, accessToken!);
-      await loadCategories();
-      setEditingId(null);
-      setEditForm({});
-    } catch (error: any) {
-      console.error('Failed to update category:', error);
-      alert(error.response?.data?.message || 'Ошибка при обновлении категории');
+      // Затем строим дерево
+      data.forEach(category => {
+        const categoryNode = categoriesMap.get(category.id)!
+        if (category.parentId) {
+          const parent = categoriesMap.get(category.parentId)
+          if (parent) {
+            parent.children!.push(categoryNode)
+          }
+        } else {
+          rootCategories.push(categoryNode)
+        }
+      })
+
+      // Сортируем по sortOrder
+      const sortCategories = (categories: CategoryWithChildren[]) => {
+        categories.sort((a, b) => a.sortOrder - b.sortOrder)
+        categories.forEach(category => {
+          if (category.children && category.children.length > 0) {
+            sortCategories(category.children)
+          }
+        })
+      }
+
+      sortCategories(rootCategories)
+      setCategories(rootCategories)
+    } catch (error) {
+      console.error("Failed to load categories:", error)
+      setError("Не удалось загрузить категории")
+    } finally {
+      setLoading(false)
     }
-  };
-
-  const handleCreateNew = async () => {
-    if (!newForm.name || !newForm.slug) {
-      alert('Заполните обязательные поля');
-      return;
-    }
-
-    try {
-      await categoriesApi.create(newForm, accessToken!);
-      await loadCategories();
-      setCreatingNew(false);
-      setNewForm({
-        name: '',
-        slug: '',
-        description: '',
-        isActive: true,
-        sortOrder: 0,
-      });
-    } catch (error: any) {
-      console.error('Failed to create category:', error);
-      alert(error.response?.data?.message || 'Ошибка при создании категории');
-    }
-  };
+  }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Вы уверены, что хотите удалить эту категорию?')) {
-      return;
+    if (
+      !confirm(
+        "Вы уверены, что хотите удалить эту категорию? Все подкатегории также будут удалены."
+      )
+    ) {
+      return
     }
 
-    setDeleting(id);
+    setDeleting(id)
     try {
-      await categoriesApi.delete(id, accessToken!);
-      await loadCategories();
+      await categoriesApi.delete(id, accessToken!)
+      await loadCategories()
     } catch (error: any) {
-      console.error('Failed to delete category:', error);
-      alert(error.response?.data?.message || 'Ошибка при удалении категории');
+      console.error("Failed to delete category:", error)
+      alert(error.response?.data?.message || "Ошибка при удалении категории")
     } finally {
-      setDeleting(null);
+      setDeleting(null)
     }
-  };
+  }
 
-  const renderCategoryRow = (category: Category, level: number = 0) => {
-    const isEditing = editingId === category.id;
+  const handleEdit = (category: Category) => {
+    setEditingCategory(category)
+    setSheetOpen(true)
+  }
 
-    return (
-      <tr key={category.id} className="hover:bg-gray-50">
-        <td className="px-6 py-4 whitespace-nowrap">
-          <div className="flex items-center" style={{ paddingLeft: `${level * 24}px` }}>
-            {level > 0 && <ChevronRightIcon className="h-4 w-4 text-gray-400 mr-2" />}
-            {isEditing ? (
-              <input
-                type="text"
-                value={editForm.name || ''}
-                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                className="px-2 py-1 border rounded focus:outline-none focus:border-blue-500"
-              />
-            ) : (
-              <span className="text-sm font-medium text-gray-900">{category.name}</span>
-            )}
-          </div>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          {isEditing ? (
-            <input
-              type="text"
-              value={editForm.slug || ''}
-              onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })}
-              className="px-2 py-1 border rounded focus:outline-none focus:border-blue-500"
-            />
-          ) : (
-            <span className="text-sm text-gray-500">{category.slug}</span>
-          )}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <span className="text-sm text-gray-900">{category.productCount || 0}</span>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          {isEditing ? (
-            <input
-              type="number"
-              value={editForm.sortOrder || 0}
-              onChange={(e) => setEditForm({ ...editForm, sortOrder: parseInt(e.target.value) })}
-              className="px-2 py-1 border rounded focus:outline-none focus:border-blue-500 w-20"
-            />
-          ) : (
-            <span className="text-sm text-gray-900">{category.sortOrder}</span>
-          )}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          {isEditing ? (
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={editForm.isActive ?? true}
-                onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
-                className="mr-2"
-              />
-            </label>
-          ) : (
-            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-              category.isActive 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {category.isActive ? 'Активна' : 'Неактивна'}
-            </span>
-          )}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-          <div className="flex items-center justify-end gap-2">
-            {isEditing ? (
-              <>
-                <button
-                  onClick={() => handleSaveEdit(category.id)}
-                  className="text-green-600 hover:text-green-900"
-                >
-                  <CheckIcon className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => handleEdit(category)}
-                  className="text-blue-600 hover:text-blue-900"
-                >
-                  <PencilIcon className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(category.id)}
-                  disabled={deleting === category.id}
-                  className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                >
-                  <TrashIcon className="h-5 w-5" />
-                </button>
-              </>
-            )}
-          </div>
-        </td>
-      </tr>
-    );
-  };
+  const handleCreate = () => {
+    setEditingCategory(null)
+    setSheetOpen(true)
+  }
+
+  const handleSheetClose = () => {
+    setSheetOpen(false)
+    setEditingCategory(null)
+  }
+
+  const handleSheetSave = async () => {
+    await loadCategories()
+    handleSheetClose()
+  }
+
+  const toggleExpanded = (id: string) => {
+    const newExpanded = new Set(expandedIds)
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id)
+    } else {
+      newExpanded.add(id)
+    }
+    setExpandedIds(newExpanded)
+  }
+
+  // Создаем плоский список для DataTable с учетом развернутых категорий
+  const getFlatCategoriesForTable = (cats: CategoryWithChildren[], level: number = 0): CategoryWithChildren[] => {
+    const result: CategoryWithChildren[] = []
+    
+    cats.forEach(cat => {
+      const categoryWithLevel = { ...cat, level }
+      result.push(categoryWithLevel)
+      
+      if (cat.children && cat.children.length > 0 && expandedIds.has(cat.id)) {
+        result.push(...getFlatCategoriesForTable(cat.children, level + 1))
+      }
+    })
+    
+    return result
+  }
+
 
   if (loading) {
     return (
@@ -246,7 +164,7 @@ export function AdminCategoriesList() {
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -254,134 +172,76 @@ export function AdminCategoriesList() {
       <div className="bg-white shadow rounded-lg p-6">
         <div className="text-red-600 text-center py-12">{error}</div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="p-6 border-b">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Категории товаров</h2>
-          <button
-            onClick={() => setCreatingNew(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <PlusIcon className="h-5 w-5" />
-            Добавить категорию
-          </button>
+    <>
+      <div className="bg-white shadow rounded-lg">
+        <div className="p-6 border-b">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-semibold">Категории товаров</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Управление иерархическими категориями товаров
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  // Развернуть все
+                  const allIds = new Set<string>()
+                  const addIds = (cats: CategoryWithChildren[]) => {
+                    cats.forEach(cat => {
+                      if (cat.children && cat.children.length > 0) {
+                        allIds.add(cat.id)
+                        addIds(cat.children)
+                      }
+                    })
+                  }
+                  addIds(categories)
+                  setExpandedIds(allIds)
+                }}
+                className="text-sm px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
+                Развернуть все
+              </button>
+              <button
+                onClick={() => setExpandedIds(new Set())}
+                className="text-sm px-3 py-1 border border-gray-300 rounded hover:bg-gray-50">
+                Свернуть все
+              </button>
+              <button
+                onClick={handleCreate}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                <PlusIcon className="h-5 w-5" />
+                Добавить категорию
+              </button>
+            </div>
+          </div>
         </div>
+
+        <DataTable
+          columns={createCategoriesColumns({
+            onEdit: handleEdit,
+            onDelete: handleDelete,
+            deleting,
+            expandedIds,
+            toggleExpanded,
+          })}
+          data={getFlatCategoriesForTable(categories)}
+        />
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead>
-            <tr>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Название
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                URL
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Товаров
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Порядок
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Статус
-              </th>
-              <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Действия
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {creatingNew && (
-              <tr className="bg-blue-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="text"
-                    value={newForm.name}
-                    onChange={(e) => {
-                      const name = e.target.value;
-                      setNewForm({ 
-                        ...newForm, 
-                        name,
-                        slug: generateSlug(name)
-                      });
-                    }}
-                    placeholder="Название категории"
-                    className="px-2 py-1 border rounded focus:outline-none focus:border-blue-500"
-                    autoFocus
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="text"
-                    value={newForm.slug}
-                    onChange={(e) => setNewForm({ ...newForm, slug: e.target.value })}
-                    placeholder="url-адрес"
-                    className="px-2 py-1 border rounded focus:outline-none focus:border-blue-500"
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">-</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="number"
-                    value={newForm.sortOrder}
-                    onChange={(e) => setNewForm({ ...newForm, sortOrder: parseInt(e.target.value) })}
-                    className="px-2 py-1 border rounded focus:outline-none focus:border-blue-500 w-20"
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={newForm.isActive}
-                      onChange={(e) => setNewForm({ ...newForm, isActive: e.target.checked })}
-                      className="mr-2"
-                    />
-                    <span className="text-sm">Активна</span>
-                  </label>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={handleCreateNew}
-                      className="text-green-600 hover:text-green-900"
-                    >
-                      <CheckIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCreatingNew(false);
-                        setNewForm({
-                          name: '',
-                          slug: '',
-                          description: '',
-                          isActive: true,
-                          sortOrder: 0,
-                        });
-                      }}
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      <XMarkIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            )}
-            {categories.map(category => renderCategoryRow(category))}
-          </tbody>
-        </table>
-      </div>
-
-      {categories.length === 0 && !creatingNew && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Категории не найдены</p>
-        </div>
-      )}
-    </div>
-  );
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="w-1/3">
+          <CategorySheet
+            category={editingCategory}
+            categories={categories}
+            onSave={handleSheetSave}
+            onCancel={handleSheetClose}
+          />
+        </SheetContent>
+      </Sheet>
+    </>
+  )
 }
