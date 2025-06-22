@@ -3,6 +3,8 @@ export interface ChatMessage {
   chatId: string;
   senderId: string;
   content: string;
+  offerId?: string;
+  offer?: ProductOffer;
   isRead: boolean;
   isDelivered: boolean;
   deliveredAt?: string;
@@ -19,10 +21,18 @@ export interface ProductOffer {
   name: string;
   description?: string;
   price: number;
+  oldPrice?: number;
+  image?: string;
+  images: string[];
+  deliveryDays?: number;
+  isOriginal?: boolean;
+  isAnalog?: boolean;
   isActive: boolean;
+  isCancelled: boolean;
   createdAt: string;
   expiresAt?: string;
   managerName?: string;
+  messageId?: string;
 }
 
 export interface Chat {
@@ -66,5 +76,24 @@ export interface CreateProductOfferDto {
   name: string;
   description?: string;
   price: number;
+  oldPrice?: number;
+  image?: string;
+  images?: string[];
+  deliveryDays?: number;
+  isOriginal?: boolean;
+  isAnalog?: boolean;
+  expiresAt?: string;
+}
+
+export interface UpdateProductOfferDto {
+  name?: string;
+  description?: string;
+  price?: number;
+  oldPrice?: number;
+  images?: string[];
+  deliveryDays?: number;
+  isOriginal?: boolean;
+  isAnalog?: boolean;
+  isActive?: boolean;
   expiresAt?: string;
 }

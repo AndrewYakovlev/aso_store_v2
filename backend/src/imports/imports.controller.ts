@@ -8,7 +8,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiConsumes,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ImportsService } from './imports.service';
 import { ImportResultDto, ImportPreviewDto } from './dto/import-result.dto';
 import { ImportOptionsDto } from './dto/import-options.dto';
@@ -28,9 +34,10 @@ export class ImportsController {
   @Post('products/preview')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @UseInterceptors(FileInterceptor('file', multerConfig))
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Предварительный просмотр импорта товаров',
-    description: 'Анализирует Excel файл и показывает предварительный результат импорта с автоматическим сопоставлением категорий и брендов'
+    description:
+      'Анализирует Excel файл и показывает предварительный результат импорта с автоматическим сопоставлением категорий и брендов',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -41,10 +48,10 @@ export class ImportsController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Excel файл (.xlsx)'
-        }
-      }
-    }
+          description: 'Excel файл (.xlsx)',
+        },
+      },
+    },
   })
   async previewProductsImport(
     @UploadedFile() file: Express.Multer.File,
@@ -58,9 +65,10 @@ export class ImportsController {
   @Post('products')
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @UseInterceptors(FileInterceptor('file', multerConfig))
-  @ApiOperation({ 
+  @ApiOperation({
     summary: 'Импорт товаров из Excel файла',
-    description: 'Импортирует товары из Excel файла с автоматическим сопоставлением категорий и брендов'
+    description:
+      'Импортирует товары из Excel файла с автоматическим сопоставлением категорий и брендов',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -71,14 +79,14 @@ export class ImportsController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Excel файл (.xlsx)'
+          description: 'Excel файл (.xlsx)',
         },
         options: {
           type: 'string',
-          description: 'JSON строка с опциями импорта (ImportOptionsDto)'
-        }
-      }
-    }
+          description: 'JSON строка с опциями импорта (ImportOptionsDto)',
+        },
+      },
+    },
   })
   async importProducts(
     @UploadedFile() file: Express.Multer.File,
@@ -88,7 +96,7 @@ export class ImportsController {
       throw new BadRequestException('Файл не загружен');
     }
     let options: ImportOptionsDto = {};
-    
+
     if (optionsJson) {
       try {
         options = JSON.parse(optionsJson);

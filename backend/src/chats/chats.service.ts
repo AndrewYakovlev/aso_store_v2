@@ -1,14 +1,28 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 import { CreateProductOfferDto } from './dto/create-product-offer.dto';
-import { ChatDto, ChatListDto, ChatMessageDto, ProductOfferDto } from './dto/chat.dto';
+import { UpdateProductOfferDto } from './dto/update-product-offer.dto';
+import {
+  ChatDto,
+  ChatListDto,
+  ChatMessageDto,
+  ProductOfferDto,
+} from './dto/chat.dto';
 import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class ChatsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async createChat(
     userId: string | null,
@@ -33,9 +47,13 @@ export class ChatsService {
     if (existingChat) {
       // If initial message provided, send it
       if (createChatDto.message) {
-        await this.sendMessage(existingChat.id, userId || anonymousUserId || '', {
-          content: createChatDto.message,
-        });
+        await this.sendMessage(
+          existingChat.id,
+          userId || anonymousUserId || '',
+          {
+            content: createChatDto.message,
+          },
+        );
       }
       return this.getChatById(existingChat.id, userId, anonymousUserId, false);
     }
@@ -74,6 +92,9 @@ export class ChatsService {
       include: {
         messages: {
           orderBy: { createdAt: 'asc' },
+          include: {
+            offer: true,
+          },
         },
         offers: {
           include: {
@@ -117,7 +138,8 @@ export class ChatsService {
     anonymousUserId: string | null,
   ): Promise<ChatListDto[]> {
     if (!userId && !anonymousUserId) {
-      throw new BadRequestException('User or anonymous user ID is required');
+      // Return empty array if no user identification yet
+      return [];
     }
 
     const chats = await this.prisma.chat.findMany({
@@ -143,7 +165,11 @@ export class ChatsService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return Promise.all(chats.map((chat) => this.formatChatListDto(chat, userId || anonymousUserId)));
+    return Promise.all(
+      chats.map((chat) =>
+        this.formatChatListDto(chat, userId || anonymousUserId),
+      ),
+    );
   }
 
   async getManagerChats(managerId: string): Promise<ChatListDto[]> {
@@ -172,7 +198,9 @@ export class ChatsService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return Promise.all(chats.map((chat) => this.formatChatListDto(chat, managerId)));
+    return Promise.all(
+      chats.map((chat) => this.formatChatListDto(chat, managerId)),
+    );
   }
 
   async sendMessage(
@@ -215,8 +243,58 @@ export class ChatsService {
       data: { updatedAt: new Date() },
     });
 
+    // Send push notification to the recipient
+    try {
+      const recipientId = senderId === chat.userId ? chat.managerId : chat.userId;
+      const recipientAnonymousId = senderId === chat.anonymousUserId ? null : chat.anonymousUserId;
+      
+      if (recipientId || recipientAnonymousId) {
+        // Get sender info for notification
+        const sender = await this.prisma.user.findUnique({
+          where: { id: senderId },
+          select: { firstName: true, lastName: true },
+        });
+        
+        const senderName = sender 
+          ? `${sender.firstName || ''} ${sender.lastName || ''}`.trim() || 'Менеджер'
+          : chat.user ? `${chat.user.firstName || ''} ${chat.user.lastName || ''}`.trim() || 'Покупатель' : 'Покупатель';
+        
+        await this.notificationsService.sendNotificationToUser(
+          recipientId || undefined,
+          recipientAnonymousId || undefined,
+          {
+            title: `Новое сообщение от ${senderName}`,
+            body: sendMessageDto.content.length > 100 
+              ? sendMessageDto.content.substring(0, 100) + '...' 
+              : sendMessageDto.content,
+            icon: '/icon-192x192.png',
+            badge: '/badge-72x72.png',
+            tag: `chat-${chatId}`,
+            data: {
+              type: 'chat_message',
+              chatId,
+              messageId: message.id,
+            },
+            actions: [
+              {
+                action: 'open-chat',
+                title: 'Открыть чат',
+              },
+            ],
+          },
+        );
+      }
+    } catch (error) {
+      // Log error but don't fail the message send
+      console.error('Failed to send push notification:', error);
+    }
+
     // Load manager info if sender is manager
-    let manager: { id: string; firstName: string | null; lastName: string | null; } | null = null;
+    let manager: {
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+    } | null = null;
     if (senderId === chat.managerId) {
       manager = await this.prisma.user.findUnique({
         where: { id: senderId },
@@ -231,7 +309,10 @@ export class ChatsService {
     return this.formatMessageDto(message, chat, manager);
   }
 
-  async sendSystemMessage(chatId: string, content: string): Promise<ChatMessageDto> {
+  async sendSystemMessage(
+    chatId: string,
+    content: string,
+  ): Promise<ChatMessageDto> {
     const message = await this.prisma.chatMessage.create({
       data: {
         chatId,
@@ -256,7 +337,7 @@ export class ChatsService {
         senderId: { not: userId },
         isRead: false,
       },
-      data: { 
+      data: {
         isRead: true,
         readAt: new Date(),
       },
@@ -281,7 +362,8 @@ export class ChatsService {
     });
 
     const managerName = manager
-      ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() || 'Менеджер'
+      ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() ||
+        'Менеджер'
       : 'Менеджер';
 
     await this.sendSystemMessage(
@@ -313,25 +395,96 @@ export class ChatsService {
       });
     }
 
+    // Validate that only one of isOriginal or isAnalog can be true
+    if (createProductOfferDto.isOriginal && createProductOfferDto.isAnalog) {
+      throw new BadRequestException(
+        'Product cannot be both original and analog',
+      );
+    }
+
     const offer = await this.prisma.productOffer.create({
       data: {
         chatId,
         managerId,
-        ...createProductOfferDto,
+        name: createProductOfferDto.name,
+        description: createProductOfferDto.description,
         price: new Decimal(createProductOfferDto.price),
+        oldPrice: createProductOfferDto.oldPrice
+          ? new Decimal(createProductOfferDto.oldPrice)
+          : null,
+        image: createProductOfferDto.image || (createProductOfferDto.images?.[0] ?? null),
+        images: createProductOfferDto.images || [],
+        deliveryDays: createProductOfferDto.deliveryDays,
+        isOriginal: createProductOfferDto.isOriginal || false,
+        isAnalog: createProductOfferDto.isAnalog || false,
+        expiresAt: createProductOfferDto.expiresAt,
       },
     });
 
-    // Send system message about the offer
-    await this.sendSystemMessage(
-      chatId,
-      `Менеджер отправил вам товарное предложение: ${offer.name}`,
-    );
+    // Create a message with the offer
+    const message = await this.prisma.chatMessage.create({
+      data: {
+        chatId,
+        senderId: managerId,
+        content: `Товарное предложение: ${offer.name}`,
+        offerId: offer.id,
+        isDelivered: true,
+        deliveredAt: new Date(),
+      },
+    });
+
+    // Send push notification about product offer
+    try {
+      const recipientId = chat.userId;
+      const recipientAnonymousId = chat.anonymousUserId;
+      
+      if (recipientId || recipientAnonymousId) {
+        // Get manager info for notification
+        const manager = await this.prisma.user.findUnique({
+          where: { id: managerId },
+          select: { firstName: true, lastName: true },
+        });
+        
+        const managerName = manager 
+          ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() || 'Менеджер'
+          : 'Менеджер';
+        
+        await this.notificationsService.sendNotificationToUser(
+          recipientId || undefined,
+          recipientAnonymousId || undefined,
+          {
+            title: `Новое предложение от ${managerName}`,
+            body: `${offer.name} - ${offer.price} ₽`,
+            icon: offer.image || '/icon-192x192.png',
+            badge: '/badge-72x72.png',
+            tag: `offer-${offer.id}`,
+            data: {
+              type: 'product_offer',
+              chatId,
+              offerId: offer.id,
+            },
+            actions: [
+              {
+                action: 'view-offer',
+                title: 'Посмотреть предложение',
+              },
+            ],
+            requireInteraction: true, // Keep notification visible until user interacts
+          },
+        );
+      }
+    } catch (error) {
+      // Log error but don't fail the offer creation
+      console.error('Failed to send push notification for offer:', error);
+    }
 
     return this.formatProductOfferDto(offer);
   }
 
-  async deactivateOffer(offerId: string, managerId: string): Promise<ProductOfferDto> {
+  async deactivateOffer(
+    offerId: string,
+    managerId: string,
+  ): Promise<ProductOfferDto> {
     const offer = await this.prisma.productOffer.findUnique({
       where: { id: offerId },
     });
@@ -352,6 +505,83 @@ export class ChatsService {
     return this.formatProductOfferDto(updatedOffer);
   }
 
+  async updateProductOffer(
+    offerId: string,
+    managerId: string,
+    updateProductOfferDto: UpdateProductOfferDto,
+  ): Promise<ProductOfferDto> {
+    const offer = await this.prisma.productOffer.findUnique({
+      where: { id: offerId },
+    });
+
+    if (!offer) {
+      throw new NotFoundException('Offer not found');
+    }
+
+    if (offer.managerId !== managerId) {
+      throw new BadRequestException('Access denied');
+    }
+
+    // Validate that only one of isOriginal or isAnalog can be true
+    if (updateProductOfferDto.isOriginal && updateProductOfferDto.isAnalog) {
+      throw new BadRequestException(
+        'Product cannot be both original and analog',
+      );
+    }
+
+    const updatedOffer = await this.prisma.productOffer.update({
+      where: { id: offerId },
+      data: {
+        name: updateProductOfferDto.name,
+        description: updateProductOfferDto.description,
+        price: updateProductOfferDto.price
+          ? new Decimal(updateProductOfferDto.price)
+          : undefined,
+        oldPrice: updateProductOfferDto.oldPrice !== undefined
+          ? updateProductOfferDto.oldPrice
+            ? new Decimal(updateProductOfferDto.oldPrice)
+            : null
+          : undefined,
+        images: updateProductOfferDto.images,
+        image: updateProductOfferDto.images?.[0] ?? undefined,
+        deliveryDays: updateProductOfferDto.deliveryDays,
+        isOriginal: updateProductOfferDto.isOriginal,
+        isAnalog: updateProductOfferDto.isAnalog,
+        isActive: updateProductOfferDto.isActive,
+        expiresAt: updateProductOfferDto.expiresAt,
+      },
+    });
+
+    return this.formatProductOfferDto(updatedOffer);
+  }
+
+  async cancelProductOffer(
+    offerId: string,
+    managerId: string,
+  ): Promise<ProductOfferDto> {
+    const offer = await this.prisma.productOffer.findUnique({
+      where: { id: offerId },
+    });
+
+    if (!offer) {
+      throw new NotFoundException('Offer not found');
+    }
+
+    if (offer.managerId !== managerId) {
+      throw new BadRequestException('Access denied');
+    }
+
+    const updatedOffer = await this.prisma.productOffer.update({
+      where: { id: offerId },
+      data: { 
+        isCancelled: true,
+        isActive: false 
+      },
+    });
+
+    return this.formatProductOfferDto(updatedOffer);
+  }
+
   async closeChat(chatId: string): Promise<ChatDto> {
     const chat = await this.prisma.chat.update({
       where: { id: chatId },
@@ -363,9 +593,16 @@ export class ChatsService {
     return this.getChatById(chatId, null, null, true);
   }
 
-  private async formatChatDto(chat: any, currentUserId: string | null): Promise<ChatDto> {
+  private async formatChatDto(
+    chat: any,
+    currentUserId: string | null,
+  ): Promise<ChatDto> {
     // Load manager info if chat has managerId
-    let manager: { id: string; firstName: string | null; lastName: string | null; } | null = null;
+    let manager: {
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+    } | null = null;
     if (chat.managerId) {
       manager = await this.prisma.user.findUnique({
         where: { id: chat.managerId },
@@ -377,12 +614,19 @@ export class ChatsService {
       });
     }
 
-    const messages = chat.messages.map((msg) => this.formatMessageDto(msg, chat, manager));
-    const offers = chat.offers.map((offer) => this.formatProductOfferDto(offer, manager));
-    
+    const messages = chat.messages.map((msg) =>
+      this.formatMessageDto(msg, chat, manager),
+    );
+    const offers = chat.offers.map((offer) =>
+      this.formatProductOfferDto(offer, manager),
+    );
+
     // Count unread messages that are not from the current user
     const unreadCount = chat.messages.filter(
-      (msg) => !msg.isRead && msg.senderId !== currentUserId && msg.senderId !== 'system',
+      (msg) =>
+        !msg.isRead &&
+        msg.senderId !== currentUserId &&
+        msg.senderId !== 'system',
     ).length;
 
     return {
@@ -400,9 +644,16 @@ export class ChatsService {
     };
   }
 
-  async formatChatListDto(chat: any, currentUserId: string | null): Promise<ChatListDto> {
+  async formatChatListDto(
+    chat: any,
+    currentUserId: string | null,
+  ): Promise<ChatListDto> {
     // Load manager info if chat has managerId
-    let manager: { id: string; firstName: string | null; lastName: string | null; } | null = null;
+    let manager: {
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+    } | null = null;
     if (chat.managerId) {
       manager = await this.prisma.user.findUnique({
         where: { id: chat.managerId },
@@ -417,7 +668,7 @@ export class ChatsService {
     const lastMessage = chat.messages[0]
       ? this.formatMessageDto(chat.messages[0], chat, manager)
       : undefined;
-    
+
     // Count all unread messages in the chat that are not from the current user
     const unreadCount = await this.prisma.chatMessage.count({
       where: {
@@ -444,7 +695,11 @@ export class ChatsService {
     };
   }
 
-  private formatMessageDto(message: any, chat?: any, manager?: any): ChatMessageDto {
+  private formatMessageDto(
+    message: any,
+    chat?: any,
+    manager?: any,
+  ): ChatMessageDto {
     let senderName = 'Неизвестный';
     let senderRole: 'customer' | 'manager' | 'system' = 'customer';
 
@@ -452,14 +707,22 @@ export class ChatsService {
       senderName = 'Система';
       senderRole = 'system';
     } else if (chat) {
-      if (message.senderId === chat.userId || message.senderId === chat.anonymousUserId) {
+      if (
+        message.senderId === chat.userId ||
+        message.senderId === chat.anonymousUserId
+      ) {
         senderName = chat.user
-          ? `${chat.user.firstName || ''} ${chat.user.lastName || ''}`.trim() || 'Клиент'
+          ? `${chat.user.firstName || ''} ${chat.user.lastName || ''}`.trim() ||
+            'Клиент'
           : 'Клиент';
         senderRole = 'customer';
-      } else if (message.senderId === chat.managerId || (manager && message.senderId === manager.id)) {
+      } else if (
+        message.senderId === chat.managerId ||
+        (manager && message.senderId === manager.id)
+      ) {
         senderName = manager
-          ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() || 'Менеджер'
+          ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() ||
+            'Менеджер'
           : 'Менеджер';
         senderRole = 'manager';
       }
@@ -470,6 +733,10 @@ export class ChatsService {
       chatId: message.chatId,
       senderId: message.senderId,
       content: message.content,
+      offerId: message.offerId,
+      offer: message.offer
+        ? this.formatProductOfferDto(message.offer, manager)
+        : undefined,
       isRead: message.isRead,
       isDelivered: message.isDelivered,
       deliveredAt: message.deliveredAt,
@@ -488,12 +755,21 @@ export class ChatsService {
       name: offer.name,
       description: offer.description,
       price: offer.price,
+      oldPrice: offer.oldPrice,
+      image: offer.image,
+      images: offer.images || [],
+      deliveryDays: offer.deliveryDays,
+      isOriginal: offer.isOriginal,
+      isAnalog: offer.isAnalog,
       isActive: offer.isActive,
+      isCancelled: offer.isCancelled || false,
       createdAt: offer.createdAt,
       expiresAt: offer.expiresAt,
       managerName: manager
-        ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() || 'Менеджер'
+        ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() ||
+          'Менеджер'
         : 'Менеджер',
+      messageId: offer.messageId,
     };
   }
 }

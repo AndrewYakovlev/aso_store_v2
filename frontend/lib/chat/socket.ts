@@ -11,7 +11,8 @@ export interface ChatSocketEvents {
 
   // Server to client
   newMessage: (data: { chatId: string; message: ChatMessage }) => void;
-  messagesRead: (data: { chatId: string; readerId: string }) => void;
+  messageDelivered: (data: { chatId: string; messageId: string; deliveredAt: string }) => void;
+  messagesRead: (data: { chatId: string; readerId: string; readAt: string }) => void;
   userTyping: (data: { chatId: string; userId: string; isTyping: boolean }) => void;
   newOffer: (data: { chatId: string; offer: ProductOffer }) => void;
   chatUpdate: (data: { chatId: string; type: string; [key: string]: any }) => void;
@@ -54,7 +55,13 @@ class ChatSocketClient {
       this.emit('newMessage', data);
     });
 
+    this.socket.on('messageDelivered', (data) => {
+      console.log('Socket received messageDelivered:', data);
+      this.emit('messageDelivered', data);
+    });
+
     this.socket.on('messagesRead', (data) => {
+      console.log('Socket received messagesRead:', data);
       this.emit('messagesRead', data);
     });
 

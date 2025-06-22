@@ -35,6 +35,10 @@ export interface UserProfile {
   firstName?: string;
   lastName?: string;
   middleName?: string;
+  email?: string;
+  companyName?: string;
+  companyInn?: string;
+  defaultShippingAddress?: string;
   role: 'CUSTOMER' | 'MANAGER' | 'ADMIN';
   isPhoneVerified: boolean;
   createdAt: string;
@@ -85,7 +89,10 @@ export const authApi = {
   async updateProfile(accessToken: string, data: {
     firstName?: string;
     lastName?: string;
-    middleName?: string;
+    email?: string;
+    companyName?: string;
+    companyInn?: string;
+    defaultShippingAddress?: string;
   }): Promise<UserProfile> {
     return apiRequest<UserProfile>('/auth/profile', {
       method: 'PUT',

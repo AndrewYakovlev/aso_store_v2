@@ -7,12 +7,15 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from '../auth/auth.service';
+import { PromoCodeValidationService } from '../promo-codes/promo-code-validation.service';
+import { PromoCodesService } from '../promo-codes/promo-codes.service';
 import {
   AddToCartDto,
   UpdateCartItemDto,
   CartDto,
   CartItemDto,
   CartSummaryDto,
+  CartProductOfferDto,
 } from './dto';
 import { ProductDto } from '../products/dto';
 
@@ -22,6 +25,10 @@ export class CartService {
     private prisma: PrismaService,
     @Inject(forwardRef(() => AuthService))
     private authService: AuthService,
+    @Inject(forwardRef(() => PromoCodeValidationService))
+    private promoCodeValidation: PromoCodeValidationService,
+    @Inject(forwardRef(() => PromoCodesService))
+    private promoCodesService: PromoCodesService,
   ) {}
 
   private async getOrCreateCart(
@@ -92,6 +99,7 @@ export class CartService {
                 },
               },
             },
+            offer: true,
           },
           orderBy: {
             createdAt: 'desc',
@@ -114,24 +122,59 @@ export class CartService {
   ): Promise<CartItemDto> {
     const cart = await this.getOrCreateCart(userId, anonymousUserId);
 
-    // Check if product exists and is available
-    const product = await this.prisma.product.findUnique({
-      where: { id: addToCartDto.productId },
-    });
-
-    if (!product) {
-      throw new NotFoundException('Product not found');
+    // Validate that either productId or offerId is provided, but not both
+    if (!addToCartDto.productId && !addToCartDto.offerId) {
+      throw new BadRequestException('Either productId or offerId must be provided');
+    }
+    if (addToCartDto.productId && addToCartDto.offerId) {
+      throw new BadRequestException('Cannot provide both productId and offerId');
     }
 
-    if (product.stock < addToCartDto.quantity) {
-      throw new BadRequestException('Insufficient stock');
+    let productId: string | undefined;
+    let offerId: string | undefined;
+
+    if (addToCartDto.productId) {
+      // Check if product exists and is available
+      const product = await this.prisma.product.findUnique({
+        where: { id: addToCartDto.productId },
+      });
+
+      if (!product) {
+        throw new NotFoundException('Product not found');
+      }
+
+      if (product.stock < addToCartDto.quantity) {
+        throw new BadRequestException('Insufficient stock');
+      }
+
+      productId = addToCartDto.productId;
+    } else if (addToCartDto.offerId) {
+      // Check if offer exists and is active
+      const offer = await this.prisma.productOffer.findUnique({
+        where: { id: addToCartDto.offerId },
+      });
+
+      if (!offer) {
+        throw new NotFoundException('Product offer not found');
+      }
+
+      if (!offer.isActive) {
+        throw new BadRequestException('Product offer is no longer active');
+      }
+
+      if (offer.expiresAt && new Date(offer.expiresAt) < new Date()) {
+        throw new BadRequestException('Product offer has expired');
+      }
+
+      offerId = addToCartDto.offerId;
     }
 
     // Check if item already exists in cart
     const existingItem = await this.prisma.cartItem.findFirst({
       where: {
         cartId: cart.id,
-        productId: addToCartDto.productId,
+        ...(productId && { productId }),
+        ...(offerId && { offerId }),
       },
     });
 
@@ -140,8 +183,13 @@ export class CartService {
       // Update quantity
       const newQuantity = existingItem.quantity + addToCartDto.quantity;
 
-      if (product.stock < newQuantity) {
-        throw new BadRequestException('Insufficient stock');
+      if (productId) {
+        const product = await this.prisma.product.findUnique({
+          where: { id: productId },
+        });
+        if (product && product.stock < newQuantity) {
+          throw new BadRequestException('Insufficient stock');
+        }
       }
 
       cartItem = await this.prisma.cartItem.update({
@@ -158,6 +206,7 @@ export class CartService {
               specifications: true,
             },
           },
+          offer: true,
         },
       });
     } else {
@@ -165,7 +214,8 @@ export class CartService {
       cartItem = await this.prisma.cartItem.create({
         data: {
           cartId: cart.id,
-          productId: addToCartDto.productId,
+          ...(productId && { productId }),
+          ...(offerId && { offerId }),
           quantity: addToCartDto.quantity,
         },
         include: {
@@ -179,6 +229,7 @@ export class CartService {
               specifications: true,
             },
           },
+          offer: true,
         },
       });
     }
@@ -236,6 +287,46 @@ export class CartService {
     return this.formatCartItem(updatedItem);
   }
 
+  async updateOfferCartItem(
+    userId: string | undefined,
+    anonymousUserId: string | undefined,
+    offerId: string,
+    updateCartItemDto: UpdateCartItemDto,
+  ): Promise<CartItemDto> {
+    const cart = await this.getOrCreateCart(userId, anonymousUserId);
+
+    const cartItem = await this.prisma.cartItem.findFirst({
+      where: {
+        cartId: cart.id,
+        offerId,
+      },
+      include: {
+        offer: true,
+      },
+    });
+
+    if (!cartItem) {
+      throw new NotFoundException('Cart item not found');
+    }
+
+    // Check if offer is still active and not cancelled
+    if (cartItem.offer && (cartItem.offer.isCancelled || !cartItem.offer.isActive)) {
+      throw new BadRequestException('This offer is no longer available');
+    }
+
+    const updatedItem = await this.prisma.cartItem.update({
+      where: { id: cartItem.id },
+      data: {
+        quantity: updateCartItemDto.quantity,
+      },
+      include: {
+        offer: true,
+      },
+    });
+
+    return this.formatCartItem(updatedItem);
+  }
+
   async removeFromCart(
     userId: string | undefined,
     anonymousUserId: string | undefined,
@@ -259,6 +350,29 @@ export class CartService {
     });
   }
 
+  async removeOfferFromCart(
+    userId: string | undefined,
+    anonymousUserId: string | undefined,
+    offerId: string,
+  ): Promise<void> {
+    const cart = await this.getOrCreateCart(userId, anonymousUserId);
+
+    const cartItem = await this.prisma.cartItem.findFirst({
+      where: {
+        cartId: cart.id,
+        offerId,
+      },
+    });
+
+    if (!cartItem) {
+      throw new NotFoundException('Cart item not found');
+    }
+
+    await this.prisma.cartItem.delete({
+      where: { id: cartItem.id },
+    });
+  }
+
   async clearCart(
     userId: string | undefined,
     anonymousUserId: string | undefined,
@@ -270,18 +384,6 @@ export class CartService {
     });
   }
 
-  async getCartSummary(
-    userId: string | undefined,
-    anonymousUserId: string | undefined,
-  ): Promise<CartSummaryDto> {
-    const cart = await this.getCart(userId, anonymousUserId);
-
-    return {
-      totalQuantity: cart.totalQuantity,
-      totalPrice: cart.totalPrice,
-      itemsCount: cart.items.length,
-    };
-  }
 
   async mergeCarts(anonymousUserId: string, userId: string): Promise<void> {
     const anonymousCart = await this.prisma.cart.findFirst({
@@ -304,27 +406,55 @@ export class CartService {
       existingItems.map((item) => [item.productId, item]),
     );
 
+    // Get existing items with offers
+    const existingOfferIds = new Map(
+      existingItems.filter(item => item.offerId).map((item) => [item.offerId, item]),
+    );
+
     // Merge items
     for (const item of anonymousCart.items) {
-      const existingItem = existingProductIds.get(item.productId);
+      if (item.productId) {
+        const existingItem = existingProductIds.get(item.productId);
 
-      if (existingItem) {
-        // Update quantity
-        await this.prisma.cartItem.update({
-          where: { id: existingItem.id },
-          data: {
-            quantity: existingItem.quantity + item.quantity,
-          },
-        });
-      } else {
-        // Create new item in user cart
-        await this.prisma.cartItem.create({
-          data: {
-            cartId: userCart.id,
-            productId: item.productId,
-            quantity: item.quantity,
-          },
-        });
+        if (existingItem) {
+          // Update quantity
+          await this.prisma.cartItem.update({
+            where: { id: existingItem.id },
+            data: {
+              quantity: existingItem.quantity + item.quantity,
+            },
+          });
+        } else {
+          // Create new item in user cart
+          await this.prisma.cartItem.create({
+            data: {
+              cartId: userCart.id,
+              productId: item.productId,
+              quantity: item.quantity,
+            },
+          });
+        }
+      } else if (item.offerId) {
+        const existingItem = existingOfferIds.get(item.offerId);
+
+        if (existingItem) {
+          // Update quantity
+          await this.prisma.cartItem.update({
+            where: { id: existingItem.id },
+            data: {
+              quantity: existingItem.quantity + item.quantity,
+            },
+          });
+        } else {
+          // Create new item in user cart
+          await this.prisma.cartItem.create({
+            data: {
+              cartId: userCart.id,
+              offerId: item.offerId,
+              quantity: item.quantity,
+            },
+          });
+        }
       }
     }
 
@@ -345,8 +475,15 @@ export class CartService {
       0,
     );
     const totalPrice = items.reduce(
-      (sum: number, item: CartItemDto) =>
-        sum + item.product.price * item.quantity,
+      (sum: number, item: CartItemDto) => {
+        if (item.product) {
+          return sum + item.product.price * item.quantity;
+        } else if (item.offer) {
+          const price = typeof item.offer.price === 'number' ? item.offer.price : Number(item.offer.price);
+          return sum + price * item.quantity;
+        }
+        return sum;
+      },
       0,
     );
 
@@ -363,11 +500,37 @@ export class CartService {
   }
 
   private formatCartItem(item: any): CartItemDto {
+    if (item.offer) {
+      // This is a product offer item
+      return {
+        id: item.id,
+        cartId: item.cartId,
+        offerId: item.offerId,
+        offer: {
+          id: item.offer.id,
+          name: item.offer.name,
+          description: item.offer.description || undefined,
+          price: item.offer.price.toNumber ? item.offer.price.toNumber() : Number(item.offer.price),
+          oldPrice: item.offer.oldPrice ? (item.offer.oldPrice.toNumber ? item.offer.oldPrice.toNumber() : Number(item.offer.oldPrice)) : undefined,
+          image: item.offer.image || undefined,
+          deliveryDays: item.offer.deliveryDays || undefined,
+          isOriginal: item.offer.isOriginal,
+          isAnalog: item.offer.isAnalog,
+          isActive: item.offer.isActive,
+          expiresAt: item.offer.expiresAt || undefined,
+        } as CartProductOfferDto,
+        quantity: item.quantity,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      };
+    }
+
+    // This is a regular product item
     return {
       id: item.id,
       cartId: item.cartId,
       productId: item.productId,
-      product: this.formatProduct(item.product),
+      product: item.product ? this.formatProduct(item.product) : undefined,
       quantity: item.quantity,
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
@@ -406,6 +569,7 @@ export class CartService {
       stock: product.stock,
       images: product.images || [],
       isActive: product.isActive,
+      excludeFromPromoCodes: product.excludeFromPromoCodes || false,
       categories,
       specifications: product.specifications || undefined,
       createdAt: product.createdAt,
@@ -444,5 +608,66 @@ export class CartService {
     }
 
     return formatted;
+  }
+
+  async getCartSummary(
+    userId: string | undefined,
+    anonymousUserId: string | undefined,
+    promoCode?: string,
+  ): Promise<CartSummaryDto> {
+    const cart = await this.getCart(userId, anonymousUserId);
+    
+    const summary: CartSummaryDto = {
+      totalQuantity: cart.totalQuantity,
+      totalPrice: cart.totalPrice,
+      itemsCount: cart.items.length,
+    };
+
+    if (promoCode) {
+      // Convert cart items to validation format
+      const itemsForValidation = cart.items.map(item => ({
+        productId: item.productId,
+        offerId: item.offerId,
+        quantity: item.quantity,
+        product: item.product ? {
+          price: { toNumber: () => item.product!.price } as any,
+          excludeFromPromoCodes: item.product!.excludeFromPromoCodes,
+        } : undefined,
+        offer: item.offer ? {
+          price: { toNumber: () => item.offer!.price } as any,
+        } : undefined,
+      }));
+
+      const validation = await this.promoCodeValidation.validatePromoCode(
+        promoCode,
+        userId || null,
+        itemsForValidation,
+      );
+
+      if (validation.isValid && validation.discountAmount) {
+        const promoCodeData = await this.promoCodesService.findByCode(promoCode);
+        
+        return {
+          ...summary,
+          promoCode: {
+            code: promoCode.toUpperCase(),
+            discountAmount: validation.discountAmount,
+            discountType: promoCodeData?.discountType || 'FIXED_AMOUNT',
+          },
+        };
+      } else {
+        return {
+          ...summary,
+          promoCode: {
+            code: promoCode.toUpperCase(),
+            discountAmount: 0,
+            discountType: 'FIXED_AMOUNT',
+            error: validation.error,
+          },
+        };
+      }
+    }
+
+    return summary;
   }
 }

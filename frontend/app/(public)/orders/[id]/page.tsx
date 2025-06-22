@@ -12,7 +12,8 @@ import { ordersClientApi } from '@/lib/api/orders-client';
 import { formatPrice } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { getImageUrl } from '@/lib/utils/image';
 
 interface PageProps {
   params: Promise<{
@@ -107,37 +108,83 @@ export default function OrderDetailPage({ params }: PageProps) {
             <h2 className="text-xl font-semibold mb-4">Товары в заказе</h2>
             
             <div className="space-y-4">
-              {order.items.map((item) => (
-                <div key={item.id} className="flex gap-4 pb-4 border-b last:border-0">
-                  {item.product && (
-                    <>
-                      <div className="relative w-20 h-20 flex-shrink-0">
+              {order.items.map((item) => {
+                const isOffer = !!item.offer;
+                const itemData = isOffer ? item.offer : item.product;
+                
+                if (!itemData) return null;
+                
+                return (
+                  <div key={item.id} className="flex gap-4 pb-4 border-b last:border-0">
+                    <div className="relative w-20 h-20 flex-shrink-0">
+                      {isOffer ? (
                         <Image
-                          src={item.product.images[0] || '/placeholder.png'}
-                          alt={item.product.name}
+                          src={getImageUrl(item.offer?.images?.[0] || item.offer?.image || '/placeholder.png')}
+                          alt={item.offer?.name || ''}
                           fill
                           className="object-cover rounded"
                         />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <Link
-                          href={`/product/${item.product.slug}`}
-                          className="font-medium hover:text-primary"
-                        >
-                          {item.product.name}
-                        </Link>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Артикул: {item.product.sku}
-                        </p>
-                        <p className="text-sm mt-2">
-                          {formatPrice(item.price)} × {item.quantity} = {formatPrice(item.totalPrice)}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
+                      ) : (
+                        <Image
+                          src={item.product?.images?.[0] || '/placeholder.png'}
+                          alt={item.product?.name || ''}
+                          fill
+                          className="object-cover rounded"
+                        />
+                      )}
+                    </div>
+                    
+                    <div className="flex-1">
+                      {isOffer ? (
+                        <>
+                          <h4 className="font-medium">{item.offer?.name}</h4>
+                          {item.offer?.description && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              {item.offer.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">
+                              Товарное предложение
+                            </Badge>
+                            {item.offer?.isOriginal && (
+                              <Badge className="bg-green-600 text-white text-xs">
+                                Оригинал
+                              </Badge>
+                            )}
+                            {item.offer?.isAnalog && (
+                              <Badge className="bg-blue-600 text-white text-xs">
+                                Аналог
+                              </Badge>
+                            )}
+                            {item.offer?.deliveryDays !== undefined && (
+                              <div className="flex items-center gap-1 text-xs text-gray-600">
+                                <ClockIcon className="w-3 h-3" />
+                                <span>Доставка: {item.offer.deliveryDays} дн.</span>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            href={`/product/${item.product?.slug}`}
+                            className="font-medium hover:text-primary"
+                          >
+                            {item.product?.name}
+                          </Link>
+                          <p className="text-sm text-gray-600 mt-1">
+                            Артикул: {item.product?.sku}
+                          </p>
+                        </>
+                      )}
+                      <p className="text-sm mt-2">
+                        {formatPrice(item.price)} × {item.quantity} = {formatPrice(item.totalPrice)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </Card>
 
@@ -210,6 +257,13 @@ export default function OrderDetailPage({ params }: PageProps) {
                 <div>
                   <p className="text-sm text-gray-600">Комментарий</p>
                   <p className="text-sm mt-1">{order.comment}</p>
+                </div>
+              )}
+              
+              {order.isManagerCreated && order.createdByManagerName && (
+                <div>
+                  <p className="text-sm text-gray-600">Заказ оформлен</p>
+                  <p className="font-medium">Менеджером {order.createdByManagerName}</p>
                 </div>
               )}
             </div>

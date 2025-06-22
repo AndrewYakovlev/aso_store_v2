@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class DeliveryMethodDto {
+export class OrderDeliveryMethodDto {
   @ApiProperty({ description: 'ID метода доставки' })
   id: string;
 

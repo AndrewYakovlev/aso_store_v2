@@ -1,0 +1,415 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String          @id @default(uuid())
+  phone           String          @unique
+  isPhoneVerified Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  firstName       String?
+  lastName        String?
+  middleName      String?
+  anonymousUsers  AnonymousUser[]
+  carts           Cart?
+  chats           Chat[]
+  favorites       Favorite[]
+  orders          Order[]
+  otpCodes        OtpCode[]
+}
+
+model AnonymousUser {
+  id           String     @id @default(uuid())
+  token        String     @unique
+  userId       String?
+  lastActivity DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  user         User?      @relation(fields: [userId], references: [id])
+  carts        Cart?
+  chats        Chat[]
+  favorites    Favorite[]
+
+  @@index([userId])
+  @@index([token])
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  userId    String
+  code      String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([code])
+}
+
+model Brand {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  logo        String?
+  website     String?
+  country     String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+model Category {
+  id          String              @id @default(uuid())
+  name        String
+  slug        String              @unique
+  description String?
+  parentId    String?
+  isActive    Boolean             @default(true)
+  sortOrder   Int                 @default(0)
+  parent      Category?           @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children    Category[]          @relation("CategoryToCategory")
+  attributes  CategoryAttribute[]
+  products    ProductCategory[]
+
+  @@index([parentId])
+  @@index([slug])
+}
+
+model Product {
+  id             String             @id @default(uuid())
+  sku            String             @unique
+  name           String
+  description    String?
+  price          Decimal            @db.Decimal(10, 2)
+  stock          Int                @default(0)
+  isActive       Boolean            @default(true)
+  images         Json               @default("[]")
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  slug           String             @unique
+  brandId        String?
+  cartItems      CartItem[]
+  favorites      Favorite[]
+  orderItems     OrderItem[]
+  brand          Brand?             @relation(fields: [brandId], references: [id])
+  attributes     ProductAttribute[]
+  categories     ProductCategory[]
+  vehicles       ProductVehicle[]
+  specifications Specification[]
+
+  @@index([sku])
+  @@index([slug])
+  @@index([brandId])
+}
+
+model ProductCategory {
+  id         String   @id @default(uuid())
+  productId  String
+  categoryId String
+  createdAt  DateTime @default(now())
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, categoryId])
+  @@index([productId])
+  @@index([categoryId])
+}
+
+model Specification {
+  id        String  @id @default(uuid())
+  productId String
+  name      String
+  value     String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model Cart {
+  id              String         @id @default(uuid())
+  userId          String?        @unique
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  anonymousUserId String?        @unique
+  anonymousUser   AnonymousUser? @relation(fields: [anonymousUserId], references: [id])
+  user            User?          @relation(fields: [userId], references: [id])
+  items           CartItem[]
+
+  @@index([userId])
+  @@index([anonymousUserId])
+}
+
+model CartItem {
+  id        String        @id @default(uuid())
+  cartId    String
+  productId String?
+  offerId   String?
+  quantity  Int
+  createdAt DateTime      @default(now())
+  cart      Cart          @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  offer     ProductOffer? @relation(fields: [offerId], references: [id])
+  product   Product?      @relation(fields: [productId], references: [id])
+
+  @@index([cartId])
+  @@index([productId])
+  @@index([offerId])
+}
+
+model Favorite {
+  id              String         @id @default(uuid())
+  userId          String?
+  productId       String
+  createdAt       DateTime       @default(now())
+  anonymousUserId String?
+  anonymousUser   AnonymousUser? @relation(fields: [anonymousUserId], references: [id])
+  product         Product        @relation(fields: [productId], references: [id])
+  user            User?          @relation(fields: [userId], references: [id])
+
+  @@unique([userId, productId])
+  @@unique([anonymousUserId, productId])
+  @@index([userId])
+  @@index([anonymousUserId])
+  @@index([productId])
+}
+
+model OrderStatus {
+  id        String  @id @default(uuid())
+  code      String  @unique
+  name      String
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+  orders    Order[]
+}
+
+model DeliveryMethod {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  name        String
+  description String?
+  price       Decimal @db.Decimal(10, 2)
+  isActive    Boolean @default(true)
+  orders      Order[]
+}
+
+model PaymentMethod {
+  id          String  @id @default(uuid())
+  code        String  @unique
+  name        String
+  description String?
+  isActive    Boolean @default(true)
+  orders      Order[]
+}
+
+model Order {
+  id                 String         @id @default(uuid())
+  orderNumber        String         @unique
+  userId             String
+  statusId           String
+  deliveryMethodId   String
+  paymentMethodId    String
+  totalAmount        Decimal        @db.Decimal(10, 2)
+  deliveryAmount     Decimal        @db.Decimal(10, 2)
+  comment            String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  customerEmail      String?
+  customerName       String
+  customerPhone      String
+  deliveryAddress    String?
+  deliveryApartment  String?
+  deliveryBuilding   String?
+  deliveryCity       String?
+  deliveryPostalCode String?
+  deliveryStreet     String?
+  deliveryMethod     DeliveryMethod @relation(fields: [deliveryMethodId], references: [id])
+  paymentMethod      PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
+  status             OrderStatus    @relation(fields: [statusId], references: [id])
+  user               User           @relation(fields: [userId], references: [id])
+  items              OrderItem[]
+
+  @@index([userId])
+  @@index([statusId])
+  @@index([orderNumber])
+}
+
+model OrderItem {
+  id        String        @id @default(uuid())
+  orderId   String
+  productId String?
+  offerId   String?
+  quantity  Int
+  price     Decimal       @db.Decimal(10, 2)
+  offer     ProductOffer? @relation(fields: [offerId], references: [id])
+  order     Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product?      @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([offerId])
+}
+
+model Chat {
+  id              String         @id @default(uuid())
+  userId          String?
+  managerId       String?
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  anonymousUserId String?
+  anonymousUser   AnonymousUser? @relation(fields: [anonymousUserId], references: [id])
+  user            User?          @relation(fields: [userId], references: [id])
+  messages        ChatMessage[]
+  offers          ProductOffer[]
+
+  @@index([userId])
+  @@index([anonymousUserId])
+  @@index([managerId])
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  chatId    String
+  senderId  String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+  @@index([senderId])
+}
+
+model ProductOffer {
+  id          String      @id @default(uuid())
+  chatId      String
+  managerId   String
+  name        String
+  description String?
+  price       Decimal     @db.Decimal(10, 2)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  expiresAt   DateTime?
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  chat        Chat        @relation(fields: [chatId], references: [id])
+
+  @@index([chatId])
+  @@index([managerId])
+}
+
+model Attribute {
+  id            String              @id @default(uuid())
+  code          String              @unique
+  name          String
+  type          AttributeType
+  unit          String?
+  isRequired    Boolean             @default(false)
+  isFilterable  Boolean             @default(false)
+  sortOrder     Int                 @default(0)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  options       AttributeOption[]
+  categories    CategoryAttribute[]
+  productValues ProductAttribute[]
+}
+
+model AttributeOption {
+  id          String    @id @default(uuid())
+  attributeId String
+  value       String
+  sortOrder   Int       @default(0)
+  attribute   Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@index([attributeId])
+}
+
+model CategoryAttribute {
+  id          String    @id @default(uuid())
+  categoryId  String
+  attributeId String
+  isRequired  Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  attribute   Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, attributeId])
+  @@index([categoryId])
+  @@index([attributeId])
+}
+
+model ProductAttribute {
+  id          String    @id @default(uuid())
+  productId   String
+  attributeId String
+  textValue   String?
+  numberValue Float?
+  colorValue  String?
+  optionIds   String[]
+  attribute   Attribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, attributeId])
+  @@index([productId])
+  @@index([attributeId])
+}
+
+model VehicleBrand {
+  id     String         @id @default(uuid())
+  name   String         @unique
+  models VehicleModel[]
+}
+
+model VehicleModel {
+  id                String              @id @default(uuid())
+  brandId           String
+  name              String
+  VehicleGeneration VehicleGeneration[]
+  brand             VehicleBrand        @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, name])
+}
+
+model ProductVehicle {
+  id                String            @id @default(uuid())
+  productId         String
+  generationId      String
+  VehicleGeneration VehicleGeneration @relation(fields: [generationId], references: [id])
+  product           Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, generationId])
+  @@index([productId])
+  @@index([generationId])
+}
+
+model VehicleGeneration {
+  id             String           @id
+  modelId        String
+  name           String
+  yearFrom       Int
+  yearTo         Int?
+  ProductVehicle ProductVehicle[]
+  VehicleModel   VehicleModel     @relation(fields: [modelId], references: [id])
+
+  @@index([modelId])
+}
+
+enum AttributeType {
+  SELECT_ONE
+  SELECT_MANY
+  NUMBER
+  TEXT
+  COLOR
+}

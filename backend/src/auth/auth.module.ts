@@ -14,6 +14,7 @@ import { OptionalAuthGuard } from './guards/optional-auth.guard';
 import { PrismaModule } from '../prisma/prisma.module';
 import { FavoritesModule } from '../favorites/favorites.module';
 import { CartModule } from '../cart/cart.module';
+import { PromoCodesModule } from '../promo-codes/promo-codes.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CartModule } from '../cart/cart.module';
     ConfigModule,
     forwardRef(() => FavoritesModule),
     forwardRef(() => CartModule),
+    forwardRef(() => PromoCodesModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -43,6 +45,12 @@ import { CartModule } from '../cart/cart.module';
     OptionalAuthGuard,
   ],
   controllers: [AuthController],
-  exports: [AuthService, JwtService, JwtAuthGuard, RolesGuard, OptionalAuthGuard],
+  exports: [
+    AuthService,
+    JwtService,
+    JwtAuthGuard,
+    RolesGuard,
+    OptionalAuthGuard,
+  ],
 })
 export class AuthModule {}

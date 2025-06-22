@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { ShoppingCartIcon } from '@heroicons/react/24/outline'
+import { getImageUrl } from '@/lib/utils/image'
 
 interface ProductImageProps {
   src: string
@@ -16,7 +17,7 @@ interface ProductImageProps {
 export function ProductImage({ src, alt, sizes, priority, className, iconSize = 'md' }: ProductImageProps) {
   const [error, setError] = useState(false)
 
-  const imageSrc = src.startsWith('http') ? src : `http://localhost:4000${src}`
+  const imageSrc = getImageUrl(src)
 
   const iconSizeClasses = {
     sm: 'w-12 h-12',

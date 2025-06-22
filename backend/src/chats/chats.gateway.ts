@@ -52,7 +52,10 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.userSockets.get(userKey)!.add(client.id);
 
       // Join user's chat rooms
-      const chats = await this.chatsService.getUserChats(userId, anonymousUserId);
+      const chats = await this.chatsService.getUserChats(
+        userId,
+        anonymousUserId,
+      );
       chats.forEach((chat) => {
         client.join(`chat:${chat.id}`);
         console.log(`Client ${client.id} auto-joined chat:${chat.id}`);
@@ -108,9 +111,13 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     try {
-      const message = await this.chatsService.sendMessage(data.chatId, senderId, {
-        content: data.content,
-      });
+      const message = await this.chatsService.sendMessage(
+        data.chatId,
+        senderId,
+        {
+          content: data.content,
+        },
+      );
 
       // Emit to all users in the chat room
       this.server.to(`chat:${data.chatId}`).emit('newMessage', {
@@ -152,7 +159,7 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     try {
       const result = await this.chatsService.markMessagesAsRead(chatId, userId);
-      
+
       // Notify other users in the chat about read status
       client.to(`chat:${chatId}`).emit('messagesRead', {
         chatId,

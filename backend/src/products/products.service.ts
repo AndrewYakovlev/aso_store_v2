@@ -480,6 +480,7 @@ export class ProductsService {
       price: product.price.toNumber(),
       stock: product.stock,
       isActive: product.isActive,
+      excludeFromPromoCodes: product.excludeFromPromoCodes || false,
       images: product.images as string[],
       brandId: product.brandId,
       categories:
@@ -600,7 +601,9 @@ export class ProductsService {
     return dto;
   }
 
-  async getAvailableFilters(baseFilter: ProductsFilterDto): Promise<AvailableFiltersDto> {
+  async getAvailableFilters(
+    baseFilter: ProductsFilterDto,
+  ): Promise<AvailableFiltersDto> {
     try {
       // console.log('Getting available filters with base filter:', JSON.stringify(baseFilter, null, 2));
 

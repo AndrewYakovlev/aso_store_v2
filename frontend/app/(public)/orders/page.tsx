@@ -149,7 +149,7 @@ export default function OrdersPage() {
                   <div className="mt-3 flex flex-wrap gap-2">
                     {order.items.slice(0, 3).map((item, index) => (
                       <span key={item.id} className="text-sm text-gray-600">
-                        {item.product?.name}
+                        {item.product?.name || item.offer?.name}
                         {index < Math.min(2, order.items.length - 1) && ','}
                       </span>
                     ))}

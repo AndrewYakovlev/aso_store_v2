@@ -63,4 +63,9 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   comment?: string;
+
+  @ApiProperty({ description: 'Промокод', required: false })
+  @IsString()
+  @IsOptional()
+  promoCode?: string;
 }

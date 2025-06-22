@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -15,16 +15,21 @@ import { ordersApi } from '@/lib/api/orders';
 import { ordersClientApi } from '@/lib/api/orders-client';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { DeliveryMethod, PaymentMethod } from '@/lib/api/orders';
+import { cartApiWithAuth } from '@/lib/api/cart-client-auth';
+import { CartSummary } from '@/lib/api/cart';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { cart, loading: cartLoading, refetch: refreshCart } = useCart();
+  const searchParams = useSearchParams();
+  const { cart, loading: cartLoading, refetch: refreshCart, clearCart } = useCart();
   const { user, login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [cartSummary, setCartSummary] = useState<CartSummary | null>(null);
+  const [promoCode, setPromoCode] = useState<string>('');
 
   // Form data
   const [formData, setFormData] = useState({
@@ -40,7 +45,32 @@ export default function CheckoutPage() {
     deliveryApartment: '',
     deliveryPostalCode: '',
     comment: '',
+    promoCode: '',
   });
+
+  // Load promo code from URL
+  useEffect(() => {
+    const promo = searchParams.get('promo');
+    if (promo) {
+      setPromoCode(promo);
+      setFormData(prev => ({ ...prev, promoCode: promo }));
+    }
+  }, [searchParams]);
+
+  // Load cart summary with promo code
+  useEffect(() => {
+    async function loadCartSummary() {
+      if (promoCode) {
+        try {
+          const summary = await cartApiWithAuth.getCartSummary(promoCode);
+          setCartSummary(summary);
+        } catch (error) {
+          console.error('Failed to load cart summary:', error);
+        }
+      }
+    }
+    loadCartSummary();
+  }, [promoCode]);
 
   // Load delivery and payment methods
   useEffect(() => {
@@ -161,7 +191,11 @@ export default function CheckoutPage() {
         deliveryApartment: formData.deliveryApartment || undefined,
         deliveryPostalCode: formData.deliveryPostalCode || undefined,
         comment: formData.comment || undefined,
+        promoCode: formData.promoCode || undefined,
       });
+
+      // Clear cart after successful order
+      await clearCart();
 
       // Redirect to success page
       router.push(`/checkout/success?order=${order.orderNumber}`);
@@ -266,6 +300,7 @@ export default function CheckoutPage() {
               items={cart.items}
               deliveryMethod={selectedDeliveryMethod}
               totalPrice={cart.totalPrice}
+              promoCode={cartSummary?.promoCode}
             />
 
             <Button

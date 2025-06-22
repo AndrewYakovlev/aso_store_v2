@@ -1,6 +1,62 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Decimal } from '@prisma/client/runtime/library';
 
+export class ProductOfferDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  chatId: string;
+
+  @ApiProperty()
+  managerId: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiPropertyOptional()
+  description?: string;
+
+  @ApiProperty()
+  price: number | Decimal;
+
+  @ApiPropertyOptional()
+  oldPrice?: number | Decimal;
+
+  @ApiPropertyOptional({ description: 'Image URL (deprecated, use images instead)' })
+  image?: string;
+
+  @ApiProperty({ type: [String] })
+  images: string[];
+
+  @ApiPropertyOptional()
+  deliveryDays?: number;
+
+  @ApiPropertyOptional()
+  isOriginal?: boolean;
+
+  @ApiPropertyOptional()
+  isAnalog?: boolean;
+
+  @ApiProperty()
+  isActive: boolean;
+
+  @ApiProperty()
+  isCancelled: boolean;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiPropertyOptional()
+  expiresAt?: Date;
+
+  @ApiPropertyOptional()
+  managerName?: string;
+
+  @ApiPropertyOptional()
+  messageId?: string;
+}
+
 export class ChatMessageDto {
   @ApiProperty()
   id: string;
@@ -13,6 +69,12 @@ export class ChatMessageDto {
 
   @ApiProperty()
   content: string;
+
+  @ApiPropertyOptional()
+  offerId?: string;
+
+  @ApiPropertyOptional({ type: () => ProductOfferDto })
+  offer?: ProductOfferDto;
 
   @ApiProperty()
   isRead: boolean;
@@ -34,38 +96,6 @@ export class ChatMessageDto {
 
   @ApiPropertyOptional()
   senderRole?: 'customer' | 'manager' | 'system';
-}
-
-export class ProductOfferDto {
-  @ApiProperty()
-  id: string;
-
-  @ApiProperty()
-  chatId: string;
-
-  @ApiProperty()
-  managerId: string;
-
-  @ApiProperty()
-  name: string;
-
-  @ApiPropertyOptional()
-  description?: string;
-
-  @ApiProperty()
-  price: number | Decimal;
-
-  @ApiProperty()
-  isActive: boolean;
-
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiPropertyOptional()
-  expiresAt?: Date;
-
-  @ApiPropertyOptional()
-  managerName?: string;
 }
 
 export class ChatDto {

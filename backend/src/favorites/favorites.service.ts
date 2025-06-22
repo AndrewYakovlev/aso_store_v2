@@ -263,6 +263,7 @@ export class FavoritesService {
         price: favorite.product.price.toNumber(),
         stock: favorite.product.stock,
         isActive: favorite.product.isActive,
+        excludeFromPromoCodes: favorite.product.excludeFromPromoCodes || false,
         images: favorite.product.images as string[],
         categories:
           favorite.product.categories?.map((pc: any) => ({

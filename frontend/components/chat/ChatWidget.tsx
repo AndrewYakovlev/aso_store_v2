@@ -138,6 +138,12 @@ export function ChatWidget() {
   }, [chat?.id]);
 
   const loadChat = async () => {
+    // Don't try to load if we don't have a token
+    if (!token || !userId) {
+      console.log('Skipping chat load - no token or userId');
+      return;
+    }
+    
     try {
       setIsLoading(true);
       const chats = await chatApi.getUserChats();

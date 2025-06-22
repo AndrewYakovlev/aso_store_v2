@@ -12,23 +12,31 @@ datasource db {
 
 // User model - for authenticated users only
 model User {
-  id              String    @id @default(uuid())
-  phone           String    @unique
-  firstName       String?
-  lastName        String?
-  middleName      String?
-  role            UserRole  @default(CUSTOMER)
-  isPhoneVerified Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                      String    @id @default(uuid())
+  phone                   String    @unique
+  firstName               String?
+  lastName                String?
+  middleName              String?
+  email                   String?
+  companyName             String?
+  companyInn              String?
+  defaultShippingAddress  String?
+  role                    UserRole  @default(CUSTOMER)
+  isPhoneVerified         Boolean   @default(false)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   // Relations
   anonymousUsers  AnonymousUser[]
   carts           Cart[]
   orders          Order[]
+  createdOrders   Order[]         @relation("ManagerOrders")
   favorites       Favorite[]
   chats           Chat[]
   otpCodes        OtpCode[]
+  pushSubscriptions PushSubscription[]
+  promoCodeUsages PromoCodeUsage[]
+  userPromoCodes  UserPromoCode[]
 }
 
 // AnonymousUser model - for anonymous users
@@ -44,6 +52,7 @@ model AnonymousUser {
   carts        Cart[]
   favorites    Favorite[]
   chats        Chat[]
+  pushSubscriptions PushSubscription[]
 
   @@index([userId])
   @@index([token])
@@ -64,6 +73,28 @@ model OtpCode {
 
   @@index([userId])
   @@index([code])
+}
+
+// PushSubscription model - for web push notifications
+model PushSubscription {
+  id               String   @id @default(uuid())
+  userId           String?  // For registered users
+  anonymousUserId  String?  // For anonymous users
+  endpoint         String   @unique
+  p256dh           String   // Public key for encryption
+  auth             String   // Authentication secret
+  userAgent        String?  // Browser/device info
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  user             User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  anonymousUser    AnonymousUser? @relation(fields: [anonymousUserId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([anonymousUserId])
+  @@index([endpoint])
 }
 
 // Brand model - product manufacturers
@@ -119,6 +150,7 @@ model Product {
   isActive     Boolean @default(true)
   images       Json    @default("[]") // Array of image URLs
   brandId      String? // Необязательная связь с брендом
+  excludeFromPromoCodes Boolean @default(false) // Не применять промокоды к этому товару
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -227,32 +259,42 @@ model Favorite {
 
 // Order status - dynamic, stored in DB
 model OrderStatus {
-  id        String  @id @default(uuid())
-  code      String  @unique
+  id        String   @id @default(uuid())
+  code      String   @unique
   name      String
-  sortOrder Int     @default(0)
-  isActive  Boolean @default(true)
+  color     String   @default("#6B7280") // Default gray color
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  isFinal   Boolean  @default(false) // Indicates if this is a final status
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   orders    Order[]
 }
 
 // Delivery method - dynamic, stored in DB
 model DeliveryMethod {
-  id          String  @id @default(uuid())
-  code        String  @unique
+  id          String   @id @default(uuid())
+  code        String   @unique
   name        String
   description String?
-  price       Decimal @db.Decimal(10, 2)
-  isActive    Boolean @default(true)
+  price       Decimal  @db.Decimal(10, 2)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   orders      Order[]
 }
 
 // Payment method - dynamic, stored in DB
 model PaymentMethod {
-  id          String  @id @default(uuid())
-  code        String  @unique
+  id          String   @id @default(uuid())
+  code        String   @unique
   name        String
   description String?
-  isActive    Boolean @default(true)
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   orders      Order[]
 }
 
@@ -266,6 +308,8 @@ model Order {
   paymentMethodId  String
   totalAmount      Decimal  @db.Decimal(10, 2)
   deliveryAmount   Decimal  @db.Decimal(10, 2)
+  subtotalAmount   Decimal  @db.Decimal(10, 2) // Сумма товаров до скидки
+  discountAmount   Decimal? @db.Decimal(10, 2) // Сумма скидки по промокоду
   
   // Contact information
   customerName     String
@@ -280,20 +324,27 @@ model Order {
   deliveryApartment String?
   deliveryPostalCode String?
   
+  // Manager-created order fields
+  createdByManagerId String?   // ID менеджера, создавшего заказ
+  isManagerCreated   Boolean   @default(false) // Флаг, что заказ создан менеджером
+  
   comment          String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   // Relations
-  user           User           @relation(fields: [userId], references: [id])
-  status         OrderStatus    @relation(fields: [statusId], references: [id])
-  deliveryMethod DeliveryMethod @relation(fields: [deliveryMethodId], references: [id])
-  paymentMethod  PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
-  items          OrderItem[]
+  user             User           @relation(fields: [userId], references: [id])
+  createdByManager User?          @relation(name: "ManagerOrders", fields: [createdByManagerId], references: [id])
+  status           OrderStatus    @relation(fields: [statusId], references: [id])
+  deliveryMethod   DeliveryMethod @relation(fields: [deliveryMethodId], references: [id])
+  paymentMethod    PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
+  items            OrderItem[]
+  promoCodeUsage   PromoCodeUsage?
 
   @@index([userId])
   @@index([statusId])
   @@index([orderNumber])
+  @@index([createdByManagerId])
 }
 
 // Order items
@@ -343,6 +394,7 @@ model ChatMessage {
   chatId       String
   senderId     String
   content      String
+  offerId      String?   @unique // ID товарного предложения (если это сообщение с предложением)
   isDelivered  Boolean   @default(false)
   deliveredAt  DateTime?
   isRead       Boolean   @default(false)
@@ -351,29 +403,39 @@ model ChatMessage {
 
   // Relations
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  offer ProductOffer? @relation(fields: [offerId], references: [id])
 
   @@index([chatId])
   @@index([senderId])
   @@index([isDelivered])
   @@index([isRead])
+  @@index([offerId])
 }
 
 // Product offers from managers
 model ProductOffer {
   id          String   @id @default(uuid())
-  chatId      String
+  chatId      String?  // Опциональное поле - предложение может быть создано из заказа
   managerId   String
   name        String
   description String?
   price       Decimal  @db.Decimal(10, 2)
+  oldPrice    Decimal? @db.Decimal(10, 2) // Цена до скидки
+  image       String?  // @deprecated - Устарело: используйте поле images
+  images      String[] // Массив URL изображений товара
+  deliveryDays Int?    // Срок доставки в днях
+  isOriginal  Boolean  @default(false) // Оригинал
+  isAnalog    Boolean  @default(false) // Аналог
   isActive    Boolean  @default(true)
+  isCancelled Boolean  @default(false) // Отменено ли предложение
   createdAt   DateTime @default(now())
-  expiresAt   DateTime?
-
+  expiresAt   DateTime? // Срок действия предложения
+  
   // Relations
-  chat      Chat       @relation(fields: [chatId], references: [id])
+  chat      Chat?         @relation(fields: [chatId], references: [id])
   cartItems CartItem[]
   orderItems OrderItem[]
+  message   ChatMessage?
 
   @@index([chatId])
   @@index([managerId])
@@ -529,9 +591,114 @@ model ProductVehicle {
   @@index([yearTo])
 }
 
+// Promo code models
+model PromoCode {
+  id              String    @id @default(uuid())
+  code            String    @unique
+  description     String?
+  
+  // Тип скидки
+  discountType    DiscountType // FIXED_AMOUNT или PERCENTAGE
+  discountValue   Decimal   @db.Decimal(10, 2) // Сумма или процент
+  
+  // Ограничения
+  minOrderAmount  Decimal?  @db.Decimal(10, 2) // Минимальная сумма заказа
+  maxUsesTotal    Int?      // Максимальное количество использований (null = неограничено)
+  maxUsesPerUser  Int       @default(1) // Сколько раз один пользователь может использовать
+  firstOrderOnly  Boolean   @default(false) // Только для первого заказа
+  
+  // Срок действия
+  validFrom       DateTime  @default(now())
+  validUntil      DateTime?
+  
+  // Доступность
+  isPublic        Boolean   @default(true) // Общедоступный или персональный
+  isActive        Boolean   @default(true)
+  
+  // Источник создания
+  createdByTrigger String?  // Название триггера (например, 'registration')
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  usages          PromoCodeUsage[]
+  userPromoCodes  UserPromoCode[] // Для персональных промокодов
+
+  @@index([code])
+  @@index([isActive])
+  @@index([validFrom])
+  @@index([validUntil])
+}
+
+model PromoCodeUsage {
+  id          String   @id @default(uuid())
+  promoCodeId String
+  orderId     String   @unique
+  userId      String?
+  
+  discountAmount Decimal @db.Decimal(10, 2) // Фактическая сумма скидки
+  orderAmount    Decimal @db.Decimal(10, 2) // Сумма заказа до скидки
+  
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
+  order       Order     @relation(fields: [orderId], references: [id])
+  user        User?     @relation(fields: [userId], references: [id])
+  
+  @@index([promoCodeId])
+  @@index([userId])
+}
+
+model UserPromoCode {
+  id          String   @id @default(uuid())
+  userId      String
+  promoCodeId String
+  
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id])
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
+  
+  @@unique([userId, promoCodeId])
+  @@index([userId])
+  @@index([promoCodeId])
+}
+
+model PromoCodeTrigger {
+  id              String    @id @default(uuid())
+  triggerType     String    @unique // 'registration', в будущем другие
+  isActive        Boolean   @default(true)
+  
+  // Настройки промокода, который будет создан
+  discountType    DiscountType
+  discountValue   Decimal   @db.Decimal(10, 2)
+  minOrderAmount  Decimal?  @db.Decimal(10, 2)
+  firstOrderOnly  Boolean   @default(true)
+  validityDays    Int       @default(30) // Срок действия промокода в днях
+  
+  // Срок действия самого триггера
+  activeFrom      DateTime  @default(now())
+  activeUntil     DateTime? // До какого времени работает триггер
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([triggerType])
+  @@index([isActive])
+}
+
 // User roles
 enum UserRole {
   CUSTOMER  // Обычный покупатель
   MANAGER   // Менеджер - может управлять заказами и чатами
   ADMIN     // Администратор - полный доступ
+}
+
+// Discount type for promo codes
+enum DiscountType {
+  FIXED_AMOUNT
+  PERCENTAGE
 }

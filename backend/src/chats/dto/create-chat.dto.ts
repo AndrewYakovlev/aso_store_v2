@@ -7,7 +7,9 @@ export class CreateChatDto {
   @IsString()
   message?: string;
 
-  @ApiPropertyOptional({ description: 'Product ID if the chat is about a specific product' })
+  @ApiPropertyOptional({
+    description: 'Product ID if the chat is about a specific product',
+  })
   @IsOptional()
   @IsUUID()
   productId?: string;

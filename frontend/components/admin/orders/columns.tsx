@@ -23,6 +23,11 @@ export const createOrdersColumns = ({
           <div className="text-sm text-muted-foreground">
             {new Date(order.createdAt).toLocaleDateString('ru-RU')}
           </div>
+          {order.isManagerCreated && (
+            <Badge variant="outline" className="text-xs mt-1">
+              Создан менеджером
+            </Badge>
+          )}
         </div>
       );
     },

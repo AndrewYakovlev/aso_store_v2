@@ -1,11 +1,14 @@
 import { apiRequest, getAnonymousToken } from './client';
 import { Product } from './products';
+import { ProductOffer } from '@/types/chat';
 
 export interface CartItem {
   id: string;
   cartId: string;
-  productId: string;
-  product: Product;
+  productId?: string;
+  product?: Product;
+  offerId?: string;
+  offer?: ProductOffer;
   quantity: number;
   createdAt: string;
   updatedAt: string;
@@ -26,10 +29,17 @@ export interface CartSummary {
   totalQuantity: number;
   totalPrice: number;
   itemsCount: number;
+  promoCode?: {
+    code: string;
+    discountAmount: number;
+    discountType: string;
+    error?: string;
+  };
 }
 
 export interface AddToCartData {
-  productId: string;
+  productId?: string;
+  offerId?: string;
   quantity: number;
 }
 
@@ -74,10 +84,19 @@ export const cartApi = {
     });
   },
 
-  // Remove item from cart
+  // Remove product from cart
   async removeFromCart(productId: string): Promise<void> {
     const anonymousToken = getAnonymousToken();
-    return apiRequest<void>(`/cart/${productId}`, {
+    return apiRequest<void>(`/cart/product/${productId}`, {
+      method: 'DELETE',
+      anonymousToken: anonymousToken || undefined,
+    });
+  },
+
+  // Remove offer from cart
+  async removeOfferFromCart(offerId: string): Promise<void> {
+    const anonymousToken = getAnonymousToken();
+    return apiRequest<void>(`/cart/offer/${offerId}`, {
       method: 'DELETE',
       anonymousToken: anonymousToken || undefined,
     });

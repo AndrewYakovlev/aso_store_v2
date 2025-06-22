@@ -82,7 +82,10 @@ export class ImportPreviewItemDto {
   @ApiProperty({ description: 'Предполагаемый бренд', required: false })
   suggestedBrand?: string;
 
-  @ApiProperty({ description: 'Уровень уверенности в категории', required: false })
+  @ApiProperty({
+    description: 'Уровень уверенности в категории',
+    required: false,
+  })
   categoryConfidence?: number;
 
   @ApiProperty({ description: 'Уровень уверенности в бренде', required: false })

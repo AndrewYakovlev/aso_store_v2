@@ -37,7 +37,9 @@ export class ProductVehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Добавить связь товара с автомобилем (Admin/Manager only)' })
+  @ApiOperation({
+    summary: 'Добавить связь товара с автомобилем (Admin/Manager only)',
+  })
   @ApiResponse({ status: 201, type: ProductVehicleDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -55,7 +57,10 @@ export class ProductVehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Массовое обновление связей товара с автомобилями (Admin/Manager only)' })
+  @ApiOperation({
+    summary:
+      'Массовое обновление связей товара с автомобилями (Admin/Manager only)',
+  })
   @ApiResponse({ status: 201, type: [ProductVehicleDto] })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -80,7 +85,9 @@ export class ProductVehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Обновить связь товара с автомобилем (Admin/Manager only)' })
+  @ApiOperation({
+    summary: 'Обновить связь товара с автомобилем (Admin/Manager only)',
+  })
   @ApiResponse({ status: 200, type: ProductVehicleDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -100,7 +107,9 @@ export class ProductVehiclesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Удалить связь товара с автомобилем (Admin/Manager only)' })
+  @ApiOperation({
+    summary: 'Удалить связь товара с автомобилем (Admin/Manager only)',
+  })
   @ApiResponse({ status: 204 })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })

@@ -10,8 +10,12 @@ import { AnonymousUserService } from './services/anonymous-user.service';
 import { OtpService } from './services/otp.service';
 import { FavoritesService } from '../favorites/favorites.service';
 import { CartService } from '../cart/cart.service';
-import { AuthTokensDto, UserProfileDto } from './dto';
-import { normalizePhone, formatPhoneForDisplay } from '../common/utils/phone.utils';
+import { PromoCodeTriggersService } from '../promo-codes/promo-code-triggers.service';
+import { AuthTokensDto, UserProfileDto, UpdateProfileDto } from './dto';
+import {
+  normalizePhone,
+  formatPhoneForDisplay,
+} from '../common/utils/phone.utils';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +28,8 @@ export class AuthService {
     private readonly favoritesService: FavoritesService,
     @Inject(forwardRef(() => CartService))
     private readonly cartService: CartService,
+    @Inject(forwardRef(() => PromoCodeTriggersService))
+    private readonly promoCodesTriggersService: PromoCodeTriggersService,
   ) {}
 
   async getAnonymousToken() {
@@ -46,7 +52,7 @@ export class AuthService {
   async sendOtp(phone: string) {
     // Нормализуем номер телефона
     const normalizedPhone = normalizePhone(phone);
-    
+
     // Find or create user by phone
     let user = await this.prisma.user.findUnique({
       where: { phone: normalizedPhone },
@@ -80,7 +86,7 @@ export class AuthService {
   ): Promise<AuthTokensDto> {
     // Нормализуем номер телефона
     const normalizedPhone = normalizePhone(phone);
-    
+
     // Find user by phone
     const user = await this.prisma.user.findUnique({
       where: { phone: normalizedPhone },
@@ -92,6 +98,9 @@ export class AuthService {
 
     // Verify OTP code
     await this.otpService.verifyOtp(user.id, code);
+
+    // Check if this is first verification (registration)
+    const isFirstVerification = !user.isPhoneVerified;
 
     // If anonymous token provided, merge data
     if (anonymousToken) {
@@ -115,6 +124,16 @@ export class AuthService {
       where: { id: user.id },
       data: { isPhoneVerified: true },
     });
+
+    // Handle registration trigger if this is first verification
+    if (isFirstVerification) {
+      try {
+        await this.promoCodesTriggersService.handleRegistration(user.id);
+      } catch (error) {
+        // Log error but don't fail the registration
+        console.error('Failed to handle registration trigger:', error);
+      }
+    }
 
     // Generate tokens
     const { accessToken, refreshToken } =
@@ -186,6 +205,10 @@ export class AuthService {
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
       middleName: user.middleName || undefined,
+      email: user.email || undefined,
+      companyName: user.companyName || undefined,
+      companyInn: user.companyInn || undefined,
+      defaultShippingAddress: user.defaultShippingAddress || undefined,
       role: user.role,
       isPhoneVerified: user.isPhoneVerified,
       createdAt: user.createdAt,
@@ -194,23 +217,46 @@ export class AuthService {
 
   async updateProfile(
     userId: string,
-    data: {
-      firstName?: string;
-      lastName?: string;
-      middleName?: string;
-    },
+    dto: UpdateProfileDto,
   ): Promise<UserProfileDto> {
+    // Подготавливаем данные для обновления
+    const updateData: any = {};
+
+    if (dto.firstName !== undefined) {
+      updateData.firstName = dto.firstName;
+    }
+    if (dto.lastName !== undefined) {
+      updateData.lastName = dto.lastName;
+    }
+    if (dto.email !== undefined) {
+      updateData.email = dto.email || null; // Сохраняем null если пустая строка
+    }
+    if (dto.companyName !== undefined) {
+      updateData.companyName = dto.companyName;
+    }
+    if (dto.companyInn !== undefined) {
+      updateData.companyInn = dto.companyInn;
+    }
+    if (dto.defaultShippingAddress !== undefined) {
+      updateData.defaultShippingAddress = dto.defaultShippingAddress;
+    }
+
+    // Обновляем пользователя
     const user = await this.prisma.user.update({
       where: { id: userId },
-      data,
+      data: updateData,
     });
 
+    // Возвращаем обновленный профиль
     return {
       id: user.id,
       phone: formatPhoneForDisplay(user.phone),
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
-      middleName: user.middleName || undefined,
+      email: user.email || undefined,
+      companyName: user.companyName || undefined,
+      companyInn: user.companyInn || undefined,
+      defaultShippingAddress: user.defaultShippingAddress || undefined,
       role: user.role,
       isPhoneVerified: user.isPhoneVerified,
       createdAt: user.createdAt,

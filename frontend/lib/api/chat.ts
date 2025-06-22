@@ -7,6 +7,7 @@ import type {
   CreateChatDto,
   SendMessageDto,
   CreateProductOfferDto,
+  UpdateProductOfferDto,
   ProductOffer,
 } from '@/types/chat';
 
@@ -86,6 +87,28 @@ export const chatApi = {
 
   deactivateOffer: async (offerId: string, accessToken: string): Promise<ProductOffer> => {
     return apiRequest<ProductOffer>(`/chats/offers/${offerId}/deactivate`, {
+      method: 'PATCH',
+      token: accessToken,
+    });
+  },
+
+  updateProductOffer: async (
+    offerId: string,
+    data: UpdateProductOfferDto,
+    accessToken: string
+  ): Promise<ProductOffer> => {
+    return apiRequest<ProductOffer>(`/chats/offers/${offerId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+      token: accessToken,
+    });
+  },
+
+  cancelProductOffer: async (
+    offerId: string,
+    accessToken: string
+  ): Promise<ProductOffer> => {
+    return apiRequest<ProductOffer>(`/chats/offers/${offerId}/cancel`, {
       method: 'PATCH',
       token: accessToken,
     });

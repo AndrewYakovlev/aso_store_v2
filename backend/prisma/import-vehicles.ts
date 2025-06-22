@@ -30,10 +30,48 @@ function createSlug(text: string): string {
   return text
     .toLowerCase()
     .replace(/\s+/g, '-')
-    .replace(/[^\w\-]/g, '')
-    .replace(/\-\-+/g, '-')
+    .replace(/[^\w-]/g, '')
+    .replace(/--+/g, '-')
     .replace(/^-+/, '')
     .replace(/-+$/, '');
+}
+
+// Функция для получения уникального slug для марки
+async function getUniqueBrandSlug(baseSlug: string): Promise<string> {
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const existing = await prisma.vehicleBrand.findUnique({
+      where: { slug },
+    });
+
+    if (!existing) {
+      return slug;
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+}
+
+// Функция для получения уникального slug для модели
+async function getUniqueModelSlug(baseSlug: string): Promise<string> {
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const existing = await prisma.vehicleModel.findUnique({
+      where: { slug },
+    });
+
+    if (!existing) {
+      return slug;
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
 }
 
 async function importVehicles() {
@@ -52,25 +90,39 @@ async function importVehicles() {
     // Импортируем марки и модели
     for (const brand of brands) {
       try {
-        // Создаем или обновляем марку
-        const vehicleBrand = await prisma.vehicleBrand.upsert({
+        // Проверяем, существует ли марка
+        let vehicleBrand: Awaited<ReturnType<typeof prisma.vehicleBrand.findUnique>> = await prisma.vehicleBrand.findUnique({
           where: { externalId: brand.id },
-          update: {
-            name: brand.name,
-            nameCyrillic: brand['cyrillic-name'],
-            country: brand.country,
-            popular: brand.popular,
-          },
-          create: {
-            externalId: brand.id,
-            name: brand.name,
-            nameCyrillic: brand['cyrillic-name'],
-            slug: createSlug(brand.name),
-            country: brand.country,
-            popular: brand.popular,
-            sortOrder: brand.popular ? 0 : 100, // Популярные марки сверху
-          },
         });
+
+        if (!vehicleBrand) {
+          // Если марка не существует, создаем с уникальным slug
+          const baseSlug = createSlug(brand.name);
+          const uniqueSlug = await getUniqueBrandSlug(baseSlug);
+
+          vehicleBrand = await prisma.vehicleBrand.create({
+            data: {
+              externalId: brand.id,
+              name: brand.name,
+              nameCyrillic: brand['cyrillic-name'],
+              slug: uniqueSlug,
+              country: brand.country,
+              popular: brand.popular,
+              sortOrder: brand.popular ? 0 : 100, // Популярные марки сверху
+            },
+          });
+        } else {
+          // Если существует, обновляем данные (кроме slug)
+          vehicleBrand = await prisma.vehicleBrand.update({
+            where: { externalId: brand.id },
+            data: {
+              name: brand.name,
+              nameCyrillic: brand['cyrillic-name'],
+              country: brand.country,
+              popular: brand.popular,
+            },
+          });
+        }
 
         brandsCreated++;
         console.log(`✓ Марка ${brand.name} (${brand['cyrillic-name']})`);
@@ -78,31 +130,49 @@ async function importVehicles() {
         // Импортируем модели марки
         for (const model of brand.models) {
           try {
-            await prisma.vehicleModel.upsert({
+            // Проверяем, существует ли модель
+            const existingModel = await prisma.vehicleModel.findUnique({
               where: { externalId: model.id },
-              update: {
-                name: model.name,
-                nameCyrillic: model['cyrillic-name'],
-                class: model.class,
-                yearFrom: model['year-from'],
-                yearTo: model['year-to'],
-              },
-              create: {
-                externalId: model.id,
-                brandId: vehicleBrand.id,
-                name: model.name,
-                nameCyrillic: model['cyrillic-name'],
-                slug: createSlug(`${brand.name}-${model.name}`),
-                class: model.class,
-                yearFrom: model['year-from'],
-                yearTo: model['year-to'],
-                sortOrder: 0,
-              },
             });
+
+            if (!existingModel) {
+              // Если модель не существует, создаем с уникальным slug
+              const baseSlug = createSlug(`${brand.name}-${model.name}`);
+              const uniqueSlug = await getUniqueModelSlug(baseSlug);
+
+              await prisma.vehicleModel.create({
+                data: {
+                  externalId: model.id,
+                  brandId: vehicleBrand.id,
+                  name: model.name,
+                  nameCyrillic: model['cyrillic-name'],
+                  slug: uniqueSlug,
+                  class: model.class,
+                  yearFrom: model['year-from'],
+                  yearTo: model['year-to'],
+                  sortOrder: 0,
+                },
+              });
+            } else {
+              // Если существует, обновляем данные (кроме slug)
+              await prisma.vehicleModel.update({
+                where: { externalId: model.id },
+                data: {
+                  name: model.name,
+                  nameCyrillic: model['cyrillic-name'],
+                  class: model.class,
+                  yearFrom: model['year-from'],
+                  yearTo: model['year-to'],
+                },
+              });
+            }
 
             modelsCreated++;
           } catch (error) {
-            console.error(`  ✗ Ошибка при импорте модели ${model.name}:`, error);
+            console.error(
+              `  ✗ Ошибка при импорте модели ${model.name}:`,
+              error,
+            );
           }
         }
       } catch (error) {
@@ -116,23 +186,34 @@ async function importVehicles() {
 
     // Обновляем порядок сортировки для популярных марок
     const popularBrands = [
-      'Toyota', 'Volkswagen', 'Mercedes-Benz', 'BMW', 'Audi', 
-      'Ford', 'Nissan', 'Hyundai', 'Kia', 'Mazda',
-      'Skoda', 'Renault', 'Mitsubishi', 'Honda', 'Lexus'
+      'Toyota',
+      'Volkswagen',
+      'Mercedes-Benz',
+      'BMW',
+      'Audi',
+      'Ford',
+      'Nissan',
+      'Hyundai',
+      'Kia',
+      'Mazda',
+      'Skoda',
+      'Renault',
+      'Mitsubishi',
+      'Honda',
+      'Lexus',
     ];
 
     for (let i = 0; i < popularBrands.length; i++) {
       await prisma.vehicleBrand.updateMany({
         where: { name: popularBrands[i] },
-        data: { 
+        data: {
           popular: true,
-          sortOrder: i 
+          sortOrder: i,
         },
       });
     }
 
     console.log('\n✓ Порядок сортировки популярных марок обновлен');
-
   } catch (error) {
     console.error('Критическая ошибка при импорте:', error);
   } finally {

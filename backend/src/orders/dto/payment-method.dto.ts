@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class PaymentMethodDto {
+export class OrderPaymentMethodDto {
   @ApiProperty({ description: 'ID метода оплаты' })
   id: string;
 

@@ -9,7 +9,8 @@ import { ru } from 'date-fns/locale';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { Badge } from '@/components/ui/badge';
 
 interface AdminOrderDetailsProps {
   orderId: string;
@@ -114,33 +115,67 @@ export function AdminOrderDetails({ orderId }: AdminOrderDetailsProps) {
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Товары</h2>
             <div className="space-y-4">
-              {order.items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between py-3 border-b last:border-0">
-                  <div className="flex-1">
-                    <h3 className="font-medium">
-                      {item.product ? (
-                        <Link
-                          href={`/panel/products/${item.product.id}/edit`}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          {item.product.name}
-                        </Link>
-                      ) : (
-                        'Товарное предложение'
+              {order.items.map((item) => {
+                const isOffer = !!item.offer;
+                
+                return (
+                  <div key={item.id} className="flex items-start justify-between py-3 border-b last:border-0">
+                    <div className="flex-1">
+                      <h3 className="font-medium">
+                        {item.product ? (
+                          <Link
+                            href={`/panel/products/${item.product.id}/edit`}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            {item.product.name}
+                          </Link>
+                        ) : item.offer ? (
+                          <span>{item.offer.name}</span>
+                        ) : (
+                          'Товар не найден'
+                        )}
+                      </h3>
+                      {item.product && (
+                        <p className="text-sm text-gray-500">Артикул: {item.product.sku}</p>
                       )}
-                    </h3>
-                    {item.product && (
-                      <p className="text-sm text-gray-500">Артикул: {item.product.sku}</p>
-                    )}
+                      {item.offer && (
+                        <>
+                          {item.offer.description && (
+                            <p className="text-sm text-gray-600 mt-1">{item.offer.description}</p>
+                          )}
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">
+                              Товарное предложение
+                            </Badge>
+                            {item.offer.isOriginal && (
+                              <Badge className="bg-green-600 text-white text-xs">
+                                Оригинал
+                              </Badge>
+                            )}
+                            {item.offer.isAnalog && (
+                              <Badge className="bg-blue-600 text-white text-xs">
+                                Аналог
+                              </Badge>
+                            )}
+                            {item.offer.deliveryDays !== undefined && (
+                              <div className="flex items-center gap-1 text-xs text-gray-600">
+                                <ClockIcon className="w-3 h-3" />
+                                <span>Доставка: {item.offer.deliveryDays} дн.</span>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{item.totalPrice.toLocaleString()} ₽</p>
+                      <p className="text-sm text-gray-500">
+                        {item.quantity} × {item.price.toLocaleString()} ₽
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">{item.totalPrice.toLocaleString()} ₽</p>
-                    <p className="text-sm text-gray-500">
-                      {item.quantity} × {item.price.toLocaleString()} ₽
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="mt-4 pt-4 border-t space-y-2">
               <div className="flex justify-between">
@@ -243,6 +278,12 @@ export function AdminOrderDetails({ orderId }: AdminOrderDetailsProps) {
                 <span className="text-gray-600">Способ оплаты:</span>
                 <p className="font-medium">{order.paymentMethod.name}</p>
               </div>
+              {order.isManagerCreated && order.createdByManagerName && (
+                <div>
+                  <span className="text-gray-600">Создан менеджером:</span>
+                  <p className="font-medium">{order.createdByManagerName}</p>
+                </div>
+              )}
             </div>
           </div>
 

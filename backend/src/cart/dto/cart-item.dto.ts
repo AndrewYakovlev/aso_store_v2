@@ -1,5 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductDto } from '../../products/dto';
+import { CartProductOfferDto } from './cart-offer.dto';
 
 export class CartItemDto {
   @ApiProperty({ description: 'ID элемента корзины' })
@@ -8,11 +9,17 @@ export class CartItemDto {
   @ApiProperty({ description: 'ID корзины' })
   cartId: string;
 
-  @ApiProperty({ description: 'ID товара' })
-  productId: string;
+  @ApiPropertyOptional({ description: 'ID товара' })
+  productId?: string;
 
-  @ApiProperty({ description: 'Товар', type: ProductDto })
-  product: ProductDto;
+  @ApiPropertyOptional({ description: 'Товар', type: ProductDto })
+  product?: ProductDto;
+
+  @ApiPropertyOptional({ description: 'ID товарного предложения' })
+  offerId?: string;
+
+  @ApiPropertyOptional({ description: 'Товарное предложение', type: CartProductOfferDto })
+  offer?: CartProductOfferDto;
 
   @ApiProperty({ description: 'Количество' })
   quantity: number;

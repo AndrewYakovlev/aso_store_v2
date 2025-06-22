@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ProductDto } from '../../products/dto';
+import { ProductOfferDto } from '../../chats/dto/chat.dto';
 
 export class OrderItemDto {
   @ApiProperty({ description: 'ID элемента заказа' })
@@ -16,6 +17,9 @@ export class OrderItemDto {
 
   @ApiProperty({ description: 'Товар', type: ProductDto, required: false })
   product?: ProductDto;
+
+  @ApiProperty({ description: 'Товарное предложение', type: ProductOfferDto, required: false })
+  offer?: ProductOfferDto;
 
   @ApiProperty({ description: 'Количество' })
   quantity: number;

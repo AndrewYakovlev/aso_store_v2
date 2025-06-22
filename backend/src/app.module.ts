@@ -16,6 +16,14 @@ import { VehicleModelsModule } from './vehicle-models/vehicle-models.module';
 import { ProductVehiclesModule } from './product-vehicles/product-vehicles.module';
 import { ImportsModule } from './imports/imports.module';
 import { ChatsModule } from './chats/chats.module';
+import { UsersModule } from './users/users.module';
+import { DeliveryMethodsModule } from './delivery-methods/delivery-methods.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { PaymentMethodsModule } from './payment-methods/payment-methods.module';
+import { OrderStatusesModule } from './order-statuses/order-statuses.module';
+import { StatisticsModule } from './statistics/statistics.module';
+import { UploadsModule } from './uploads/uploads.module';
+import { PromoCodesModule } from './promo-codes/promo-codes.module';
 
 @Module({
   imports: [
@@ -36,6 +44,14 @@ import { ChatsModule } from './chats/chats.module';
     ProductVehiclesModule,
     ImportsModule,
     ChatsModule,
+    UsersModule,
+    DeliveryMethodsModule,
+    NotificationsModule,
+    PaymentMethodsModule,
+    OrderStatusesModule,
+    StatisticsModule,
+    UploadsModule,
+    PromoCodesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

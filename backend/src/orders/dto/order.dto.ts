@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { OrderStatusDto } from './order-status.dto';
-import { DeliveryMethodDto } from './delivery-method.dto';
-import { PaymentMethodDto } from './payment-method.dto';
+import { OrderOrderStatusDto } from './order-status.dto';
+import { OrderDeliveryMethodDto } from './delivery-method.dto';
+import { OrderPaymentMethodDto } from './payment-method.dto';
 import { OrderItemDto } from './order-item.dto';
 
 export class OrderDto {
@@ -17,14 +17,20 @@ export class OrderDto {
   @ApiProperty({ description: 'ID анонимного пользователя', required: false })
   anonymousUserId?: string;
 
-  @ApiProperty({ description: 'Статус заказа', type: OrderStatusDto })
-  status: OrderStatusDto;
+  @ApiProperty({ description: 'Статус заказа', type: OrderOrderStatusDto })
+  status: OrderOrderStatusDto;
 
-  @ApiProperty({ description: 'Метод доставки', type: DeliveryMethodDto })
-  deliveryMethod: DeliveryMethodDto;
+  @ApiProperty({ description: 'Метод доставки', type: OrderDeliveryMethodDto })
+  deliveryMethod: OrderDeliveryMethodDto;
 
-  @ApiProperty({ description: 'Метод оплаты', type: PaymentMethodDto })
-  paymentMethod: PaymentMethodDto;
+  @ApiProperty({ description: 'Метод оплаты', type: OrderPaymentMethodDto })
+  paymentMethod: OrderPaymentMethodDto;
+
+  @ApiProperty({ description: 'Стоимость товаров до скидки', required: false })
+  subtotalAmount?: number;
+
+  @ApiProperty({ description: 'Сумма скидки', required: false })
+  discountAmount?: number;
 
   @ApiProperty({ description: 'Общая стоимость товаров' })
   totalAmount: number;
@@ -67,6 +73,15 @@ export class OrderDto {
 
   @ApiProperty({ description: 'Товары в заказе', type: [OrderItemDto] })
   items: OrderItemDto[];
+
+  @ApiProperty({ description: 'ID менеджера, создавшего заказ', required: false })
+  createdByManagerId?: string;
+
+  @ApiProperty({ description: 'Имя менеджера, создавшего заказ', required: false })
+  createdByManagerName?: string;
+
+  @ApiProperty({ description: 'Заказ создан менеджером' })
+  isManagerCreated: boolean;
 
   @ApiProperty({ description: 'Дата создания заказа' })
   createdAt: Date;

@@ -29,6 +29,9 @@ export class ProductDto {
   @ApiProperty()
   isActive: boolean;
 
+  @ApiProperty({ default: false })
+  excludeFromPromoCodes: boolean;
+
   @ApiProperty({ type: [String] })
   images: string[];
 

@@ -69,12 +69,15 @@ export function useCart() {
   }, [token, loadCart]);
 
   // Update cart item
-  const updateCartItem = useCallback(async (productId: string, quantity: number) => {
+  const updateCartItem = useCallback(async (productId: string | undefined, quantity: number, offerId?: string) => {
     if (!token || !cart) return;
     
-    const currentItem = cart.items.find(item => item.productId === productId);
+    const currentItem = cart.items.find(item => 
+      productId ? item.productId === productId : item.offerId === offerId
+    );
     if (!currentItem) return;
 
+    const itemPrice = currentItem.product?.price || currentItem.offer?.price || 0;
     const quantityDiff = quantity - currentItem.quantity;
 
     try {
@@ -82,12 +85,12 @@ export function useCart() {
       setCart(prev => prev ? {
         ...prev,
         items: prev.items.map(item =>
-          item.productId === productId
+          (productId && item.productId === productId) || (offerId && item.offerId === offerId)
             ? { ...item, quantity }
             : item
         ),
         totalQuantity: prev.totalQuantity + quantityDiff,
-        totalPrice: prev.totalPrice + (currentItem.product.price * quantityDiff),
+        totalPrice: prev.totalPrice + (itemPrice * quantityDiff),
       } : null);
 
       setSummary(prev => prev ? {
@@ -95,7 +98,11 @@ export function useCart() {
         totalQuantity: prev.totalQuantity + quantityDiff,
       } : null);
 
-      await cartClientApi.updateCartItem(productId, { quantity });
+      if (productId) {
+        await cartClientApi.updateCartItem(productId, { quantity });
+      } else if (offerId) {
+        await cartClientApi.updateOfferCartItem(offerId, { quantity });
+      }
     } catch (err) {
       // Revert optimistic update
       await loadCart();
@@ -104,19 +111,26 @@ export function useCart() {
   }, [token, cart, loadCart]);
 
   // Remove from cart
-  const removeFromCart = useCallback(async (productId: string) => {
+  const removeFromCart = useCallback(async (productId?: string, offerId?: string) => {
     if (!token || !cart) return;
     
-    const currentItem = cart.items.find(item => item.productId === productId);
+    const currentItem = productId 
+      ? cart.items.find(item => item.productId === productId)
+      : cart.items.find(item => item.offerId === offerId);
+    
     if (!currentItem) return;
+
+    const itemPrice = currentItem.product?.price || currentItem.offer?.price || 0;
 
     try {
       // Optimistic update
       setCart(prev => prev ? {
         ...prev,
-        items: prev.items.filter(item => item.productId !== productId),
+        items: prev.items.filter(item => 
+          productId ? item.productId !== productId : item.offerId !== offerId
+        ),
         totalQuantity: prev.totalQuantity - currentItem.quantity,
-        totalPrice: prev.totalPrice - (currentItem.product.price * currentItem.quantity),
+        totalPrice: prev.totalPrice - (itemPrice * currentItem.quantity),
       } : null);
 
       setSummary(prev => prev ? {
@@ -125,7 +139,11 @@ export function useCart() {
         itemsCount: prev.itemsCount - 1,
       } : null);
 
-      await cartClientApi.removeFromCart(productId);
+      if (productId) {
+        await cartClientApi.removeFromCart(productId);
+      } else if (offerId) {
+        await cartClientApi.removeOfferFromCart(offerId);
+      }
     } catch (err) {
       // Revert optimistic update
       await loadCart();

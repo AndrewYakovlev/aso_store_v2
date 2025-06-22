@@ -10,8 +10,8 @@ interface CartContextType {
   loading: boolean;
   error: string | null;
   addToCart: (data: AddToCartData) => Promise<void>;
-  updateCartItem: (productId: string, quantity: number) => Promise<void>;
-  removeFromCart: (productId: string) => Promise<void>;
+  updateCartItem: (productId: string | undefined, quantity: number, offerId?: string) => Promise<void>;
+  removeFromCart: (productId?: string, offerId?: string) => Promise<void>;
   clearCart: () => Promise<void>;
   isInCart: (productId: string) => boolean;
   getItemQuantity: (productId: string) => number;

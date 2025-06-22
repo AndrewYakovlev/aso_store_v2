@@ -37,33 +37,33 @@ export class AvailableAttributeFilterDto {
   @ApiProperty({ description: 'Attribute code' })
   code: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Attribute type',
-    enum: ['TEXT', 'NUMBER', 'SELECT_ONE', 'SELECT_MANY', 'COLOR']
+    enum: ['TEXT', 'NUMBER', 'SELECT_ONE', 'SELECT_MANY', 'COLOR'],
   })
   type: string;
 
   @ApiProperty({ description: 'Unit of measurement', required: false })
   unit?: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Available options for SELECT types',
     type: [AttributeOptionDto],
-    required: false 
+    required: false,
   })
   options?: AttributeOptionDto[];
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Value range for NUMBER type',
     type: NumberRangeDto,
-    required: false 
+    required: false,
   })
   range?: NumberRangeDto;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Available colors for COLOR type',
     type: [ColorOptionDto],
-    required: false 
+    required: false,
   })
   colors?: ColorOptionDto[];
 }
@@ -105,27 +105,27 @@ export class PriceRangeDto {
 }
 
 export class AvailableFiltersDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Available attribute filters',
-    type: [AvailableAttributeFilterDto]
+    type: [AvailableAttributeFilterDto],
   })
   attributes: AvailableAttributeFilterDto[];
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Price range',
-    type: PriceRangeDto
+    type: PriceRangeDto,
   })
   priceRange: PriceRangeDto;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Available categories',
-    type: [CategoryFilterDto]
+    type: [CategoryFilterDto],
   })
   categories: CategoryFilterDto[];
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Available brands',
-    type: [BrandFilterDto]
+    type: [BrandFilterDto],
   })
   brands: BrandFilterDto[];
 }

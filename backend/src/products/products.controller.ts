@@ -65,7 +65,9 @@ export class ProductsController {
     description: 'Available filters with counts',
     type: AvailableFiltersDto,
   })
-  async getFilters(@Query() baseFilter: ProductsFilterDto): Promise<AvailableFiltersDto> {
+  async getFilters(
+    @Query() baseFilter: ProductsFilterDto,
+  ): Promise<AvailableFiltersDto> {
     return this.productsService.getAvailableFilters(baseFilter);
   }
 

@@ -41,6 +41,14 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  
+  /* ASO Brand Colors */
+  --color-aso-blue: var(--aso-blue);
+  --color-aso-blue-light: var(--aso-blue-light);
+  --color-aso-blue-dark: var(--aso-blue-dark);
+  --color-aso-orange: var(--aso-orange);
+  --color-aso-orange-light: var(--aso-orange-light);
+  --color-aso-orange-dark: var(--aso-orange-dark);
 }
 
 :root {
@@ -76,6 +84,14 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  
+  /* ASO Brand Colors */
+  --aso-blue: #1e3a8a;
+  --aso-blue-light: #2563eb;
+  --aso-blue-dark: #1e40af;
+  --aso-orange: #f59e0b;
+  --aso-orange-light: #fbbf24;
+  --aso-orange-dark: #d97706;
 }
 
 .dark {
@@ -124,6 +140,54 @@
 @layer components {
   .image-error.image-error {
     display: flex !important;
+  }
+}
+
+@layer utilities {
+  .text-aso-blue { color: var(--aso-blue); }
+  .text-aso-blue-light { color: var(--aso-blue-light); }
+  .text-aso-blue-dark { color: var(--aso-blue-dark); }
+  .text-aso-orange { color: var(--aso-orange); }
+  .text-aso-orange-light { color: var(--aso-orange-light); }
+  .text-aso-orange-dark { color: var(--aso-orange-dark); }
+  
+  .bg-aso-blue { background-color: var(--aso-blue); }
+  .bg-aso-blue-light { background-color: var(--aso-blue-light); }
+  .bg-aso-blue-dark { background-color: var(--aso-blue-dark); }
+  .bg-aso-orange { background-color: var(--aso-orange); }
+  .bg-aso-orange-light { background-color: var(--aso-orange-light); }
+  .bg-aso-orange-dark { background-color: var(--aso-orange-dark); }
+  
+  .border-aso-blue { border-color: var(--aso-blue); }
+  .border-aso-blue-light { border-color: var(--aso-blue-light); }
+  .border-aso-blue-dark { border-color: var(--aso-blue-dark); }
+  .border-aso-orange { border-color: var(--aso-orange); }
+  .border-aso-orange-light { border-color: var(--aso-orange-light); }
+  .border-aso-orange-dark { border-color: var(--aso-orange-dark); }
+  
+  .hover\:text-aso-blue:hover { color: var(--aso-blue); }
+  .hover\:text-aso-blue-dark:hover { color: var(--aso-blue-dark); }
+  .hover\:bg-aso-blue-dark:hover { background-color: var(--aso-blue-dark); }
+  .hover\:border-aso-blue:hover { border-color: var(--aso-blue); }
+  
+  .focus\:border-aso-blue:focus { border-color: var(--aso-blue); }
+  .focus\:ring-aso-blue:focus { --tw-ring-color: var(--aso-blue); }
+  
+  /* Safe area insets for iOS devices */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
   }
 }
 

@@ -271,18 +271,18 @@ export class ImportsService {
   private async getCategoryWithParents(categoryId: string): Promise<string[]> {
     const categoryIds: string[] = [];
     let currentCategoryId: string | null = categoryId;
-    
+
     while (currentCategoryId) {
       categoryIds.push(currentCategoryId);
-      
+
       const category = await this.prisma.category.findUnique({
         where: { id: currentCategoryId },
         select: { parentId: true },
       });
-      
+
       currentCategoryId = category?.parentId || null;
     }
-    
+
     return categoryIds;
   }
 
@@ -377,15 +377,15 @@ export class ImportsService {
         if (categoryId) {
           // Получаем все категории включая родительские
           const allCategoryIds = await this.getCategoryWithParents(categoryId);
-          
+
           // Удаляем старые связи с категориями
           await this.prisma.productCategory.deleteMany({
             where: { productId: existingProduct.id },
           });
-          
+
           // Создаем новые связи со всеми категориями
           await this.prisma.productCategory.createMany({
-            data: allCategoryIds.map(catId => ({
+            data: allCategoryIds.map((catId) => ({
               productId: existingProduct.id,
               categoryId: catId,
             })),
@@ -404,16 +404,16 @@ export class ImportsService {
       } else {
         // Создаем новый товар
         const slug = await this.generateSlug(product.name);
-        
+
         // Если есть категория, получаем все родительские
         let categoriesToCreate: { categoryId: string }[] = [];
         if (categoryId) {
           const allCategoryIds = await this.getCategoryWithParents(categoryId);
-          categoriesToCreate = allCategoryIds.map(catId => ({
+          categoriesToCreate = allCategoryIds.map((catId) => ({
             categoryId: catId,
           }));
         }
-        
+
         const createdProduct = await this.prisma.product.create({
           data: {
             ...productData,
@@ -444,7 +444,9 @@ export class ImportsService {
         if (target?.includes('sku')) {
           throw new Error(`Товар с артикулом ${product.sku} уже существует`);
         } else if (target?.includes('slug')) {
-          throw new Error(`Ошибка создания уникального URL для товара "${product.name}"`);
+          throw new Error(
+            `Ошибка создания уникального URL для товара "${product.name}"`,
+          );
         }
       }
       throw new Error(`Ошибка при сохранении товара: ${error.message}`);
@@ -608,20 +610,20 @@ export class ImportsService {
     // Проверяем уникальность slug
     let slug = baseSlug;
     let counter = 1;
-    
+
     while (true) {
       const existing = await this.prisma.product.findUnique({
         where: { slug },
       });
-      
+
       if (!existing) {
         break;
       }
-      
+
       // Если slug уже существует, добавляем числовой суффикс
       slug = `${baseSlug}-${counter}`;
       counter++;
-      
+
       // Защита от бесконечного цикла
       if (counter > 100) {
         // Используем timestamp для уникальности
@@ -629,7 +631,7 @@ export class ImportsService {
         break;
       }
     }
-    
+
     return slug;
   }
 }

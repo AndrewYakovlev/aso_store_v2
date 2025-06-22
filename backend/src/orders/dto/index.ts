@@ -7,3 +7,4 @@ export * from './delivery-method.dto';
 export * from './payment-method.dto';
 export * from './orders-filter.dto';
 export * from './paginated-orders.dto';
+export * from './create-manager-order.dto';

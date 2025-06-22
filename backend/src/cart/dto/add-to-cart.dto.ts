@@ -1,10 +1,16 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsInt, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsUUID, IsInt, Min, IsOptional, ValidateIf } from 'class-validator';
 
 export class AddToCartDto {
-  @ApiProperty({ description: 'ID товара' })
+  @ApiPropertyOptional({ description: 'ID товара' })
+  @ValidateIf((o) => !o.offerId)
   @IsUUID()
-  productId: string;
+  productId?: string;
+
+  @ApiPropertyOptional({ description: 'ID товарного предложения' })
+  @ValidateIf((o) => !o.productId)
+  @IsUUID()
+  offerId?: string;
 
   @ApiProperty({ description: 'Количество товара', minimum: 1 })
   @IsInt()

@@ -67,8 +67,8 @@ export function AdminOrdersList() {
         sortOrder: 'desc',
       };
       
-      // Используем обычный метод getOrders, так как админский endpoint еще не создан
-      const response = await ordersApi.getOrders(filter);
+      // Используем админский метод для получения всех заказов
+      const response = await ordersApi.getAllOrders(filter, accessToken || undefined);
       setOrders(response.items);
       setTotal(response.total);
     } catch (error) {

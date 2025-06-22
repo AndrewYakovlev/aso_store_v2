@@ -10,7 +10,13 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AttributesService } from './attributes.service';
 import {
   AttributeDto,
@@ -201,7 +207,9 @@ export class AttributesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Установить значение атрибута товара (Admin/Manager only)' })
+  @ApiOperation({
+    summary: 'Установить значение атрибута товара (Admin/Manager only)',
+  })
   @ApiParam({ name: 'productId', description: 'ID товара' })
   @ApiResponse({
     status: 200,
@@ -222,7 +230,10 @@ export class AttributesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Установить значения нескольких атрибутов товара (Admin/Manager only)' })
+  @ApiOperation({
+    summary:
+      'Установить значения нескольких атрибутов товара (Admin/Manager only)',
+  })
   @ApiParam({ name: 'productId', description: 'ID товара' })
   @ApiResponse({
     status: 200,
@@ -244,7 +255,9 @@ export class AttributesController {
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Удалить значение атрибута товара (Admin/Manager only)' })
+  @ApiOperation({
+    summary: 'Удалить значение атрибута товара (Admin/Manager only)',
+  })
   @ApiParam({ name: 'productId', description: 'ID товара' })
   @ApiParam({ name: 'attributeId', description: 'ID атрибута' })
   @ApiResponse({ status: 204, description: 'Значение атрибута удалено' })

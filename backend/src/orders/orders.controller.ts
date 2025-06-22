@@ -26,13 +26,14 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import {
   CreateOrderDto,
-  UpdateOrderStatusDto,
+  CreateManagerOrderDto,
+  UpdateOrderOrderStatusDto,
   OrderDto,
   OrdersFilterDto,
   PaginatedOrdersDto,
-  OrderStatusDto,
-  DeliveryMethodDto,
-  PaymentMethodDto,
+  OrderOrderStatusDto,
+  OrderDeliveryMethodDto,
+  OrderPaymentMethodDto,
 } from './dto';
 
 @ApiTags('orders')
@@ -45,9 +46,9 @@ export class OrdersController {
   @ApiResponse({
     status: 200,
     description: 'Список статусов заказов',
-    type: [OrderStatusDto],
+    type: [OrderOrderStatusDto],
   })
-  async getOrderStatuses(): Promise<OrderStatusDto[]> {
+  async getOrderStatuses(): Promise<OrderOrderStatusDto[]> {
     return this.ordersService.getOrderStatuses();
   }
 
@@ -56,9 +57,9 @@ export class OrdersController {
   @ApiResponse({
     status: 200,
     description: 'Список методов доставки',
-    type: [DeliveryMethodDto],
+    type: [OrderDeliveryMethodDto],
   })
-  async getDeliveryMethods(): Promise<DeliveryMethodDto[]> {
+  async getDeliveryMethods(): Promise<OrderDeliveryMethodDto[]> {
     return this.ordersService.getDeliveryMethods();
   }
 
@@ -67,9 +68,9 @@ export class OrdersController {
   @ApiResponse({
     status: 200,
     description: 'Список методов оплаты',
-    type: [PaymentMethodDto],
+    type: [OrderPaymentMethodDto],
   })
-  async getPaymentMethods(): Promise<PaymentMethodDto[]> {
+  async getPaymentMethods(): Promise<OrderPaymentMethodDto[]> {
     return this.ordersService.getPaymentMethods();
   }
 
@@ -99,6 +100,30 @@ export class OrdersController {
       undefined, // Orders are only for authenticated users now
       createOrderDto,
     );
+  }
+
+  @Post('manager')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Создать заказ от имени клиента (менеджер)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Заказ успешно создан менеджером',
+    type: OrderDto,
+  })
+  @ApiResponse({ status: 400, description: 'Некорректные данные' })
+  @ApiResponse({ status: 401, description: 'Требуется авторизация' })
+  @ApiResponse({ status: 403, description: 'Недостаточно прав' })
+  @ApiBearerAuth()
+  async createByManager(
+    @Request() req,
+    @Body() createManagerOrderDto: CreateManagerOrderDto,
+  ): Promise<OrderDto> {
+    const manager = req.user;
+    const managerId = manager?.id || manager?.sub;
+
+    return this.ordersService.createByManager(managerId, createManagerOrderDto);
   }
 
   @Get()
@@ -147,6 +172,24 @@ export class OrdersController {
     );
   }
 
+  @Get('admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Получить все заказы (Admin/Manager only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Список всех заказов',
+    type: PaginatedOrdersDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  async findAllAdmin(
+    @Query() filter: OrdersFilterDto,
+  ): Promise<PaginatedOrdersDto> {
+    return this.ordersService.findAllAdmin(filter);
+  }
+
   @Get(':id')
   @UseGuards(OptionalAuthGuard)
   @ApiOperation({ summary: 'Получить заказ по ID' })
@@ -183,7 +226,7 @@ export class OrdersController {
   @ApiResponse({ status: 400, description: 'Некорректный статус' })
   async updateStatus(
     @Param('id') id: string,
-    @Body() updateStatusDto: UpdateOrderStatusDto,
+    @Body() updateStatusDto: UpdateOrderOrderStatusDto,
   ): Promise<OrderDto> {
     return this.ordersService.updateStatus(id, updateStatusDto);
   }

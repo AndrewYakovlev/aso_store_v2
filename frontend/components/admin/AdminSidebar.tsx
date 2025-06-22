@@ -15,6 +15,9 @@ import {
   BuildingStorefrontIcon,
   ListBulletIcon,
   ArrowUpTrayIcon,
+  CreditCardIcon,
+  PlusIcon,
+  TicketIcon,
 } from "@heroicons/react/24/outline"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { useNotifications } from "@/lib/contexts/NotificationContext"
@@ -51,10 +54,10 @@ const menuItems = [
     roles: ["ADMIN", "MANAGER"],
   },
   {
-    href: "/panel/users",
-    label: "Пользователи",
-    icon: UsersIcon,
-    roles: ["ADMIN"],
+    href: "/panel/orders/new",
+    label: "Новый заказ",
+    icon: PlusIcon,
+    roles: ["ADMIN", "MANAGER"],
   },
   {
     href: "/panel/chats",
@@ -63,15 +66,45 @@ const menuItems = [
     roles: ["ADMIN", "MANAGER"],
   },
   {
+    href: "/panel/users",
+    label: "Пользователи",
+    icon: UsersIcon,
+    roles: ["ADMIN"],
+  },
+  {
     href: "/panel/brands",
     label: "Бренды",
-    icon: TruckIcon,
+    icon: BuildingStorefrontIcon,
     roles: ["ADMIN"],
   },
   {
     href: "/panel/vehicles/brands",
     label: "Марки авто",
-    icon: BuildingStorefrontIcon,
+    icon: TruckIcon,
+    roles: ["ADMIN"],
+  },
+  {
+    href: "/panel/delivery-methods",
+    label: "Методы доставки",
+    icon: TruckIcon,
+    roles: ["ADMIN"],
+  },
+  {
+    href: "/panel/payment-methods",
+    label: "Методы оплаты",
+    icon: CreditCardIcon,
+    roles: ["ADMIN"],
+  },
+  {
+    href: "/panel/order-statuses",
+    label: "Статусы заказов",
+    icon: ListBulletIcon,
+    roles: ["ADMIN"],
+  },
+  {
+    href: "/panel/promo-codes",
+    label: "Промокоды",
+    icon: TicketIcon,
     roles: ["ADMIN"],
   },
   {

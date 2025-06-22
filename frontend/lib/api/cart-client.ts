@@ -10,8 +10,9 @@ export const cartClientApi = {
   },
 
   // Get cart summary
-  async getCartSummary(): Promise<CartSummary> {
-    return UnifiedApiClient.get<CartSummary>('/cart/summary');
+  async getCartSummary(promoCode?: string): Promise<CartSummary> {
+    const params = promoCode ? `?promoCode=${encodeURIComponent(promoCode)}` : '';
+    return UnifiedApiClient.get<CartSummary>(`/cart/summary${params}`);
   },
 
   // Add item to cart
@@ -24,9 +25,19 @@ export const cartClientApi = {
     return UnifiedApiClient.put<CartItem>(`/cart/${productId}`, data);
   },
 
-  // Remove item from cart
+  // Update offer cart item quantity
+  async updateOfferCartItem(offerId: string, data: UpdateCartItemData): Promise<CartItem> {
+    return UnifiedApiClient.put<CartItem>(`/cart/offer/${offerId}`, data);
+  },
+
+  // Remove product from cart
   async removeFromCart(productId: string): Promise<void> {
-    return UnifiedApiClient.delete<void>(`/cart/${productId}`);
+    return UnifiedApiClient.delete<void>(`/cart/product/${productId}`);
+  },
+
+  // Remove offer from cart
+  async removeOfferFromCart(offerId: string): Promise<void> {
+    return UnifiedApiClient.delete<void>(`/cart/offer/${offerId}`);
   },
 
   // Clear cart
