@@ -34,8 +34,8 @@ class ChatSocketClient {
     if (userRole) query.userRole = userRole;
     if (token) query.token = token;
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-    this.socket = io(baseUrl, {
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:4000';
+    this.socket = io(wsUrl, {
       path: '/socket.io/',
       query,
       transports: ['websocket', 'polling'],
