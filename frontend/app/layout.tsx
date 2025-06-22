@@ -3,12 +3,19 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { AnonymousTokenProvider } from '@/components/AnonymousTokenProvider';
 import { NotificationProvider } from '@/lib/contexts/NotificationContext';
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
 export const metadata: Metadata = {
   title: 'АСО - Автозапчасти онлайн',
   description: 'Интернет-магазин автозапчастей с широким ассортиментом',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -22,6 +29,7 @@ export default function RootLayout({
         <AnonymousTokenProvider>
           <NotificationProvider>
             {children}
+            <Toaster />
           </NotificationProvider>
         </AnonymousTokenProvider>
       </body>

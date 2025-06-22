@@ -1,5 +1,6 @@
 import { apiRequest, getAnonymousToken } from './client';
 import { Product } from './products';
+import { ProductOffer } from '@/types/chat';
 
 export interface OrderStatus {
   id: string;
@@ -32,6 +33,7 @@ export interface OrderItem {
   productId?: string;
   offerId?: string;
   product?: Product;
+  offer?: ProductOffer;
   quantity: number;
   price: number;
   totalPrice: number;
@@ -60,6 +62,9 @@ export interface Order {
   deliveryPostalCode?: string;
   comment?: string;
   items: OrderItem[];
+  createdByManagerId?: string;
+  createdByManagerName?: string;
+  isManagerCreated: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -77,6 +82,30 @@ export interface CreateOrderData {
   deliveryApartment?: string;
   deliveryPostalCode?: string;
   comment?: string;
+  promoCode?: string;
+}
+
+export interface CreateManagerOrderItem {
+  productId?: string;
+  offerId?: string;
+  quantity: number;
+  price: number;
+}
+
+export interface CreateManagerOrderData {
+  customerPhone: string;
+  customerName: string;
+  customerEmail?: string;
+  deliveryMethodId: string;
+  paymentMethodId: string;
+  deliveryAddress?: string;
+  deliveryCity?: string;
+  deliveryStreet?: string;
+  deliveryBuilding?: string;
+  deliveryApartment?: string;
+  deliveryPostalCode?: string;
+  comment?: string;
+  items: CreateManagerOrderItem[];
 }
 
 export interface OrdersFilter {
@@ -192,6 +221,18 @@ export const ordersApi = {
       headers: accessToken ? {
         'Authorization': `Bearer ${accessToken}`,
       } : undefined,
+    });
+  },
+
+  // Create order by manager
+  async createManagerOrder(data: CreateManagerOrderData, accessToken: string): Promise<Order> {
+    return apiRequest<Order>('/orders/manager', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(data),
     });
   },
 };

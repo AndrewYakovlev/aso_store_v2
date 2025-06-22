@@ -9,6 +9,10 @@ import { formatDistanceToNow } from "date-fns"
 import { ru } from "date-fns/locale"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { useNotifications } from "@/lib/contexts/NotificationContext"
+import { ProductOfferCard } from "./ProductOfferCard"
+import { ProductOfferForm } from "./ProductOfferForm"
+import { useToast } from '@/components/ui/use-toast'
+import { NotificationPermission } from '@/components/NotificationPermission'
 
 interface ChatWithUser extends Chat {
   user?: {
@@ -43,6 +47,8 @@ export default function ChatWindow({
     price: 0,
   })
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { toast } = useToast()
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(true)
 
   // Mark chat as read when opened
   useEffect(() => {
@@ -66,13 +72,25 @@ export default function ChatWindow({
       chatId: string
       message: ChatMessage
     }) => {
+      // Ignore our own messages (we already added them when sending)
+      if (user && data.message.senderId === user.id) {
+        console.log('Ignoring own message from socket in ChatWindow')
+        return
+      }
+      
       if (data.chatId === chat.id) {
-        setMessages(prev => [...prev, data.message])
+        setMessages(prev => {
+          // Check if message already exists to avoid duplicates
+          const messageExists = prev.some(msg => msg.id === data.message.id)
+          if (messageExists) {
+            console.log('Message already exists in ChatWindow, skipping')
+            return prev
+          }
+          return [...prev, data.message]
+        })
 
         // Play notification sound if message is from other party
-        if (user && data.message.senderId !== user.id) {
-          playNotificationSound()
-        }
+        playNotificationSound()
       }
     }
 
@@ -144,11 +162,16 @@ export default function ChatWindow({
 
     try {
       setIsSending(true)
-      await chatApi.sendMessage(
+      const sentMessage = await chatApi.sendMessage(
         chat.id,
         { content: message.trim() },
         isManager && accessToken ? accessToken : undefined
       )
+      
+      // Add the sent message to local state immediately
+      // Socket event will be ignored for our own messages
+      setMessages(prev => [...prev, sentMessage])
+      
       setMessage("")
     } catch (error) {
       console.error("Failed to send message:", error)
@@ -168,26 +191,46 @@ export default function ChatWindow({
     }
   }
 
-  const createOffer = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!isManager || !accessToken || !offerData.name || offerData.price <= 0)
-      return
+
+  const handleEditOffer = (offerId: string) => {
+    // TODO: Implement edit offer functionality
+    console.log('Edit offer:', offerId);
+  };
+
+  const handleCancelOffer = async (offerId: string) => {
+    if (!isManager || !accessToken) return;
+    
+    if (!window.confirm("Вы уверены, что хотите отменить это предложение?")) {
+      return;
+    }
 
     try {
-      await chatApi.createProductOffer(chat.id, offerData, accessToken)
-      setShowOfferForm(false)
-      setOfferData({ name: "", description: "", price: 0 })
-
-      // Reload chat to get updated offers
-      const updatedChat = await chatApi.getChatById(
-        chat.id,
-        isManager ? accessToken : undefined
-      )
-      onChatUpdate?.(updatedChat)
+      const updatedOffer = await chatApi.cancelProductOffer(offerId, accessToken);
+      
+      // Update the offer in the messages
+      setMessages(prev => prev.map(msg => {
+        if (msg.offer?.id === offerId) {
+          return {
+            ...msg,
+            offer: updatedOffer
+          };
+        }
+        return msg;
+      }));
+      
+      toast({
+        title: 'Предложение отменено',
+        description: 'Покупатель больше не сможет добавить товар в корзину',
+      });
     } catch (error) {
-      console.error("Failed to create offer:", error)
+      console.error("Failed to cancel offer:", error);
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось отменить предложение',
+        variant: 'destructive',
+      });
     }
-  }
+  };
 
   const closeChat = async () => {
     if (
@@ -206,8 +249,45 @@ export default function ChatWindow({
   }
 
   const renderMessage = (msg: ChatMessage) => {
-    const isMyMessage = user && msg.senderId === user.id
+    const isMyMessage = !!user && msg.senderId === user.id
     const isSystem = msg.senderRole === "system"
+
+    // If message has an offer, render the offer card
+    if (msg.offer) {
+      return (
+        <div
+          key={msg.id}
+          className={`flex ${isMyMessage ? "justify-start" : "justify-end"} mb-4`}>
+          <div className="max-w-[70%]">
+            <ProductOfferCard 
+              offer={msg.offer} 
+              isMyMessage={isMyMessage}
+              onEdit={() => handleEditOffer(msg.offer!.id)}
+              onCancel={() => handleCancelOffer(msg.offer!.id)}
+            />
+            <div className={`text-xs mt-1 px-2 flex items-center justify-between ${isMyMessage ? "text-gray-500" : "text-gray-600"}`}>
+              <span>
+                {formatDistanceToNow(new Date(msg.createdAt), {
+                  addSuffix: true,
+                  locale: ru,
+                })}
+              </span>
+              {isMyMessage && !isSystem && (
+                <span className="ml-2">
+                  {msg.isRead ? (
+                    <span title={`Прочитано ${msg.readAt ? formatDistanceToNow(new Date(msg.readAt), { addSuffix: true, locale: ru }) : ""}`}>✓✓</span>
+                  ) : msg.isDelivered ? (
+                    <span title={`Доставлено ${msg.deliveredAt ? formatDistanceToNow(new Date(msg.deliveredAt), { addSuffix: true, locale: ru }) : ""}`}>✓</span>
+                  ) : (
+                    <span title="Отправляется...">○</span>
+                  )}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )
+    }
 
     return (
       <div
@@ -313,94 +393,36 @@ export default function ChatWindow({
       </div>
 
       {/* Product offer form */}
-      {showOfferForm && isManager && (
-        <form onSubmit={createOffer} className="p-4 border-b bg-gray-50">
+      {showOfferForm && isManager && accessToken && (
+        <div className="p-4 border-b bg-gray-50">
           <h4 className="font-medium mb-3">Создать товарное предложение</h4>
-          <div className="space-y-3">
-            <input
-              type="text"
-              placeholder="Название товара"
-              value={offerData.name}
-              onChange={e =>
-                setOfferData({ ...offerData, name: e.target.value })
+          <ProductOfferForm
+            onSubmit={async (data) => {
+              try {
+                await chatApi.createProductOffer(chat.id, data, accessToken);
+                setShowOfferForm(false);
+                setOfferData({ name: "", description: "", price: 0 });
+                
+                // Reload chat to get updated messages with the offer
+                const updatedChat = await chatApi.getChatById(
+                  chat.id,
+                  isManager ? accessToken : undefined
+                );
+                onChatUpdate?.(updatedChat);
+              } catch (error) {
+                console.error("Failed to create offer:", error);
               }
-              className="w-full px-3 py-2 border rounded"
-              required
-            />
-            <textarea
-              placeholder="Описание (необязательно)"
-              value={offerData.description}
-              onChange={e =>
-                setOfferData({ ...offerData, description: e.target.value })
-              }
-              className="w-full px-3 py-2 border rounded"
-              rows={2}
-            />
-            <input
-              type="number"
-              placeholder="Цена"
-              value={offerData.price || ""}
-              onChange={e =>
-                setOfferData({ ...offerData, price: Number(e.target.value) })
-              }
-              className="w-full px-3 py-2 border rounded"
-              min="0"
-              step="0.01"
-              required
-            />
-            <div className="flex space-x-2">
-              <button
-                type="submit"
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                Отправить предложение
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowOfferForm(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-                Отмена
-              </button>
-            </div>
-          </div>
-        </form>
+            }}
+            onCancel={() => setShowOfferForm(false)}
+            accessToken={accessToken}
+          />
+        </div>
       )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4">
         {messages.map(renderMessage)}
 
-        {/* Active offers */}
-        {chat.offers.filter(o => o.isActive).length > 0 && (
-          <div className="my-4 p-4 bg-blue-50 rounded-lg">
-            <p className="font-medium mb-3">Товарные предложения:</p>
-            <div className="space-y-2">
-              {chat.offers
-                .filter(o => o.isActive)
-                .map(offer => (
-                  <div key={offer.id} className="bg-white p-3 rounded border">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">{offer.name}</p>
-                        {offer.description && (
-                          <p className="text-sm text-gray-600">
-                            {offer.description}
-                          </p>
-                        )}
-                      </div>
-                      <p className="font-bold text-green-600">
-                        {Number(offer.price).toLocaleString()} ₽
-                      </p>
-                    </div>
-                    {!isManager && (
-                      <button className="mt-2 text-sm text-blue-600 hover:text-blue-800">
-                        Добавить в корзину
-                      </button>
-                    )}
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
 
         <div ref={messagesEndRef} />
       </div>
@@ -439,6 +461,14 @@ export default function ChatWindow({
         <div className="p-4 text-center text-gray-500 border-t">
           Этот чат закрыт
         </div>
+      )}
+
+      {/* Notification permission prompt */}
+      {showNotificationPrompt && !isManager && (
+        <NotificationPermission 
+          onClose={() => setShowNotificationPrompt(false)}
+          autoShow={true}
+        />
       )}
     </div>
   )
