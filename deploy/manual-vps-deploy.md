@@ -46,9 +46,17 @@ npm install -g pm2
 ```bash
 sudo -u postgres psql
 
-CREATE DATABASE aso_store;
+CREATE DATABASE aso_store_v2;
 CREATE USER aso_user WITH ENCRYPTED PASSWORD 'your_secure_password';
-GRANT ALL PRIVILEGES ON DATABASE aso_store TO aso_user;
+GRANT ALL PRIVILEGES ON DATABASE aso_store_v2 TO aso_user;
+
+# Подключаемся к созданной базе
+\c aso_store_v2
+
+# Даем права на схему public (важно для Prisma)
+GRANT ALL ON SCHEMA public TO aso_user;
+GRANT CREATE ON SCHEMA public TO aso_user;
+
 \q
 ```
 
@@ -77,10 +85,10 @@ nano .env
 Отредактируйте файл:
 ```env
 NODE_ENV=production
-PORT=3001
+PORT=4000
 
 # Database
-DATABASE_URL="postgresql://aso_user:your_secure_password@localhost:5432/aso_store"
+DATABASE_URL="postgresql://aso_user:your_secure_password@localhost:5432/aso_store_v2"
 
 # JWT
 JWT_SECRET=your_very_secure_jwt_secret_key_here
@@ -96,21 +104,33 @@ FRONTEND_URL=https://andrewdev.ru
 # CORS
 CORS_ORIGINS=https://andrewdev.ru
 
+# VAPID keys for push notifications
+VAPID_PUBLIC_KEY=your_vapid_public_key
+VAPID_PRIVATE_KEY=your_vapid_private_key
+VAPID_SUBJECT=mailto:admin@andrewdev.ru
+
 # Admin user
 ADMIN_PHONE=+79991234567
 ```
 
+### Генерация VAPID ключей для push-уведомлений
+```bash
+cd /var/www/aso_store_v2/backend
+node scripts/generate-vapid-keys.js
+```
+Скопируйте сгенерированные ключи в .env файл
+
 ### Настройка Frontend (.env файл)
 ```bash
 cd ../frontend
-cp .env.example .env.production
-nano .env.production
+cp .env.example .env.local
+nano .env.local
 ```
 
 Отредактируйте файл:
 ```env
 NEXT_PUBLIC_API_URL=https://andrewdev.ru/api
-NEXT_PUBLIC_WS_URL=wss://andrewdev.ru
+NEXT_PUBLIC_WS_URL=https://andrewdev.ru
 ```
 
 ### Запуск миграций
@@ -119,6 +139,16 @@ cd ../backend
 npx prisma generate
 npx prisma migrate deploy
 npx prisma db seed
+```
+
+### Импорт данных о транспортных средствах и категориях
+```bash
+# Импорт марок и моделей автомобилей
+cd /var/www/aso_store_v2/backend
+npx tsx prisma/import-vehicles.ts
+
+# Импорт категорий товаров
+npx tsx src/imports/scripts/import-categories.ts
 ```
 
 ## 4. Сборка приложений
@@ -157,7 +187,7 @@ module.exports = {
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
-        PORT: 3001
+        PORT: 4000
       },
     },
     {
@@ -217,9 +247,21 @@ server {
     # Увеличиваем размер загружаемых файлов
     client_max_body_size 10M;
 
+    # Special rule for Next.js anonymous auth route
+    location = /api/auth/anonymous {
+        if ($request_method = GET) {
+            proxy_pass http://localhost:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+
     # API Backend
-    location /api {
-        proxy_pass http://localhost:3001;
+    location /api/ {
+        proxy_pass http://localhost:4000/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -231,8 +273,8 @@ server {
     }
 
     # WebSocket для чата
-    location /socket.io {
-        proxy_pass http://localhost:3001;
+    location /socket.io/ {
+        proxy_pass http://localhost:4000/socket.io/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -394,14 +436,29 @@ chmod +x /var/www/aso_store_v2/deploy.sh
 ### Ошибка 502 Bad Gateway
 - Проверьте, запущены ли приложения: `pm2 status`
 - Проверьте логи: `pm2 logs`
+- Убедитесь, что backend работает на порту 4000, а не 3001
 
 ### Ошибки при сборке
 - Убедитесь, что установлена правильная версия Node.js: `node --version`
 - Очистите кеш npm: `npm cache clean --force`
 
 ### Проблемы с базой данных
-- Проверьте подключение: `sudo -u postgres psql -d aso_store`
+- Проверьте подключение: `sudo -u postgres psql -d aso_store_v2`
 - Проверьте миграции: `cd backend && npx prisma migrate status`
+- Проверьте права на схему: убедитесь, что выполнили GRANT для схемы public
+- При ошибке "permission denied for schema public": подключитесь к БД aso_store_v2 и выполните GRANT
+
+### Проблемы с WebSocket
+- Убедитесь, что NEXT_PUBLIC_WS_URL указывает на https://andrewdev.ru (не wss://)
+- Проверьте, что в Nginx настроен проксирование /socket.io/ с trailing slash
+
+### Ошибка "Invalid namespace" для WebSocket
+- Это означает, что клиент пытается подключиться к неправильному namespace
+- Убедитесь, что используется корректный URL без /api в пути
+
+### VAPID keys validation error
+- Если backend падает с ошибкой валидации VAPID ключей, сгенерируйте новые
+- Используйте скрипт: `node scripts/generate-vapid-keys.js`
 
 ### Нехватка памяти
 - Добавьте swap файл:

@@ -7,7 +7,9 @@ import { Logo } from '@/components/Logo';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useFavoritesContext } from '@/lib/contexts/FavoritesContext';
 import { useCartContext } from '@/lib/contexts/CartContext';
+import { useStoreContacts } from '@/lib/contexts/StoreContactsContext';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { formatPhoneForDisplay } from '@/lib/utils/phone';
 import {
   Bars3Icon,
   TruckIcon,
@@ -17,6 +19,7 @@ import {
   UserIcon,
   CogIcon,
   MapPinIcon,
+  PhoneIcon,
 } from '@heroicons/react/24/outline';
 
 export function DesktopHeader() {
@@ -24,6 +27,7 @@ export function DesktopHeader() {
   const { user, login } = useAuth();
   const { favoriteIds } = useFavoritesContext();
   const { summary } = useCartContext();
+  const { phones, mainAddress, loading: contactsLoading } = useStoreContacts();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -84,17 +88,11 @@ export function DesktopHeader() {
                 <Link href="/about" className="hover:text-aso-blue transition-colors">
                   О компании
                 </Link>
-                <Link href="/payment" className="hover:text-aso-blue transition-colors">
-                  Оплата
-                </Link>
-                <Link href="/delivery" className="hover:text-aso-blue transition-colors">
-                  Доставка
+                <Link href="/delivery-and-payment" className="hover:text-aso-blue transition-colors">
+                  Доставка и оплата
                 </Link>
                 <Link href="/warranty" className="hover:text-aso-blue transition-colors">
                   Гарантия и возврат
-                </Link>
-                <Link href="/loyalty" className="hover:text-aso-blue transition-colors">
-                  Программа лояльности
                 </Link>
                 <Link href="/contacts" className="hover:text-aso-blue transition-colors">
                   Контакты
@@ -103,18 +101,32 @@ export function DesktopHeader() {
               
               {/* Right info */}
               <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <MapPinIcon className="h-4 w-4" />
-                  <span>г. Москва, ул. Автозапчастей, 15</span>
-                </div>
-                <div className="flex gap-4">
-                  <a href="tel:+71234567890" className="hover:text-aso-blue transition-colors">
-                    +7 (123) 456-78-90
-                  </a>
-                  <a href="tel:+70987654321" className="hover:text-aso-blue transition-colors">
-                    +7 (098) 765-43-21
-                  </a>
-                </div>
+                {mainAddress && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <MapPinIcon className="h-4 w-4" />
+                    <span>
+                      г. {mainAddress.city}, {mainAddress.street}, {mainAddress.building}
+                      {mainAddress.office && `, офис ${mainAddress.office}`}
+                    </span>
+                  </div>
+                )}
+                {phones.length > 0 && (
+                  <div className="flex items-center gap-4">
+                    <PhoneIcon className="h-4 w-4 text-gray-600" />
+                    {phones.slice(0, 2).map((phone, index) => (
+                      <div key={phone.id} className="flex items-center">
+                        {index > 0 && <span className="text-gray-400 mx-2">|</span>}
+                        <a
+                          href={`tel:${phone.phone}`}
+                          className="hover:text-aso-blue transition-colors"
+                          title={phone.name || undefined}
+                        >
+                          {formatPhoneForDisplay(phone.phone)}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -132,12 +144,12 @@ export function DesktopHeader() {
               {/* Left section */}
               <div className="flex items-center gap-4">
                 {/* Logo */}
-                <Logo className="h-10 flex-shrink-0" width={160} height={40} />
+                <Logo className="flex-shrink-0" width={160} height={50} />
 
                 {/* Catalog button */}
                 <Link
                   href="/catalog"
-                  className="flex items-center gap-2 bg-aso-blue text-white px-4 py-2 rounded-lg hover:bg-aso-blue-dark transition-colors"
+                  className="flex items-center gap-2 bg-aso-blue text-white px-4 h-[42px] rounded-lg hover:bg-aso-blue-dark transition-colors"
                 >
                   <Bars3Icon className="h-5 w-5" />
                   <span>Каталог</span>
@@ -146,7 +158,7 @@ export function DesktopHeader() {
                 {/* Vehicle selection */}
                 <Link
                   href="/vehicles"
-                  className="flex items-center gap-2 bg-aso-orange text-white px-3 py-2 rounded-lg hover:bg-aso-orange-dark transition-colors"
+                  className="flex items-center gap-2 bg-aso-orange text-white px-3 h-[42px] rounded-lg hover:bg-aso-orange-dark transition-colors"
                 >
                   <TruckIcon className="h-5 w-5" />
                   <span>Подбор по авто</span>
@@ -161,11 +173,11 @@ export function DesktopHeader() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Поиск по каталогу..."
-                    className="w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:border-aso-blue"
+                    className="w-full px-4 h-[42px] pr-10 border rounded-lg focus:outline-none focus:border-aso-blue"
                   />
                   <button
                     type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded"
                   >
                     <MagnifyingGlassIcon className="h-5 w-5 text-gray-600" />
                   </button>
@@ -173,16 +185,16 @@ export function DesktopHeader() {
               </form>
 
               {/* Right section */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {/* Favorites */}
                 <Link
                   href="/favorites"
-                  className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg relative"
+                  className="flex items-center gap-2 px-3 h-[42px] hover:bg-gray-100 rounded-lg relative"
                 >
-                  <HeartIcon className="h-6 w-6" />
+                  <HeartIcon className="h-5 w-5" />
                   <span className="text-sm">Избранное</span>
                   {favoriteIds.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
                       {favoriteIds.length}
                     </span>
                   )}
@@ -192,9 +204,9 @@ export function DesktopHeader() {
                 {user && (user.role === 'ADMIN' || user.role === 'MANAGER') && (
                   <Link
                     href="/panel"
-                    className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg text-red-600"
+                    className="flex items-center gap-2 px-3 h-[42px] hover:bg-gray-100 rounded-lg text-red-600"
                   >
-                    <CogIcon className="h-6 w-6" />
+                    <CogIcon className="h-5 w-5" />
                     <span className="text-sm">Админка</span>
                   </Link>
                 )}
@@ -203,9 +215,9 @@ export function DesktopHeader() {
                 <Link
                   href="/account"
                   onClick={handleAccountClick}
-                  className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg"
+                  className="flex items-center gap-2 px-3 h-[42px] hover:bg-gray-100 rounded-lg"
                 >
-                  <UserIcon className="h-6 w-6" />
+                  <UserIcon className="h-5 w-5" />
                   <span className="text-sm">
                     {user ? user.firstName || 'Кабинет' : 'Войти'}
                   </span>
@@ -214,12 +226,12 @@ export function DesktopHeader() {
                 {/* Cart */}
                 <Link
                   href="/cart"
-                  className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg relative"
+                  className="flex items-center gap-2 px-3 h-[42px] hover:bg-gray-100 rounded-lg relative"
                 >
-                  <ShoppingCartIcon className="h-6 w-6" />
+                  <ShoppingCartIcon className="h-5 w-5" />
                   <span className="text-sm">Корзина</span>
                   {summary && summary.totalQuantity > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-aso-blue text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 bg-aso-blue text-white text-xs rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
                       {summary.totalQuantity}
                     </span>
                   )}

@@ -189,6 +189,11 @@
   .pr-safe {
     padding-right: env(safe-area-inset-right);
   }
+
+  /* Safe area for bottom navigation */
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 @keyframes shake {

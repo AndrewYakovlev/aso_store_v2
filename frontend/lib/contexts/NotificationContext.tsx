@@ -96,12 +96,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Clear unread count when visiting a chat
   useEffect(() => {
-    const match = pathname.match(/\/chats\/([^\/]+)/);
-    if (match) {
-      const chatId = match[1];
-      markAsRead(chatId);
+    // Check if we're on the chat page
+    if (pathname === '/chat') {
+      // Clear all unread counts since we have a single chat per user
+      setUnreadCounts(new Map());
     }
-  }, [pathname, markAsRead]);
+  }, [pathname]);
 
   const value: NotificationContextType = {
     unreadCounts,

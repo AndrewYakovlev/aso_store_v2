@@ -172,6 +172,65 @@ async function main() {
     console.log('Payment methods already exist');
   }
 
+  // Create store phones
+  console.log('Seeding store phones...');
+
+  const existingPhones = await prisma.storePhone.count();
+
+  if (existingPhones === 0) {
+    await prisma.storePhone.createMany({
+      data: [
+        {
+          phone: '+71234567890',
+          name: 'Отдел продаж',
+          isWhatsApp: true,
+          isTelegram: true,
+          isMain: true,
+          sortOrder: 0,
+          isActive: true,
+        },
+        {
+          phone: '+70987654321',
+          name: 'Техническая поддержка',
+          isWhatsApp: false,
+          isTelegram: true,
+          isMain: false,
+          sortOrder: 1,
+          isActive: true,
+        },
+      ],
+    });
+    console.log('Store phones created');
+  } else {
+    console.log('Store phones already exist');
+  }
+
+  // Create store addresses
+  console.log('Seeding store addresses...');
+
+  const existingAddresses = await prisma.storeAddress.count();
+
+  if (existingAddresses === 0) {
+    await prisma.storeAddress.create({
+      data: {
+        type: 'main',
+        name: 'Главный офис и магазин',
+        country: 'Россия',
+        city: 'Москва',
+        street: 'ул. Автозапчастей',
+        building: '15',
+        office: '201',
+        postalCode: '123456',
+        workingHours: 'Пн-Пт 9:00-19:00, Сб 10:00-16:00',
+        coordinates: JSON.stringify({ lat: 55.7558, lng: 37.6173 }),
+        isActive: true,
+      },
+    });
+    console.log('Store addresses created');
+  } else {
+    console.log('Store addresses already exist');
+  }
+
   console.log('Seed completed successfully');
 }
 

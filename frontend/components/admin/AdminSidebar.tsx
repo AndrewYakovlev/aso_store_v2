@@ -123,7 +123,7 @@ const menuItems = [
     href: "/panel/settings",
     label: "Настройки",
     icon: CogIcon,
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "MANAGER"],
   },
 ]
 

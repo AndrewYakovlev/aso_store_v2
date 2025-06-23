@@ -702,3 +702,44 @@ enum DiscountType {
   FIXED_AMOUNT
   PERCENTAGE
 }
+
+// Store Settings
+model StoreSettings {
+  id            String   @id @default(uuid())
+  key           String   @unique
+  value         Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Store Phone Numbers
+model StorePhone {
+  id            String   @id @default(uuid())
+  phone         String
+  name          String?  // e.g., "Отдел продаж", "Техподдержка"
+  isWhatsApp    Boolean  @default(false)
+  isTelegram    Boolean  @default(false)
+  isMain        Boolean  @default(false) // Main phone number
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Store Address
+model StoreAddress {
+  id            String   @id @default(uuid())
+  type          String   @default("main") // main, warehouse, pickup_point
+  name          String?  // e.g., "Главный офис", "Склад"
+  country       String   @default("Россия")
+  city          String
+  street        String
+  building      String
+  office        String?
+  postalCode    String?
+  coordinates   String?  // JSON with lat/lng
+  workingHours  String?  // e.g., "Пн-Пт 9:00-18:00"
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

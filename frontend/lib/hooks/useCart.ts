@@ -25,21 +25,32 @@ export function useCart() {
       setCart(cartData);
       setSummary(summaryData);
       setError(null);
-    } catch (err) {
-      // If cart is empty or not found, that's okay
-      setCart({
+    } catch (err: any) {
+      // If cart is empty or not found (404), that's okay
+      const emptyCart = {
         id: '',
         items: [],
         totalPrice: 0,
         totalQuantity: 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      });
-      setSummary({
+      };
+      
+      const emptySummary = {
         totalQuantity: 0,
         totalPrice: 0,
         itemsCount: 0,
-      });
+      };
+      
+      setCart(emptyCart);
+      setSummary(emptySummary);
+      
+      // Only set error if it's not a 404 (cart not found)
+      if (err?.status !== 404) {
+        setError(err?.message || 'Failed to load cart');
+      } else {
+        setError(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -157,12 +168,14 @@ export function useCart() {
     
     try {
       // Optimistic update
-      setCart(prev => prev ? {
-        ...prev,
+      setCart({
+        id: cart?.id || '',
         items: [],
         totalQuantity: 0,
         totalPrice: 0,
-      } : null);
+        createdAt: cart?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
 
       setSummary({
         totalQuantity: 0,
@@ -171,12 +184,15 @@ export function useCart() {
       });
 
       await cartClientApi.clearCart();
+      
+      // Force reload to ensure sync with server
+      await loadCart();
     } catch (err) {
       // Revert optimistic update
       await loadCart();
       throw err;
     }
-  }, [token, loadCart]);
+  }, [token, cart, loadCart]);
 
   // Check if product is in cart
   const isInCart = useCallback((productId: string) => {

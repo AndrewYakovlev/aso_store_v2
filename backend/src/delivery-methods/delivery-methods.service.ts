@@ -17,10 +17,34 @@ export class DeliveryMethodsService {
   }
 
   async findAll(onlyActive: boolean = false) {
-    return this.prisma.deliveryMethod.findMany({
+    const methods = await this.prisma.deliveryMethod.findMany({
       where: onlyActive ? { isActive: true } : undefined,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     });
+
+    // Update pickup method description with actual address
+    const mainAddress = await this.prisma.storeAddress.findFirst({
+      where: { type: 'main', isActive: true },
+    });
+
+    if (mainAddress) {
+      const pickupMethod = methods.find(m => m.code === 'pickup');
+      if (pickupMethod) {
+        const addressParts = [
+          'г.',
+          mainAddress.city,
+          mainAddress.street,
+          'д.',
+          mainAddress.building,
+        ];
+        if (mainAddress.office) {
+          addressParts.push('офис', mainAddress.office);
+        }
+        pickupMethod.description = `Самовывоз из магазина по адресу: ${addressParts.join(' ')}`;
+      }
+    }
+
+    return methods;
   }
 
   async findOne(id: string) {

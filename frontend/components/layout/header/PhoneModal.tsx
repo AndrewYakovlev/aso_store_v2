@@ -3,6 +3,9 @@
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon, PhoneIcon } from '@heroicons/react/24/outline';
+import { useStoreContacts } from '@/lib/contexts/StoreContactsContext';
+import { formatPhoneForDisplay } from '@/lib/utils/phone';
+import { FaWhatsapp, FaTelegram } from 'react-icons/fa';
 
 interface PhoneModalProps {
   isOpen: boolean;
@@ -11,6 +14,8 @@ interface PhoneModalProps {
 }
 
 export function PhoneModal({ isOpen, onClose, onCallbackClick }: PhoneModalProps) {
+  const { phones } = useStoreContacts();
+
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -57,21 +62,48 @@ export function PhoneModal({ isOpen, onClose, onCallbackClick }: PhoneModalProps
                     <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-gray-900">
                       Свяжитесь с нами
                     </Dialog.Title>
-                    <div className="mt-4 space-y-3">
-                      <a
-                        href="tel:+71234567890"
-                        className="flex items-center gap-2 text-lg font-medium text-aso-blue hover:text-aso-blue-dark"
-                      >
-                        <PhoneIcon className="h-5 w-5" />
-                        +7 (123) 456-78-90
-                      </a>
-                      <a
-                        href="tel:+70987654321"
-                        className="flex items-center gap-2 text-lg font-medium text-aso-blue hover:text-aso-blue-dark"
-                      >
-                        <PhoneIcon className="h-5 w-5" />
-                        +7 (098) 765-43-21
-                      </a>
+                    <div className="mt-4 space-y-4">
+                      {phones.map((phone) => (
+                        <div key={phone.id} className="space-y-1">
+                          <a
+                            href={`tel:${phone.phone}`}
+                            className="flex items-center gap-2 text-lg font-medium text-aso-blue hover:text-aso-blue-dark"
+                          >
+                            <PhoneIcon className="h-5 w-5" />
+                            {formatPhoneForDisplay(phone.phone)}
+                          </a>
+                          {phone.name && (
+                            <p className="text-sm text-gray-500 ml-7">{phone.name}</p>
+                          )}
+                          <div className="flex gap-3 ml-7">
+                            {phone.isWhatsApp && (
+                              <a
+                                href={`https://wa.me/${phone.phone.replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-green-600 hover:text-green-700 text-sm"
+                              >
+                                <FaWhatsapp className="w-4 h-4" />
+                                WhatsApp
+                              </a>
+                            )}
+                            {phone.isTelegram && (
+                              <a
+                                href={`https://t.me/${phone.phone.replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm"
+                              >
+                                <FaTelegram className="w-4 h-4" />
+                                Telegram
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {phones.length === 0 && (
+                        <p className="text-gray-500">Контактные телефоны временно недоступны</p>
+                      )}
                     </div>
                   </div>
                 </div>

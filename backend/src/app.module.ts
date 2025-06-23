@@ -24,6 +24,7 @@ import { OrderStatusesModule } from './order-statuses/order-statuses.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { PromoCodesModule } from './promo-codes/promo-codes.module';
     StatisticsModule,
     UploadsModule,
     PromoCodesModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

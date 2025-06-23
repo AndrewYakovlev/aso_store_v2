@@ -99,18 +99,11 @@ export function MobileMenu({ isOpen, onClose, onCallbackClick }: MobileMenuProps
                             О компании
                           </Link>
                           <Link
-                            href="/delivery"
+                            href="/delivery-and-payment"
                             className="block py-2 text-gray-700 hover:text-aso-blue"
                             onClick={onClose}
                           >
-                            Доставка
-                          </Link>
-                          <Link
-                            href="/payment"
-                            className="block py-2 text-gray-700 hover:text-aso-blue"
-                            onClick={onClose}
-                          >
-                            Оплата
+                            Доставка и оплата
                           </Link>
                           <Link
                             href="/warranty"
@@ -118,13 +111,6 @@ export function MobileMenu({ isOpen, onClose, onCallbackClick }: MobileMenuProps
                             onClick={onClose}
                           >
                             Гарантия и возврат
-                          </Link>
-                          <Link
-                            href="/loyalty"
-                            className="block py-2 text-gray-700 hover:text-aso-blue"
-                            onClick={onClose}
-                          >
-                            Программа лояльности
                           </Link>
                           <Link
                             href="/contacts"

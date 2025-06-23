@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useFavoritesContext } from '@/lib/contexts/FavoritesContext';
 import { useCartContext } from '@/lib/contexts/CartContext';
+import { useNotifications } from '@/lib/contexts/NotificationContext';
 import {
   HeartIcon,
   Squares2X2Icon,
@@ -21,6 +22,7 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const { favoriteIds } = useFavoritesContext();
   const { summary } = useCartContext();
+  const { totalUnread } = useNotifications();
   
   // Hide navigation on chat page
   if (pathname === '/chat') {
@@ -53,12 +55,13 @@ export function MobileBottomNav() {
       href: '/chat',
       icon: ChatBubbleLeftRightIcon,
       activeIcon: ChatBubbleSolidIcon,
+      count: totalUnread,
     },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t md:hidden">
-      <div className="grid grid-cols-4 h-16">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 md:hidden">
+      <div className="grid grid-cols-4 items-stretch pb-safe">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           const Icon = isActive ? item.activeIcon : item.icon;
@@ -68,19 +71,26 @@ export function MobileBottomNav() {
               key={item.name}
               href={item.href}
               className={`
-                flex flex-col items-center justify-center gap-1 relative
-                ${isActive ? 'text-aso-blue' : 'text-gray-600'}
+                relative flex flex-col items-center justify-center px-1 py-2 transition-colors
+                ${isActive ? 'text-aso-blue' : 'text-gray-600 active:text-gray-900'}
               `}
             >
-              <div className="relative">
+              <div className="relative w-7 h-7 flex items-center justify-center">
                 <Icon className="h-6 w-6" />
-                {item.count && item.count > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                {item.count !== undefined && item.count > 0 && (
+                  <span 
+                    className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] 
+                               font-bold rounded-full min-w-[16px] h-[16px] 
+                               flex items-center justify-center px-0.5
+                               ring-2 ring-white"
+                  >
                     {item.count > 99 ? '99+' : item.count}
                   </span>
                 )}
               </div>
-              <span className="text-xs">{item.name}</span>
+              <span className={`text-[10px] leading-none mt-1 ${isActive ? 'font-medium' : ''}`}>
+                {item.name}
+              </span>
             </Link>
           );
         })}

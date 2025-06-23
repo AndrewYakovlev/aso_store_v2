@@ -136,7 +136,21 @@ export default function CartPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => clearCart()}
+          onClick={async () => {
+            try {
+              await clearCart();
+              toast({
+                title: 'Корзина очищена',
+                description: 'Все товары удалены из корзины',
+              });
+            } catch (error) {
+              toast({
+                title: 'Ошибка',
+                description: 'Не удалось очистить корзину',
+                variant: 'destructive',
+              });
+            }
+          }}
         >
           Очистить корзину
         </Button>

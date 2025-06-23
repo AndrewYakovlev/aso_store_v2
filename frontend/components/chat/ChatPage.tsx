@@ -189,6 +189,16 @@ export function ChatPage() {
         // Load existing chat
         const fullChat = await chatApi.getChatById(chats[0].id);
         setChat(fullChat);
+        // Mark all messages in this chat as read
+        markAsRead(fullChat.id);
+        // Send read notification to server via socket
+        chatSocket.markAsRead(fullChat.id);
+        // Also mark as read via API to ensure server state is updated
+        try {
+          await chatApi.markMessagesAsRead(fullChat.id);
+        } catch (error) {
+          console.error('Failed to mark messages as read:', error);
+        }
       } else {
         // Chat will be created on first message
         setChat(null);

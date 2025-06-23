@@ -5,6 +5,7 @@ import { AnonymousTokenProvider } from "@/components/AnonymousTokenProvider";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { FavoritesProvider } from "@/lib/contexts/FavoritesContext";
 import { CartProvider } from "@/lib/contexts/CartContext";
+import { StoreContactsProvider } from "@/lib/contexts/StoreContactsContext";
 import { ChatFloatingButton } from "@/components/chat/ChatFloatingButton";
 
 export default function PublicLayout({
@@ -17,15 +18,17 @@ export default function PublicLayout({
       <AuthProvider>
         <FavoritesProvider>
           <CartProvider>
-            <HeaderWrapper />
-            <MainWrapper>
-              {children}
-            </MainWrapper>
-            <Footer />
-            {/* Chat floating button - visible on tablets and desktop */}
-            <div className="hidden md:block">
-              <ChatFloatingButton />
-            </div>
+            <StoreContactsProvider>
+              <HeaderWrapper />
+              <MainWrapper>
+                {children}
+              </MainWrapper>
+              <Footer />
+              {/* Chat floating button - visible on tablets and desktop */}
+              <div className="hidden md:block">
+                <ChatFloatingButton />
+              </div>
+            </StoreContactsProvider>
           </CartProvider>
         </FavoritesProvider>
       </AuthProvider>
