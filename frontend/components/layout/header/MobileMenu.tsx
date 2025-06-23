@@ -4,6 +4,8 @@ import { Fragment } from 'react';
 import Link from 'next/link';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon, MapPinIcon, PhoneIcon } from '@heroicons/react/24/outline';
+import { useStoreContacts } from '@/lib/contexts/StoreContactsContext';
+import { formatPhoneForDisplay } from '@/lib/utils/phone';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -12,6 +14,7 @@ interface MobileMenuProps {
 }
 
 export function MobileMenu({ isOpen, onClose, onCallbackClick }: MobileMenuProps) {
+  const { phones, mainAddress } = useStoreContacts();
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -58,33 +61,79 @@ export function MobileMenu({ isOpen, onClose, onCallbackClick }: MobileMenuProps
                     <div className="flex-1 overflow-y-auto">
                       <div className="px-4 py-6 space-y-6">
                         {/* Address */}
-                        <div className="flex items-start gap-3">
-                          <MapPinIcon className="h-5 w-5 text-gray-400 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium">Наш адрес</p>
-                            <p className="text-sm text-gray-600">г. Москва, ул. Автозапчастей, 15</p>
+                        {mainAddress && (
+                          <div className="flex items-start gap-3">
+                            <MapPinIcon className="h-5 w-5 text-gray-400 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium">Наш адрес</p>
+                              <p className="text-sm text-gray-600">
+                                г. {mainAddress.city}, {mainAddress.street}, д. {mainAddress.building}
+                                {mainAddress.office && `, офис ${mainAddress.office}`}
+                              </p>
+                              {mainAddress.workingHours && (
+                                <p className="text-xs text-gray-500 mt-1">{mainAddress.workingHours}</p>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        )}
 
-                        {/* Phone */}
-                        <div className="space-y-2">
-                          <a
-                            href="tel:+71234567890"
-                            className="flex items-center gap-3 text-aso-blue hover:text-aso-blue-dark"
-                          >
-                            <PhoneIcon className="h-5 w-5" />
-                            <span className="text-lg font-medium">+7 (123) 456-78-90</span>
-                          </a>
-                          <button
-                            onClick={() => {
-                              onCallbackClick();
-                              onClose();
-                            }}
-                            className="w-full bg-aso-blue text-white py-2 px-4 rounded-lg hover:bg-aso-blue-dark transition-colors"
-                          >
-                            Перезвоните мне
-                          </button>
-                        </div>
+                        {/* Phones */}
+                        {phones.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <PhoneIcon className="h-5 w-5 text-gray-400" />
+                              <p className="text-sm font-medium">Наши телефоны</p>
+                            </div>
+                            <div className="space-y-3">
+                              {phones.map((phone) => (
+                                <div key={phone.id} className="ml-7">
+                                  <a
+                                    href={`tel:${phone.phone}`}
+                                    className="text-lg font-medium text-aso-blue hover:text-aso-blue-dark"
+                                  >
+                                    {formatPhoneForDisplay(phone.phone)}
+                                  </a>
+                                  {phone.name && (
+                                    <p className="text-sm text-gray-600">{phone.name}</p>
+                                  )}
+                                  {(phone.isWhatsApp || phone.isTelegram) && (
+                                    <div className="flex gap-3 mt-1">
+                                      {phone.isWhatsApp && (
+                                        <a
+                                          href={`https://wa.me/${phone.phone.replace(/\D/g, '')}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-xs text-green-600 hover:text-green-700"
+                                        >
+                                          WhatsApp
+                                        </a>
+                                      )}
+                                      {phone.isTelegram && (
+                                        <a
+                                          href={`https://t.me/${phone.phone.replace(/\D/g, '')}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-xs text-blue-600 hover:text-blue-700"
+                                        >
+                                          Telegram
+                                        </a>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            <button
+                              onClick={() => {
+                                onCallbackClick();
+                                onClose();
+                              }}
+                              className="w-full bg-aso-blue text-white py-2 px-4 rounded-lg hover:bg-aso-blue-dark transition-colors"
+                            >
+                              Перезвоните мне
+                            </button>
+                          </div>
+                        )}
 
                         {/* Navigation Links */}
                         <nav className="space-y-1">

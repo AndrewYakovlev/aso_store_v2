@@ -147,10 +147,10 @@ export default function ContactsPage() {
           <div>
             <h3 className="font-medium mb-2">Реквизиты компании</h3>
             <p className="text-sm text-gray-600">
-              ООО "АСО"<br />
-              ИНН: 1234567890<br />
-              КПП: 123456789<br />
-              ОГРН: 1234567890123
+              АО "Бежецкий завод "АСО"<br />
+              ИНН: 6906000113<br />
+              КПП: 690601001<br />
+              ОГРН: 1026901539720
             </p>
           </div>
           <div>

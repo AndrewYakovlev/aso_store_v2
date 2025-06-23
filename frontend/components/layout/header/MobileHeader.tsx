@@ -38,25 +38,28 @@ export function MobileHeader() {
   return (
     <>
       <header className="sticky top-0 z-40 bg-white border-b md:hidden">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            {/* Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <Bars3Icon className="h-6 w-6" />
-            </button>
+        <div className="px-4 py-2">
+          <div className="flex items-center justify-between">
+            {/* Left section with menu and logo */}
+            <div className="flex items-center gap-2">
+              {/* Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="h-[37px] px-2 hover:bg-gray-100 rounded-lg flex items-center justify-center"
+              >
+                <Bars3Icon className="h-6 w-6" />
+              </button>
 
-            {/* Logo */}
-            <Logo className="h-8 flex-shrink-0" width={120} height={32} />
+              {/* Logo */}
+              <Logo className="flex-shrink-0" width={120} height={37} />
+            </div>
 
             {/* Right buttons */}
             <div className="flex items-center gap-1">
               {/* Phone */}
               <button
                 onClick={() => setPhoneModalOpen(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="h-[37px] px-2 hover:bg-gray-100 rounded-lg flex items-center justify-center"
               >
                 <PhoneIcon className="h-5 w-5" />
               </button>
@@ -64,7 +67,7 @@ export function MobileHeader() {
               {/* Search */}
               <button
                 onClick={() => setSearchOpen(true)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="h-[37px] px-2 hover:bg-gray-100 rounded-lg flex items-center justify-center"
               >
                 <MagnifyingGlassIcon className="h-5 w-5" />
               </button>
@@ -73,7 +76,7 @@ export function MobileHeader() {
               <Link
                 href="/account"
                 onClick={handleAccountClick}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="h-[37px] px-2 hover:bg-gray-100 rounded-lg flex items-center justify-center"
               >
                 <UserIcon className="h-5 w-5" />
               </Link>

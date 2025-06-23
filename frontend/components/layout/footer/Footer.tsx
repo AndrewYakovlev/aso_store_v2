@@ -208,7 +208,10 @@ export function Footer() {
 
           {/* Copyright */}
           <div className="border-t border-gray-800 mt-12 pt-8 text-sm text-center">
-            <p>&copy; 2024 АСО. Все права защищены.</p>
+            <p>&copy; 2024 АО "Бежецкий завод "АСО". Все права защищены.</p>
+            <p className="text-xs text-gray-500 mt-2">
+              ИНН: 6906000113 | КПП: 690601001 | ОГРН: 1026901539720
+            </p>
           </div>
         </div>
       </div>
