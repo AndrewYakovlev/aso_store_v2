@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import {
   CreateStorePhoneDto,
   UpdateStorePhoneDto,
@@ -117,7 +118,7 @@ export class SettingsService {
   }
 
   // General Settings
-  async getSetting(key: string) {
+  async getSetting(key: string): Promise<Prisma.JsonValue | null> {
     const setting = await this.prisma.storeSettings.findUnique({
       where: { key },
     });
@@ -125,11 +126,11 @@ export class SettingsService {
     return setting?.value || null;
   }
 
-  async setSetting(key: string, value: any) {
+  async setSetting(key: string, value: Prisma.InputJsonValue | null) {
     return this.prisma.storeSettings.upsert({
       where: { key },
-      update: { value },
-      create: { key, value },
+      update: { value: value as Prisma.InputJsonValue },
+      create: { key, value: value as Prisma.InputJsonValue },
     });
   }
 
@@ -142,7 +143,7 @@ export class SettingsService {
         acc[setting.key] = setting.value;
         return acc;
       },
-      {} as Record<string, any>,
+      {} as Record<string, Prisma.JsonValue | null>,
     );
   }
 }

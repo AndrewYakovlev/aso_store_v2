@@ -1,132 +1,197 @@
-'use client';
-
+import { apiRequest } from './client';
 import { apiRequestWithAuth } from './client-with-auth';
 
-// Types
-export interface DashboardStatistics {
-  overview: {
-    totalOrders: number;
-    totalRevenue: number;
-    totalUsers: number;
-    totalProducts: number;
-    activeChats: number;
-    pendingOrders: number;
-  };
-  periods: {
-    today: PeriodStats;
-    yesterday: PeriodStats;
-    week: PeriodStats;
-    month: PeriodStats;
-  };
-  topProducts: TopProduct[];
-  topCategories: TopCategory[];
-  recentOrders: RecentOrder[];
-  ordersChart: ChartData[];
-  ordersByStatus: StatusDistribution[];
+export interface OverallStatistics {
+  totalOrders: number
+  totalRevenue: string
+  totalCustomers: number
+  totalProducts: number
+  activeOrders: number
+  todayOrders: number
+  todayRevenue: string
 }
 
-interface PeriodStats {
-  orders: number;
-  revenue: number;
-  users: number;
+export interface PeriodicStatisticsItem {
+  period: string
+  orders: number
+  revenue: string
 }
 
-interface TopProduct {
-  id: string;
-  name: string;
-  sku: string;
-  sold: number;
-  revenue: number;
+export interface TopProduct {
+  productId: string
+  productName: string
+  productSku: string
+  brand: string
+  category: string
+  orderCount: number
+  totalQuantity: number
+  totalRevenue: string
 }
 
-interface TopCategory {
-  id: string;
-  name: string;
-  orders: number;
-  revenue: number;
+export interface OrderStatusStatistics {
+  statusId: string
+  statusName: string
+  statusColor: string
+  orderCount: number
 }
 
-interface RecentOrder {
-  id: string;
-  orderNumber: string;
-  status: {
-    id: string;
-    name: string;
-    color: string;
-  };
-  total: number;
-  createdAt: string;
-  user: {
-    id: string;
-    firstName: string;
-    lastName?: string;
-    phone: string;
-  };
+export interface PaymentMethodStatistics {
+  methodId: string
+  methodName: string
+  orderCount: number
+  totalRevenue: string
 }
 
-interface ChartData {
-  date: string;
-  orders: number;
-  revenue: number;
+export interface NewCustomersStatistics {
+  newCustomers: number
+  customersWithOrders: number
+  conversionRate: number
 }
 
-interface StatusDistribution {
-  status: string;
-  count: number;
-  percentage: number;
+// Server-side functions
+export async function getOverallStatistics(
+  accessToken: string
+): Promise<OverallStatistics> {
+  return apiRequest('/statistics/overall', {
+    token: accessToken,
+  });
 }
 
-export interface RevenueStatistics {
-  total: number;
-  average: number;
-  count: number;
+export async function getPeriodicStatistics(
+  accessToken: string,
+  period?: "day" | "week" | "month"
+): Promise<PeriodicStatisticsItem[]> {
+  const params = new URLSearchParams();
+  if (period) {
+    params.append("period", period);
+  }
+  const queryString = params.toString();
+  const endpoint = `/statistics/periodic${queryString ? `?${queryString}` : ''}`;
+  
+  return apiRequest(endpoint, {
+    token: accessToken,
+  });
 }
 
-export interface ProductStatistics {
-  total: number;
-  active: number;
-  outOfStock: number;
-  lowStock: number;
+export async function getTopProducts(
+  accessToken: string,
+  limit?: number
+): Promise<TopProduct[]> {
+  const params = new URLSearchParams();
+  if (limit) {
+    params.append("limit", limit.toString());
+  }
+  const queryString = params.toString();
+  const endpoint = `/statistics/top-products${queryString ? `?${queryString}` : ''}`;
+  
+  return apiRequest(endpoint, {
+    token: accessToken,
+  });
 }
 
-export interface UserStatistics {
-  total: number;
-  byRole: {
-    customers: number;
-    managers: number;
-    admins: number;
-  };
-  activeToday: number;
+export async function getOrderStatusStatistics(
+  accessToken: string
+): Promise<OrderStatusStatistics[]> {
+  return apiRequest('/statistics/order-status', {
+    token: accessToken,
+  });
 }
 
-// Statistics API
-export const statisticsApi = {
-  async getDashboard(accessToken: string): Promise<DashboardStatistics> {
-    return apiRequestWithAuth('/statistics/dashboard', {
+export async function getPaymentMethodStatistics(
+  accessToken: string
+): Promise<PaymentMethodStatistics[]> {
+  return apiRequest('/statistics/payment-methods', {
+    token: accessToken,
+  });
+}
+
+export async function getNewCustomersStatistics(
+  accessToken: string,
+  days?: number
+): Promise<NewCustomersStatistics> {
+  const params = new URLSearchParams();
+  if (days) {
+    params.append("days", days.toString());
+  }
+  const queryString = params.toString();
+  const endpoint = `/statistics/new-customers${queryString ? `?${queryString}` : ''}`;
+  
+  return apiRequest(endpoint, {
+    token: accessToken,
+  });
+}
+
+// Client-side API class
+export class StatisticsApi {
+  static async getOverallStatistics(
+    accessToken: string
+  ): Promise<OverallStatistics> {
+    return apiRequestWithAuth('/statistics/overall', {
       token: accessToken,
     });
-  },
+  }
 
-  async getRevenue(accessToken: string, startDate?: string, endDate?: string): Promise<RevenueStatistics> {
+  static async getPeriodicStatistics(
+    accessToken: string,
+    period?: "day" | "week" | "month"
+  ): Promise<PeriodicStatisticsItem[]> {
     const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    
+    if (period) {
+      params.append("period", period);
+    }
     const queryString = params.toString();
-    return apiRequestWithAuth(`/statistics/revenue${queryString ? `?${queryString}` : ''}`, {
+    const endpoint = `/statistics/periodic${queryString ? `?${queryString}` : ''}`;
+    
+    return apiRequestWithAuth(endpoint, {
       token: accessToken,
     });
-  },
+  }
 
-  async getProducts(accessToken: string): Promise<ProductStatistics> {
-    return apiRequestWithAuth('/statistics/products', {
+  static async getTopProducts(
+    accessToken: string,
+    limit?: number
+  ): Promise<TopProduct[]> {
+    const params = new URLSearchParams();
+    if (limit) {
+      params.append("limit", limit.toString());
+    }
+    const queryString = params.toString();
+    const endpoint = `/statistics/top-products${queryString ? `?${queryString}` : ''}`;
+    
+    return apiRequestWithAuth(endpoint, {
       token: accessToken,
     });
-  },
+  }
 
-  async getUsers(accessToken: string): Promise<UserStatistics> {
-    return apiRequestWithAuth('/statistics/users', {
+  static async getOrderStatusStatistics(
+    accessToken: string
+  ): Promise<OrderStatusStatistics[]> {
+    return apiRequestWithAuth('/statistics/order-status', {
       token: accessToken,
     });
-  },
-};
+  }
+
+  static async getPaymentMethodStatistics(
+    accessToken: string
+  ): Promise<PaymentMethodStatistics[]> {
+    return apiRequestWithAuth('/statistics/payment-methods', {
+      token: accessToken,
+    });
+  }
+
+  static async getNewCustomersStatistics(
+    accessToken: string,
+    days?: number
+  ): Promise<NewCustomersStatistics> {
+    const params = new URLSearchParams();
+    if (days) {
+      params.append("days", days.toString());
+    }
+    const queryString = params.toString();
+    const endpoint = `/statistics/new-customers${queryString ? `?${queryString}` : ''}`;
+    
+    return apiRequestWithAuth(endpoint, {
+      token: accessToken,
+    });
+  }
+}

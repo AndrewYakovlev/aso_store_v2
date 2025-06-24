@@ -114,10 +114,10 @@ const menuItems = [
     roles: ["ADMIN", "MANAGER"],
   },
   {
-    href: "/panel/stats",
+    href: "/panel/statistics",
     label: "Статистика",
     icon: ChartBarIcon,
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "MANAGER"],
   },
   {
     href: "/panel/settings",

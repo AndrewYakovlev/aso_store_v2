@@ -1,57 +1,155 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import {
-  DashboardStatisticsDto,
-  PeriodStatisticsDto,
-} from './dto/statistics.dto';
-import { UserRole } from '@prisma/client';
+import { startOfDay, endOfDay, subDays, startOfWeek, startOfMonth, endOfWeek, endOfMonth } from 'date-fns';
+import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class StatisticsService {
   constructor(private prisma: PrismaService) {}
 
-  async getDashboardStatistics(): Promise<DashboardStatisticsDto> {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const weekAgo = new Date(today);
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    const monthAgo = new Date(today);
-    monthAgo.setMonth(monthAgo.getMonth() - 1);
-
-    // Общая статистика
-    const [totalOrders, totalUsers, totalProducts, activeChats, pendingOrders] =
-      await Promise.all([
-        this.prisma.order.count(),
-        this.prisma.user.count({ where: { role: UserRole.CUSTOMER } }),
-        this.prisma.product.count({ where: { isActive: true } }),
-        this.prisma.chat.count({ where: { isActive: true } }),
-        this.prisma.order.count({
-          where: {
-            status: {
-              code: { in: ['NEW', 'PROCESSING'] },
+  // Общая статистика
+  async getOverallStatistics() {
+    const [
+      totalOrders,
+      totalRevenue,
+      totalCustomers,
+      totalProducts,
+      activeOrders,
+      todayOrders,
+      todayRevenue,
+    ] = await Promise.all([
+      // Общее количество заказов
+      this.prisma.order.count(),
+      
+      // Общая выручка (только оплаченные заказы)
+      this.prisma.order.aggregate({
+        where: {
+          OR: [
+            { status: { name: 'completed' } },
+            { status: { name: 'delivered' } },
+          ],
+        },
+        _sum: {
+          totalAmount: true,
+        },
+      }),
+      
+      // Количество уникальных клиентов
+      this.prisma.user.count({
+        where: {
+          orders: {
+            some: {},
+          },
+        },
+      }),
+      
+      // Количество активных товаров
+      this.prisma.product.count({
+        where: {
+          isActive: true,
+        },
+      }),
+      
+      // Активные заказы (не завершенные)
+      this.prisma.order.count({
+        where: {
+          status: {
+            name: {
+              notIn: ['completed', 'cancelled', 'delivered'],
             },
           },
-        }),
-      ]);
+        },
+      }),
+      
+      // Заказы за сегодня
+      this.prisma.order.count({
+        where: {
+          createdAt: {
+            gte: startOfDay(new Date()),
+            lte: endOfDay(new Date()),
+          },
+        },
+      }),
+      
+      // Выручка за сегодня
+      this.prisma.order.aggregate({
+        where: {
+          createdAt: {
+            gte: startOfDay(new Date()),
+            lte: endOfDay(new Date()),
+          },
+          OR: [
+            { status: { name: 'completed' } },
+            { status: { name: 'delivered' } },
+          ],
+        },
+        _sum: {
+          totalAmount: true,
+        },
+      }),
+    ]);
 
-    const totalRevenue = await this.prisma.order.aggregate({
-      _sum: { totalAmount: true },
-    });
+    return {
+      totalOrders,
+      totalRevenue: (totalRevenue._sum.totalAmount || new Decimal(0)).toString(),
+      totalCustomers,
+      totalProducts,
+      activeOrders,
+      todayOrders,
+      todayRevenue: (todayRevenue._sum.totalAmount || new Decimal(0)).toString(),
+    };
+  }
 
-    // Статистика по периодам
-    const [todayStats, yesterdayStats, weekStats, monthStats] =
-      await Promise.all([
-        this.getStatisticsForPeriod(today, new Date()),
-        this.getStatisticsForPeriod(yesterday, today),
-        this.getStatisticsForPeriod(weekAgo, new Date()),
-        this.getStatisticsForPeriod(monthAgo, new Date()),
-      ]);
+  // Статистика по периодам
+  async getPeriodicStatistics(period: 'day' | 'week' | 'month' = 'week') {
+    const periods = this.generatePeriods(period);
+    
+    const statistics = await Promise.all(
+      periods.map(async ({ start, end, label }) => {
+        const [orders, revenue] = await Promise.all([
+          this.prisma.order.count({
+            where: {
+              createdAt: {
+                gte: start,
+                lte: end,
+              },
+            },
+          }),
+          this.prisma.order.aggregate({
+            where: {
+              createdAt: {
+                gte: start,
+                lte: end,
+              },
+              OR: [
+                { status: { name: 'completed' } },
+                { status: { name: 'delivered' } },
+              ],
+            },
+            _sum: {
+              totalAmount: true,
+            },
+          }),
+        ]);
 
-    // Топ товаров
+        return {
+          period: label,
+          orders,
+          revenue: (revenue._sum.totalAmount || new Decimal(0)).toString(),
+        };
+      }),
+    );
+
+    return statistics;
+  }
+
+  // Топ продаваемых товаров
+  async getTopProducts(limit: number = 10) {
     const topProducts = await this.prisma.orderItem.groupBy({
       by: ['productId'],
+      _count: {
+        _all: true,
+      },
       _sum: {
         quantity: true,
         price: true,
@@ -61,256 +159,188 @@ export class StatisticsService {
           quantity: 'desc',
         },
       },
-      take: 5,
+      take: limit,
     });
 
-    const topProductsWithDetails = await Promise.all(
-      topProducts
-        .filter((item) => item.productId)
-        .map(async (item) => {
-          const product = await this.prisma.product.findUnique({
-            where: { id: item.productId! },
-          });
-          return {
-            id: product!.id,
-            name: product!.name,
-            sku: product!.sku,
-            sold: item._sum.quantity || 0,
-            revenue: Number(item._sum.price || 0),
-          };
-        }),
-    );
-
-    // Топ категорий
-    const ordersByCategory = await this.prisma.$queryRaw<
-      Array<{
-        categoryId: string;
-        orderCount: bigint;
-        revenue: number;
-      }>
-    >`
-      SELECT 
-        pc."categoryId",
-        COUNT(DISTINCT o.id) as "orderCount",
-        COALESCE(SUM(oi.price * oi.quantity), 0) as revenue
-      FROM "OrderItem" oi
-      INNER JOIN "Product" p ON p.id = oi."productId"
-      INNER JOIN "ProductCategory" pc ON pc."productId" = p.id
-      INNER JOIN "Order" o ON o.id = oi."orderId"
-      GROUP BY pc."categoryId"
-      ORDER BY "orderCount" DESC
-      LIMIT 5
-    `;
-
-    const topCategories = await Promise.all(
-      ordersByCategory.map(async (item) => {
-        const category = await this.prisma.category.findUnique({
-          where: { id: item.categoryId },
-        });
-        return {
-          id: category!.id,
-          name: category!.name,
-          orders: Number(item.orderCount),
-          revenue: item.revenue,
-        };
-      }),
-    );
-
-    // Последние заказы
-    const recentOrders = await this.prisma.order.findMany({
-      take: 10,
-      orderBy: { createdAt: 'desc' },
+    // Получаем информацию о товарах
+    const productIds = topProducts.map(item => item.productId).filter(id => id !== null);
+    const products = await this.prisma.product.findMany({
+      where: {
+        id: {
+          in: productIds as string[],
+        },
+      },
       include: {
-        status: true,
-        user: true,
+        brand: true,
+        categories: {
+          include: {
+            category: true,
+          },
+        },
       },
     });
 
-    // График заказов за последние 7 дней
-    const ordersChart: Array<{
-      date: string;
-      orders: number;
-      revenue: number;
-    }> = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const nextDay = new Date(date);
-      nextDay.setDate(nextDay.getDate() + 1);
+    const productsMap = new Map(products.map(p => [p.id, p]));
 
-      const dayStats = await this.getStatisticsForPeriod(date, nextDay);
-      ordersChart.push({
-        date: date.toISOString().split('T')[0],
-        orders: dayStats.orders,
-        revenue: dayStats.revenue,
+    return topProducts
+      .filter(item => item.productId !== null)
+      .map(item => {
+        const product = productsMap.get(item.productId!);
+        const categoryName = product?.categories?.[0]?.category?.name || '';
+        const quantity = item._sum?.quantity || 0;
+        const price = item._sum?.price || new Decimal(0);
+        const totalRevenue = new Decimal(price).mul(quantity);
+        
+        return {
+          productId: item.productId as string,
+          productName: product?.name || 'Товар удален',
+          productSku: product?.sku || '',
+          brand: product?.brand?.name || '',
+          category: categoryName,
+          orderCount: item._count?._all || 0,
+          totalQuantity: quantity,
+          totalRevenue: totalRevenue.toString(),
+        };
       });
-    }
+  }
 
-    // Распределение заказов по статусам
-    const ordersByStatus = await this.prisma.order.groupBy({
-      by: ['statusId'],
-      _count: true,
+  // Статистика по статусам заказов
+  async getOrderStatusStatistics() {
+    const statuses = await this.prisma.orderStatus.findMany({
+      include: {
+        _count: {
+          select: {
+            orders: true,
+          },
+        },
+      },
+      orderBy: {
+        sortOrder: 'asc',
+      },
     });
 
-    const ordersByStatusWithDetails = await Promise.all(
-      ordersByStatus.map(async (item) => {
-        const status = await this.prisma.orderStatus.findUnique({
-          where: { id: item.statusId },
+    return statuses.map(status => ({
+      statusId: status.id,
+      statusName: status.name,
+      statusColor: status.color,
+      orderCount: status._count.orders,
+    }));
+  }
+
+  // Статистика по методам оплаты
+  async getPaymentMethodStatistics() {
+    const paymentMethods = await this.prisma.paymentMethod.findMany({
+      include: {
+        _count: {
+          select: {
+            orders: true,
+          },
+        },
+      },
+      orderBy: {
+        sortOrder: 'asc',
+      },
+    });
+
+    const methodsWithRevenue = await Promise.all(
+      paymentMethods.map(async (method) => {
+        const revenue = await this.prisma.order.aggregate({
+          where: {
+            paymentMethodId: method.id,
+            OR: [
+              { status: { name: 'completed' } },
+              { status: { name: 'delivered' } },
+            ],
+          },
+          _sum: {
+            totalAmount: true,
+          },
         });
+
         return {
-          status: status!.name,
-          count: item._count,
-          percentage: Math.round((item._count / totalOrders) * 100),
+          methodId: method.id,
+          methodName: method.name,
+          orderCount: method._count.orders,
+          totalRevenue: (revenue._sum.totalAmount || new Decimal(0)).toString(),
         };
       }),
     );
 
-    return {
-      overview: {
-        totalOrders,
-        totalRevenue: Number(totalRevenue._sum?.totalAmount || 0),
-        totalUsers,
-        totalProducts,
-        activeChats,
-        pendingOrders,
-      },
-      periods: {
-        today: todayStats,
-        yesterday: yesterdayStats,
-        week: weekStats,
-        month: monthStats,
-      },
-      topProducts: topProductsWithDetails,
-      topCategories,
-      recentOrders: recentOrders.map((order) => ({
-        id: order.id,
-        orderNumber: order.orderNumber,
-        status: {
-          id: order.status.id,
-          name: order.status.name,
-          color: order.status.color,
-        },
-        total: Number(order.totalAmount),
-        createdAt: order.createdAt,
-        user: {
-          id: order.user.id,
-          firstName: order.user.firstName || '',
-          lastName: order.user.lastName || undefined,
-          phone: order.user.phone,
-        },
-      })),
-      ordersChart,
-      ordersByStatus: ordersByStatusWithDetails,
-    };
+    return methodsWithRevenue;
   }
 
-  private async getStatisticsForPeriod(startDate: Date, endDate: Date) {
-    const [orders, revenue, users] = await Promise.all([
-      this.prisma.order.count({
-        where: {
-          createdAt: {
-            gte: startDate,
-            lt: endDate,
-          },
+  // Статистика по новым клиентам
+  async getNewCustomersStatistics(days: number = 30) {
+    const startDate = subDays(new Date(), days);
+    
+    const newCustomers = await this.prisma.user.count({
+      where: {
+        createdAt: {
+          gte: startDate,
         },
-      }),
-      this.prisma.order.aggregate({
-        where: {
-          createdAt: {
-            gte: startDate,
-            lt: endDate,
-          },
+      },
+    });
+
+    const customersWithOrders = await this.prisma.user.count({
+      where: {
+        createdAt: {
+          gte: startDate,
         },
-        _sum: { totalAmount: true },
-      }),
-      this.prisma.user.count({
-        where: {
-          role: UserRole.CUSTOMER,
-          createdAt: {
-            gte: startDate,
-            lt: endDate,
-          },
+        orders: {
+          some: {},
         },
-      }),
-    ]);
-
-    return {
-      orders,
-      revenue: Number(revenue._sum?.totalAmount || 0),
-      users,
-    };
-  }
-
-  async getRevenueStatistics(period: PeriodStatisticsDto) {
-    const where: any = {};
-
-    if (period.startDate) {
-      where.createdAt = { gte: new Date(period.startDate) };
-    }
-
-    if (period.endDate) {
-      where.createdAt = { ...where.createdAt, lte: new Date(period.endDate) };
-    }
-
-    const revenue = await this.prisma.order.aggregate({
-      where,
-      _sum: { totalAmount: true },
-      _avg: { totalAmount: true },
-      _count: true,
+      },
     });
 
     return {
-      total: Number(revenue._sum?.totalAmount || 0),
-      average: Number(revenue._avg?.totalAmount || 0),
-      count: revenue._count,
+      newCustomers,
+      customersWithOrders,
+      conversionRate: newCustomers > 0 ? (customersWithOrders / newCustomers) * 100 : 0,
     };
   }
 
-  async getProductStatistics() {
-    const [total, active, outOfStock, lowStock] = await Promise.all([
-      this.prisma.product.count(),
-      this.prisma.product.count({ where: { isActive: true } }),
-      this.prisma.product.count({ where: { stock: 0 } }),
-      this.prisma.product.count({ where: { stock: { gt: 0, lte: 10 } } }),
-    ]);
+  // Вспомогательный метод для генерации периодов
+  private generatePeriods(period: 'day' | 'week' | 'month'): Array<{ start: Date; end: Date; label: string }> {
+    const periods: Array<{ start: Date; end: Date; label: string }> = [];
+    const now = new Date();
 
-    return {
-      total,
-      active,
-      outOfStock,
-      lowStock,
-    };
-  }
+    switch (period) {
+      case 'day':
+        // Последние 7 дней
+        for (let i = 6; i >= 0; i--) {
+          const date = subDays(now, i);
+          periods.push({
+            start: startOfDay(date),
+            end: endOfDay(date),
+            label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }),
+          });
+        }
+        break;
+      case 'week':
+        // Последние 4 недели
+        for (let i = 3; i >= 0; i--) {
+          const weekStart = startOfWeek(subDays(now, i * 7), { weekStartsOn: 1 });
+          const weekEnd = endOfWeek(subDays(now, i * 7), { weekStartsOn: 1 });
+          periods.push({
+            start: weekStart,
+            end: weekEnd,
+            label: `Неделя ${i + 1}`,
+          });
+        }
+        break;
+      case 'month':
+        // Последние 6 месяцев
+        for (let i = 5; i >= 0; i--) {
+          const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          periods.push({
+            start: startOfMonth(monthDate),
+            end: endOfMonth(monthDate),
+            label: monthDate.toLocaleDateString('ru-RU', { month: 'short' }),
+          });
+        }
+        break;
+    }
 
-  async getUserStatistics() {
-    const [total, customers, managers, admins, activeToday] = await Promise.all(
-      [
-        this.prisma.user.count(),
-        this.prisma.user.count({ where: { role: UserRole.CUSTOMER } }),
-        this.prisma.user.count({ where: { role: UserRole.MANAGER } }),
-        this.prisma.user.count({ where: { role: UserRole.ADMIN } }),
-        this.prisma.user.count({
-          where: {
-            orders: {
-              some: {
-                createdAt: {
-                  gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                },
-              },
-            },
-          },
-        }),
-      ],
-    );
-
-    return {
-      total,
-      byRole: {
-        customers,
-        managers,
-        admins,
-      },
-      activeToday,
-    };
+    return periods;
   }
 }

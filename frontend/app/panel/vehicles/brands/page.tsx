@@ -2,7 +2,7 @@ import { AdminVehicleBrandsList } from "@/components/admin/vehicles/vehicle-bran
 
 export default function VehicleBrandsPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <AdminVehicleBrandsList />
     </div>
   )

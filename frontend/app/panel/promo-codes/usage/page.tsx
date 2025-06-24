@@ -1,12 +1,12 @@
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { format } from "date-fns"
+import { ru } from "date-fns/locale"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Table,
   TableBody,
@@ -14,131 +14,132 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Search, Filter, Download } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { formatPrice } from '@/lib/utils';
-import { promoCodesApi } from '@/lib/api/promo-codes';
-import { Pagination } from '@/components/Pagination';
-import { useAuth } from '@/lib/contexts/AuthContext';
+} from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Calendar, Search, Filter, Download } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { formatPrice } from "@/lib/utils"
+import { promoCodesApi } from "@/lib/api/promo-codes"
+import { Pagination } from "@/components/Pagination"
+import { useAuth } from "@/lib/contexts/AuthContext"
 
 interface PromoCodeUsage {
-  id: string;
+  id: string
   promoCode: {
-    code: string;
-    description?: string;
-    discountType: 'PERCENTAGE' | 'FIXED_AMOUNT';
-    discountValue: number;
-  };
+    code: string
+    description?: string
+    discountType: "PERCENTAGE" | "FIXED_AMOUNT"
+    discountValue: number
+  }
   user: {
-    id: string;
-    phone: string;
-    firstName?: string;
-    lastName?: string;
-  } | null;
+    id: string
+    phone: string
+    firstName?: string
+    lastName?: string
+  } | null
   order: {
-    orderNumber: string;
-    totalAmount: number;
-    status: string;
-  };
-  orderAmount: number;
-  discountAmount: number;
-  usedAt: string;
+    orderNumber: string
+    totalAmount: number
+    status: string
+  }
+  orderAmount: number
+  discountAmount: number
+  usedAt: string
 }
 
 export default function PromoCodeUsageHistoryPage() {
-  const router = useRouter();
-  const { accessToken } = useAuth();
-  const [usageHistory, setUsageHistory] = useState<PromoCodeUsage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter()
+  const { accessToken } = useAuth()
+  const [usageHistory, setUsageHistory] = useState<PromoCodeUsage[]>([])
+  const [loading, setLoading] = useState(true)
+  const [totalPages, setTotalPages] = useState(1)
+  const [currentPage, setCurrentPage] = useState(1)
   const [filters, setFilters] = useState({
-    promoCodeId: '',
-    userId: '',
-    orderId: '',
-    dateFrom: '',
-    dateTo: '',
-  });
+    promoCodeId: "",
+    userId: "",
+    orderId: "",
+    dateFrom: "",
+    dateTo: "",
+  })
 
   useEffect(() => {
-    loadUsageHistory();
-  }, [currentPage, filters, accessToken]);
+    loadUsageHistory()
+  }, [currentPage, filters, accessToken])
 
   const loadUsageHistory = async () => {
-    if (!accessToken) return;
-    
+    if (!accessToken) return
+
     try {
-      setLoading(true);
+      setLoading(true)
       const data = await promoCodesApi.getAllUsageHistory(accessToken, {
         ...filters,
         page: currentPage,
         limit: 20,
-      });
-      setUsageHistory(data.items);
-      setTotalPages(data.totalPages);
+      })
+      setUsageHistory(data.items)
+      setTotalPages(data.totalPages)
     } catch (error) {
-      console.error('Failed to load usage history:', error);
+      console.error("Failed to load usage history:", error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    setCurrentPage(1);
-  };
+    setFilters(prev => ({ ...prev, [key]: value }))
+    setCurrentPage(1)
+  }
 
   const handleSearch = () => {
-    setCurrentPage(1);
-    loadUsageHistory();
-  };
+    setCurrentPage(1)
+    loadUsageHistory()
+  }
 
   const handleReset = () => {
     setFilters({
-      promoCodeId: '',
-      userId: '',
-      orderId: '',
-      dateFrom: '',
-      dateTo: '',
-    });
-    setCurrentPage(1);
-  };
+      promoCodeId: "",
+      userId: "",
+      orderId: "",
+      dateFrom: "",
+      dateTo: "",
+    })
+    setCurrentPage(1)
+  }
 
   const getDiscountText = (usage: PromoCodeUsage) => {
-    const { discountType, discountValue } = usage.promoCode;
-    return discountType === 'PERCENTAGE' 
-      ? `${discountValue}%` 
-      : formatPrice(discountValue);
-  };
+    const { discountType, discountValue } = usage.promoCode
+    return discountType === "PERCENTAGE"
+      ? `${discountValue}%`
+      : formatPrice(discountValue)
+  }
 
-  const getUserName = (user: PromoCodeUsage['user']) => {
-    if (!user) return 'Гость';
-    const name = [user.firstName, user.lastName].filter(Boolean).join(' ');
-    return name || user.phone;
-  };
+  const getUserName = (user: PromoCodeUsage["user"]) => {
+    if (!user) return "Гость"
+    const name = [user.firstName, user.lastName].filter(Boolean).join(" ")
+    return name || user.phone
+  }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">История использования промокодов</h1>
+          <h1 className="text-3xl font-bold">
+            История использования промокодов
+          </h1>
           <p className="text-muted-foreground mt-1">
             Просмотр всех использований промокодов
           </p>
         </div>
         <Button
-          onClick={() => router.push('/panel/promo-codes')}
-          variant="outline"
-        >
+          onClick={() => router.push("/panel/promo-codes")}
+          variant="outline">
           К промокодам
         </Button>
       </div>
@@ -159,7 +160,7 @@ export default function PromoCodeUsageHistoryPage() {
                 id="orderId"
                 placeholder="Поиск по номеру заказа"
                 value={filters.orderId}
-                onChange={(e) => handleFilterChange('orderId', e.target.value)}
+                onChange={e => handleFilterChange("orderId", e.target.value)}
               />
             </div>
             <div>
@@ -168,7 +169,7 @@ export default function PromoCodeUsageHistoryPage() {
                 id="dateFrom"
                 type="date"
                 value={filters.dateFrom}
-                onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                onChange={e => handleFilterChange("dateFrom", e.target.value)}
               />
             </div>
             <div>
@@ -177,7 +178,7 @@ export default function PromoCodeUsageHistoryPage() {
                 id="dateTo"
                 type="date"
                 value={filters.dateTo}
-                onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                onChange={e => handleFilterChange("dateTo", e.target.value)}
               />
             </div>
           </div>
@@ -214,7 +215,10 @@ export default function PromoCodeUsageHistoryPage() {
           <CardContent>
             <p className="text-2xl font-bold">
               {formatPrice(
-                usageHistory.reduce((sum, usage) => sum + usage.discountAmount, 0)
+                usageHistory.reduce(
+                  (sum, usage) => sum + usage.discountAmount,
+                  0
+                )
               )}
             </p>
           </CardContent>
@@ -229,8 +233,10 @@ export default function PromoCodeUsageHistoryPage() {
             <p className="text-2xl font-bold">
               {usageHistory.length > 0
                 ? formatPrice(
-                    usageHistory.reduce((sum, usage) => sum + usage.discountAmount, 0) /
-                      usageHistory.length
+                    usageHistory.reduce(
+                      (sum, usage) => sum + usage.discountAmount,
+                      0
+                    ) / usageHistory.length
                   )
                 : formatPrice(0)}
             </p>
@@ -267,16 +273,18 @@ export default function PromoCodeUsageHistoryPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                usageHistory.map((usage) => (
+                usageHistory.map(usage => (
                   <TableRow key={usage.id}>
                     <TableCell>
-                      {format(new Date(usage.usedAt), 'dd.MM.yyyy HH:mm', {
+                      {format(new Date(usage.usedAt), "dd.MM.yyyy HH:mm", {
                         locale: ru,
                       })}
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-mono font-medium">{usage.promoCode.code}</p>
+                        <p className="font-mono font-medium">
+                          {usage.promoCode.code}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {getDiscountText(usage)}
                         </p>
@@ -286,8 +294,9 @@ export default function PromoCodeUsageHistoryPage() {
                       <Button
                         variant="link"
                         className="p-0 h-auto"
-                        onClick={() => router.push(`/panel/users/${usage.user?.id}`)}
-                      >
+                        onClick={() =>
+                          router.push(`/panel/users/${usage.user?.id}`)
+                        }>
                         {getUserName(usage.user)}
                       </Button>
                     </TableCell>
@@ -295,12 +304,17 @@ export default function PromoCodeUsageHistoryPage() {
                       <Button
                         variant="link"
                         className="p-0 h-auto font-mono"
-                        onClick={() => router.push(`/panel/orders/${usage.order.orderNumber}`)}
-                      >
+                        onClick={() =>
+                          router.push(
+                            `/panel/orders/${usage.order.orderNumber}`
+                          )
+                        }>
                         {usage.order.orderNumber}
                       </Button>
                     </TableCell>
-                    <TableCell>{formatPrice(usage.order.totalAmount)}</TableCell>
+                    <TableCell>
+                      {formatPrice(usage.order.totalAmount)}
+                    </TableCell>
                     <TableCell className="text-green-600 font-medium">
                       -{formatPrice(usage.discountAmount)}
                     </TableCell>
@@ -325,5 +339,5 @@ export default function PromoCodeUsageHistoryPage() {
         </div>
       )}
     </div>
-  );
+  )
 }
