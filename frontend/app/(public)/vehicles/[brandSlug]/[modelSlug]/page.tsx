@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const model = await vehicleModelsApi.getBySlug(modelSlug);
     
     return {
-      title: `${model.brand?.name} ${model.nameCyrillic || model.name} - Запчасти - АСО`,
-      description: `Запчасти для ${model.brand?.name} ${model.nameCyrillic || model.name} ${model.yearFrom}-${model.yearTo || 'н.в.'}. Большой выбор, низкие цены, быстрая доставка.`,
+      title: `${model.brand?.name} ${model.name} - Запчасти - АСО`,
+      description: `Запчасти для ${model.brand?.name} ${model.name} ${model.yearFrom}-${model.yearTo || 'н.в.'}. Большой выбор, низкие цены, быстрая доставка.`,
     };
   } catch {
     return {
@@ -76,7 +76,7 @@ export default async function VehicleModelPage({ params, searchParams }: Props) 
             </Link>
           </li>
           <li className="text-gray-500">/</li>
-          <li className="text-gray-900">{model.nameCyrillic || model.name}</li>
+          <li className="text-gray-900">{model.name}</li>
         </ol>
       </nav>
 
@@ -92,7 +92,7 @@ export default async function VehicleModelPage({ params, searchParams }: Props) 
           )}
           <div className="flex-1">
             <h1 className="text-3xl font-bold mb-2">
-              {model.brand?.name} {model.nameCyrillic || model.name}
+              {model.brand?.name} {model.name}
             </h1>
             <div className="text-gray-600 space-y-1">
               <p>Годы выпуска: {model.yearFrom} - {model.yearTo || 'н.в.'}</p>
@@ -141,7 +141,7 @@ export default async function VehicleModelPage({ params, searchParams }: Props) 
       {/* Products section */}
       <section>
         <h2 className="text-2xl font-semibold mb-6">
-          Запчасти для {model.brand?.name} {model.nameCyrillic || model.name}
+          Запчасти для {model.brand?.name} {model.name}
           {selectedYear && ` ${selectedYear} года`}
         </h2>
         

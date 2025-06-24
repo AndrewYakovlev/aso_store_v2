@@ -124,7 +124,7 @@ export default async function VehicleBrandPage({ params }: Props) {
                         className="w-full h-32 object-cover rounded mb-3"
                       />
                     )}
-                    <h3 className="font-medium">{model.nameCyrillic || model.name}</h3>
+                    <h3 className="font-medium">{model.name}</h3>
                     <p className="text-sm text-gray-500 mt-1">
                       {model.yearFrom} - {model.yearTo || 'н.в.'}
                     </p>
