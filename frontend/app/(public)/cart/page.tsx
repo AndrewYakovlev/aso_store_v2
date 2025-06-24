@@ -194,7 +194,7 @@ export default function CartPage() {
                           return imageUrl ? (
                             <img
                               src={getImageUrl(imageUrl)}
-                              alt={item.product.name}
+                              alt={item.product?.name || 'Product image'}
                               className="w-full h-full object-cover rounded"
                             />
                           ) : (

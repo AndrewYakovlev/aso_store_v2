@@ -201,7 +201,7 @@ export const attributesApi = {
   },
 
   // Get attributes for multiple categories
-  async getAttributesByCategoryIds(categoryIds: string[]): Promise<CategoryAttributeDto[]> {
+  async getAttributesByCategoryIds(categoryIds: string[]): Promise<CategoryAttribute[]> {
     if (categoryIds.length === 0) return [];
     
     // Make requests for each category and combine results
@@ -209,7 +209,7 @@ export const attributesApi = {
     const results = await Promise.all(promises);
     
     // Flatten and deduplicate by attributeId
-    const attributesMap = new Map<string, CategoryAttributeDto>();
+    const attributesMap = new Map<string, CategoryAttribute>();
     results.flat().forEach(attr => {
       // Keep the one with highest priority (isRequired = true wins)
       const existing = attributesMap.get(attr.attributeId);
@@ -259,27 +259,5 @@ export const attributesApi = {
         'Authorization': `Bearer ${accessToken}`,
       },
     });
-  },
-
-  // Get attributes for multiple categories
-  async getAttributesByCategoryIds(categoryIds: string[]): Promise<CategoryAttribute[]> {
-    if (categoryIds.length === 0) return [];
-    
-    // Make requests for each category and combine results
-    const promises = categoryIds.map(id => this.getCategoryAttributes(id));
-    const results = await Promise.all(promises);
-    
-    // Flatten and deduplicate by attributeId
-    const attributesMap = new Map<string, CategoryAttribute>();
-    results.flat().forEach(attr => {
-      // Keep the one with highest priority (isRequired = true wins)
-      const existing = attributesMap.get(attr.attributeId);
-      if (!existing || attr.isRequired) {
-        attributesMap.set(attr.attributeId, attr);
-      }
-    });
-    
-    return Array.from(attributesMap.values())
-      .sort((a, b) => a.sortOrder - b.sortOrder);
   },
 };

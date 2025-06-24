@@ -169,7 +169,6 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
         stock: parseInt(formData.stock),
         categoryIds: formData.categoryIds.length > 0 ? formData.categoryIds : undefined,
         brandId: formData.brandId || undefined,
-        images: formData.productImages.map(img => img.url),
         isActive: formData.isActive,
       };
 

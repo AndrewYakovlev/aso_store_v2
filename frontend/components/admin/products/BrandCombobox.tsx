@@ -194,7 +194,7 @@ export function BrandCombobox({ value, onChange, brands, onBrandsUpdate }: Brand
                       )}
                     </div>
                     <span className="ml-auto text-xs text-muted-foreground">
-                      {brand._count?.products || 0} товаров
+                      {brand.productsCount || 0} товаров
                     </span>
                   </CommandItem>
                 ))}
