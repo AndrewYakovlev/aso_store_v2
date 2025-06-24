@@ -107,7 +107,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <div className="mb-2">
             <p className="text-xs text-muted-foreground">
               Подходит для: {product.vehicles.slice(0, 2).map(v => 
-                v.vehicleModel?.brand?.name + ' ' + (v.vehicleModel?.nameCyrillic || v.vehicleModel?.name)
+                v.vehicleModel?.brand?.name + ' ' + v.vehicleModel?.name
               ).join(', ')}
               {product.vehicles.length > 2 && ` и еще ${product.vehicles.length - 2}`}
             </p>

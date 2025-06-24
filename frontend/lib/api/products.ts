@@ -27,6 +27,7 @@ export interface Product {
   oldPrice?: number;
   stock: number;
   isActive: boolean;
+  excludeFromPromoCodes: boolean;
   images: string[];
   productImages?: ProductImage[];
   brandId?: string;
@@ -61,6 +62,7 @@ export interface CreateProductDto {
   oldPrice?: number;
   stock: number;
   isActive?: boolean;
+  excludeFromPromoCodes?: boolean;
   brandId?: string;
   categoryIds?: string[];
 }
@@ -74,6 +76,7 @@ export interface UpdateProductDto {
   oldPrice?: number;
   stock?: number;
   isActive?: boolean;
+  excludeFromPromoCodes?: boolean;
   brandId?: string;
   categoryIds?: string[];
 }

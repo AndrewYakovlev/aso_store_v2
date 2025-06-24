@@ -6,6 +6,7 @@ import { productsApi, ProductsFilter } from '@/lib/api/products';
 import { ProductsGrid } from '@/components/products/ProductsGrid';
 import { ProductsFilters } from '@/components/products/ProductsFilters';
 import { ProductsPagination } from '@/components/products/ProductsPagination';
+import { ExpertHelpCard } from '@/components/products/ExpertHelpCard';
 import { Loader2 } from 'lucide-react';
 
 interface Props {
@@ -241,6 +242,11 @@ export function SearchContent({ searchParams }: Props) {
           <>
             <ProductsGrid products={products.items} />
             
+            {/* Карточка помощи эксперта в конце списка */}
+            <div className="mt-6">
+              <ExpertHelpCard />
+            </div>
+            
             {/* Пагинация */}
             {products.totalPages > 1 && (
               <ProductsPagination
@@ -251,13 +257,16 @@ export function SearchContent({ searchParams }: Props) {
             )}
           </>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              По вашему запросу ничего не найдено
-            </p>
-            <p className="text-gray-400 mt-2">
-              Попробуйте изменить параметры поиска или фильтры
-            </p>
+          <div className="space-y-6">
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">
+                По вашему запросу ничего не найдено
+              </p>
+              <p className="text-gray-400 mt-2">
+                Попробуйте изменить параметры поиска или фильтры
+              </p>
+            </div>
+            <ExpertHelpCard />
           </div>
         )}
       </div>

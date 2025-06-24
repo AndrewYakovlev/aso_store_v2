@@ -41,7 +41,7 @@ export function ProductVehicles({ vehicles }: ProductVehiclesProps) {
                     href={`/vehicles/${vehicle.vehicleModel?.brand?.slug}/${vehicle.vehicleModel?.slug}`}
                     className="font-medium text-blue-600 hover:text-blue-800"
                   >
-                    {vehicle.vehicleModel?.nameCyrillic || vehicle.vehicleModel?.name}
+                    {vehicle.vehicleModel?.name}
                   </Link>
                   <div className="text-gray-600 mt-1">
                     {vehicle.yearFrom || vehicle.yearTo ? (

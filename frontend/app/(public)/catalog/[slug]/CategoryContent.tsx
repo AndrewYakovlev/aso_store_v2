@@ -7,6 +7,7 @@ import { ProductsGrid } from '@/components/products/ProductsGrid';
 import { ProductsPagination } from '@/components/products/ProductsPagination';
 import { ProductsFilters } from '@/components/products/ProductsFilters';
 import { EmptyCategory } from '@/components/categories';
+import { ExpertHelpCard } from '@/components/products/ExpertHelpCard';
 import { Loader2 } from 'lucide-react';
 
 interface Props {
@@ -229,6 +230,11 @@ export function CategoryContent({ categoryId, categorySlug, categoryName, initia
 
             <ProductsGrid products={products.items} />
             
+            {/* Карточка помощи эксперта в конце списка */}
+            <div className="mt-6">
+              <ExpertHelpCard />
+            </div>
+            
             {/* Пагинация */}
             {products.totalPages > 1 && (
               <ProductsPagination
@@ -239,7 +245,10 @@ export function CategoryContent({ categoryId, categorySlug, categoryName, initia
             )}
           </>
         ) : (
-          <EmptyCategory categoryName={categoryName} />
+          <div className="space-y-6">
+            <EmptyCategory categoryName={categoryName} />
+            <ExpertHelpCard />
+          </div>
         )}
       </div>
     </div>

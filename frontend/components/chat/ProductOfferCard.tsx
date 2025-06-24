@@ -14,10 +14,11 @@ import { ru } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
-import { useCartContext } from "@/lib/contexts/CartContext"
 import { useToast } from "@/components/ui/use-toast"
 import { getImageUrl } from "@/lib/utils/image"
 import { useAuth } from "@/lib/contexts/AuthContext"
+import { useContext } from "react"
+import { CartContext } from "@/lib/contexts/CartContext"
 
 interface ProductOfferCardProps {
   offer: ProductOffer
@@ -32,11 +33,16 @@ export function ProductOfferCard({
   onEdit,
   onCancel,
 }: ProductOfferCardProps) {
-  const { addToCart, loading: cartLoading } = useCartContext()
+  const cartContext = useContext(CartContext)
   const [isAdding, setIsAdding] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const { toast } = useToast()
   const { user } = useAuth()
+  
+  // Check if we're in admin panel (no cart context)
+  const isAdminPanel = !cartContext
+  const addToCart = cartContext?.addToCart
+  const cartLoading = cartContext?.loading || false
 
   const isExpired =
     offer.expiresAt && !isAfter(new Date(offer.expiresAt), new Date())
@@ -49,7 +55,7 @@ export function ProductOfferCard({
     offer.images?.length > 0 ? offer.images : offer.image ? [offer.image] : []
 
   const handleAddToCart = async () => {
-    if (!offer.isActive || isExpired) return
+    if (!offer.isActive || isExpired || !addToCart) return
 
     try {
       setIsAdding(true)
@@ -204,8 +210,8 @@ export function ProductOfferCard({
           </div>
         )}
 
-        {/* Add to cart button */}
-        {!isMyMessage && (
+        {/* Add to cart button - only show in customer view */}
+        {!isMyMessage && !isAdminPanel && (
           <Button
             onClick={handleAddToCart}
             disabled={

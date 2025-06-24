@@ -17,6 +17,9 @@ import { CategorySearchSelect } from './CategorySearchSelect';
 import { ProductImagesManager } from './ProductImagesManager';
 import { BrandCombobox } from './BrandCombobox';
 import { ProductAttributes } from './ProductAttributes';
+import { VehicleMakeMultiSelect } from './VehicleMakeMultiSelect';
+import { VehicleModelsSelector } from './VehicleModelsSelector';
+import { CreateProductVehicle } from '@/lib/api/product-vehicles';
 
 interface CategoryWithLevel {
   id: string;
@@ -44,6 +47,8 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
   const [productAttributes, setProductAttributes] = useState<ProductAttributeValue[]>([]);
   const [pendingAttributes, setPendingAttributes] = useState<SetProductAttributeDto[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedVehicleMakes, setSelectedVehicleMakes] = useState<string[]>([]);
+  const [pendingVehicles, setPendingVehicles] = useState<CreateProductVehicle[]>([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -57,6 +62,7 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
     brandId: '',
     productImages: [] as any[],
     isActive: true,
+    excludeFromPromoCodes: false,
   });
 
   useEffect(() => {
@@ -75,8 +81,19 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
         brandId: product.brandId || '',
         productImages: product.productImages || [],
         isActive: product.isActive,
+        excludeFromPromoCodes: product.excludeFromPromoCodes || false,
       });
       loadProductAttributes(product.id);
+      // Set selected vehicle makes if product has vehicles
+      if (product.vehicles && product.vehicles.length > 0) {
+        const brandIds = new Set<string>();
+        product.vehicles.forEach(vehicle => {
+          if (vehicle.vehicleModel?.brandId) {
+            brandIds.add(vehicle.vehicleModel.brandId);
+          }
+        });
+        setSelectedVehicleMakes(Array.from(brandIds));
+      }
     } else {
       setFormData({
         name: '',
@@ -90,8 +107,11 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
         brandId: '',
         productImages: [],
         isActive: true,
+        excludeFromPromoCodes: false,
       });
       setProductAttributes([]);
+      setSelectedVehicleMakes([]);
+      setPendingVehicles([]);
     }
     setError(null);
     setPendingAttributes([]);
@@ -196,6 +216,7 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
         categoryIds: formData.categoryIds.length > 0 ? formData.categoryIds : undefined,
         brandId: formData.brandId || undefined,
         isActive: formData.isActive,
+        excludeFromPromoCodes: formData.excludeFromPromoCodes,
       };
 
       let savedProductId: string;
@@ -218,6 +239,23 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
           );
         } catch (error) {
           console.error('Failed to save product attributes:', error);
+        }
+      }
+
+      // Save product vehicles
+      if (pendingVehicles.length > 0 && savedProductId) {
+        try {
+          const { apiRequest } = await import('@/lib/api/client');
+          await apiRequest(`/products/${savedProductId}/vehicles/bulk`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ vehicles: pendingVehicles }),
+          });
+        } catch (error) {
+          console.error('Failed to save product vehicles:', error);
         }
       }
 
@@ -394,7 +432,7 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -403,6 +441,16 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
                   className="mr-2"
                 />
                 <span className="text-sm font-medium text-gray-700">Товар активен</span>
+              </label>
+              
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.excludeFromPromoCodes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, excludeFromPromoCodes: e.target.checked }))}
+                  className="mr-2"
+                />
+                <span className="text-sm font-medium text-gray-700">Исключить из промокодов</span>
               </label>
             </div>
           </div>
@@ -433,6 +481,41 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
               productAttributes={productAttributes}
               onChange={setPendingAttributes}
             />
+          </div>
+
+          {/* Совместимость с автомобилями */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">
+              Совместимость с автомобилями
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                (укажите марки и модели автомобилей)
+              </span>
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Марки автомобилей
+                </label>
+                <VehicleMakeMultiSelect
+                  value={selectedVehicleMakes}
+                  onChange={setSelectedVehicleMakes}
+                />
+              </div>
+              
+              {selectedVehicleMakes.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Модели и годы выпуска
+                  </label>
+                  <VehicleModelsSelector
+                    brandIds={selectedVehicleMakes}
+                    selectedVehicles={product?.vehicles || []}
+                    onChange={setPendingVehicles}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Изображения */}

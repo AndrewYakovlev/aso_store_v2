@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { productsApi, ProductsFilter } from '@/lib/api/products';
 import { ProductsGrid } from '@/components/products/ProductsGrid';
 import { ProductsPagination } from '@/components/products/ProductsPagination';
-import { Loader2 } from 'lucide-react';
+import { ExpertHelpCard } from '@/components/products/ExpertHelpCard';
+import { Loader2, MessageCircle } from 'lucide-react';
+import Link from 'next/link';
 
 interface Props {
   modelId: string;
@@ -112,10 +114,13 @@ export function ModelContent({ modelId, brandSlug, modelSlug, initialProducts, s
 
   if (!products || products.items.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">
-          Товары для этой модели пока не добавлены
-        </p>
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">
+            Товары не найдены для данной модели
+          </p>
+        </div>
+        <ExpertHelpCard />
       </div>
     );
   }
@@ -144,6 +149,11 @@ export function ModelContent({ modelId, brandSlug, modelSlug, initialProducts, s
       </div>
 
       <ProductsGrid products={products.items} />
+      
+      {/* Карточка помощи эксперта в конце списка */}
+      <div className="mt-6">
+        <ExpertHelpCard />
+      </div>
       
       {/* Пагинация */}
       {products.totalPages > 1 && (
