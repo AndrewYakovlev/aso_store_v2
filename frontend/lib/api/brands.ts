@@ -100,4 +100,18 @@ export const brandsApi = {
       },
     });
   },
+
+  // Upload brand logo (requires auth)
+  async uploadLogo(id: string, file: File, accessToken: string): Promise<BrandDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return apiRequest(`/brands/${id}/logo/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
+  },
 };

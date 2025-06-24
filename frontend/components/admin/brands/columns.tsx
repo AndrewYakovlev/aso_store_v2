@@ -5,6 +5,7 @@ import { BrandWithProductsCount } from "@/lib/api/brands";
 import { Badge } from "@/components/ui/badge";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Loader2 } from "lucide-react";
+import { getImageUrl } from "@/lib/utils/image";
 
 interface BrandsColumnsProps {
   onEdit: (brand: BrandWithProductsCount) => void;
@@ -24,7 +25,7 @@ export const createBrandsColumns = ({
       const brand = row.original;
       return brand.logo ? (
         <img
-          src={brand.logo}
+          src={getImageUrl(brand.logo)}
           alt={brand.name}
           className="h-10 w-10 object-contain"
         />

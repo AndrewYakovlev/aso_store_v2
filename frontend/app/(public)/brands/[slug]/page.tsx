@@ -6,6 +6,7 @@ import { BrandContent } from "./BrandContent"
 import { Card } from "@/components/ui/card"
 import { brandsApi } from "@/lib/api/brands"
 import { productsApi } from "@/lib/api/products"
+import { getImageUrl } from "@/lib/utils/image"
 import { 
   ChevronRightIcon,
   GlobeAltIcon,
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }: BrandPageProps): Promise<Meta
     openGraph: {
       title: `${brand.name} - интернет-магазин АСО`,
       description: brand.description,
-      images: brand.logo ? [brand.logo] : [],
+      images: brand.logo ? [getImageUrl(brand.logo)] : [],
     },
   };
 }
@@ -114,7 +115,7 @@ export default async function BrandPage({ params, searchParams }: BrandPageProps
           {brand.logo && (
             <div className="w-32 h-32 flex-shrink-0">
               <img 
-                src={brand.logo} 
+                src={getImageUrl(brand.logo)} 
                 alt={brand.name}
                 className="w-full h-full object-contain"
               />

@@ -4,6 +4,7 @@ import { Metadata } from "next"
 import { Card } from "@/components/ui/card"
 import { ChevronRightIcon } from "@heroicons/react/24/outline"
 import { brandsApi, BrandWithProductsCount } from "@/lib/api/brands"
+import { getImageUrl } from "@/lib/utils/image"
 
 // Force dynamic rendering to avoid API calls during build
 export const dynamic = 'force-dynamic'
@@ -110,7 +111,7 @@ export default async function BrandsPage() {
                       {brand.logo && (
                         <div className="w-16 h-16 flex-shrink-0">
                           <img 
-                            src={brand.logo} 
+                            src={getImageUrl(brand.logo)} 
                             alt={brand.name}
                             className="w-full h-full object-contain"
                           />
