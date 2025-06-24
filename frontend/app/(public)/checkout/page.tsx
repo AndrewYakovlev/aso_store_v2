@@ -10,7 +10,7 @@ import { DeliveryForm } from '@/components/checkout/DeliveryForm';
 import { PaymentForm } from '@/components/checkout/PaymentForm';
 import { OrderSummary } from '@/components/checkout/OrderSummary';
 import { AuthStep } from '@/components/checkout/AuthStep';
-import { useCart } from '@/lib/hooks/useCart';
+import { useCartContext } from '@/lib/contexts/CartContext';
 import { ordersApi } from '@/lib/api/orders';
 import { ordersClientApi } from '@/lib/api/orders-client';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -21,7 +21,7 @@ import { CartSummary } from '@/lib/api/cart';
 function CheckoutPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { cart, loading: cartLoading, refetch: refreshCart, clearCart } = useCart();
+  const { cart, loading: cartLoading, refetch: refreshCart, clearCart } = useCartContext();
   const { user, login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [deliveryMethods, setDeliveryMethods] = useState<DeliveryMethod[]>([]);

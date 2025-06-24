@@ -14,7 +14,7 @@ import { ru } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
-import { useCart } from "@/lib/hooks/useCart"
+import { useCartContext } from "@/lib/contexts/CartContext"
 import { useToast } from "@/components/ui/use-toast"
 import { getImageUrl } from "@/lib/utils/image"
 import { useAuth } from "@/lib/contexts/AuthContext"
@@ -32,7 +32,7 @@ export function ProductOfferCard({
   onEdit,
   onCancel,
 }: ProductOfferCardProps) {
-  const { addToCart, loading: cartLoading } = useCart()
+  const { addToCart, loading: cartLoading } = useCartContext()
   const [isAdding, setIsAdding] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const { toast } = useToast()

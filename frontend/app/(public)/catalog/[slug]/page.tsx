@@ -6,6 +6,7 @@ import { categoriesApi } from "@/lib/api/categories"
 import { productsApi } from "@/lib/api/products"
 import { CategoryTree } from "@/components/categories/CategoryTree"
 import { CategoryContent } from "./CategoryContent"
+import { BreadcrumbsComponent, BreadcrumbItemType } from "@/components/shared/BreadcrumbsComponent"
 import { ChevronRightIcon } from "@heroicons/react/24/outline"
 
 // Force dynamic rendering to avoid API calls during build
@@ -63,42 +64,22 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   // Fetch all categories for sidebar
   const allCategories = await categoriesApi.getTree(true)
 
+  // Формируем элементы для хлебных крошек
+  const breadcrumbItems: BreadcrumbItemType[] = [
+    { label: 'Главная', href: '/' },
+    { label: 'Каталог', href: '/catalog' },
+    ...breadcrumbs.map(item => ({
+      label: item.name,
+      href: item.id === category.id ? undefined : `/catalog/${item.slug}`
+    }))
+  ];
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumbs */}
-      <nav className="mb-6">
-        <ol className="flex items-center space-x-2 text-sm">
-          <li>
-            <Link href="/" className="text-muted-foreground hover:text-primary">
-              Главная
-            </Link>
-          </li>
-          <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
-          <li>
-            <Link
-              href="/catalog"
-              className="text-muted-foreground hover:text-primary">
-              Каталог
-            </Link>
-          </li>
-          {breadcrumbs.map(item => (
-            <React.Fragment key={item.id}>
-              <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
-              <li>
-                {item.id === category.id ? (
-                  <span className="font-medium">{item.name}</span>
-                ) : (
-                  <Link
-                    href={`/catalog/${item.slug}`}
-                    className="text-muted-foreground hover:text-primary">
-                    {item.name}
-                  </Link>
-                )}
-              </li>
-            </React.Fragment>
-          ))}
-        </ol>
-      </nav>
+      <div className="mb-6">
+        <BreadcrumbsComponent items={breadcrumbItems} />
+      </div>
 
       {/* Page Title */}
       <h1 className="text-3xl font-bold mb-2">{category.name}</h1>

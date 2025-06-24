@@ -2,7 +2,7 @@ import React from "react"
 import Link from "next/link"
 import { Metadata } from "next"
 import { Card } from "@/components/ui/card"
-import { ChevronRightIcon } from "@heroicons/react/24/outline"
+import { BreadcrumbsComponent, BreadcrumbItemType } from "@/components/shared/BreadcrumbsComponent"
 import { brandsApi, BrandWithProductsCount } from "@/lib/api/brands"
 import { getImageUrl } from "@/lib/utils/image"
 
@@ -52,19 +52,14 @@ export default async function BrandsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumbs */}
-      <nav className="mb-6">
-        <ol className="flex items-center space-x-2 text-sm">
-          <li>
-            <Link href="/" className="text-muted-foreground hover:text-primary">
-              Главная
-            </Link>
-          </li>
-          <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
-          <li>
-            <span className="font-medium">Производители</span>
-          </li>
-        </ol>
-      </nav>
+      <div className="mb-6">
+        <BreadcrumbsComponent 
+          items={[
+            { label: 'Главная', href: '/' },
+            { label: 'Производители' }
+          ] as BreadcrumbItemType[]}
+        />
+      </div>
 
       <h1 className="text-3xl font-bold mb-8">Производители автозапчастей</h1>
 

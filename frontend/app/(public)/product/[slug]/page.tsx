@@ -10,6 +10,7 @@ import { ProductAttributes } from "@/components/ProductAttributes"
 import { ProductVehicles } from "@/components/products/ProductVehicles"
 import { ProductImageGallery } from "@/components/products/ProductImageGallery"
 import { Card } from "@/components/ui/card"
+import { BreadcrumbsComponent, BreadcrumbItemType } from "@/components/shared/BreadcrumbsComponent"
 import { 
   ShoppingCartIcon, 
   ChevronRightIcon,
@@ -67,42 +68,23 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const inStock = product.stock > 0
 
+  // Формируем элементы для хлебных крошек
+  const breadcrumbItems: BreadcrumbItemType[] = [
+    { label: 'Главная', href: '/' },
+    { label: 'Каталог', href: '/catalog' },
+    ...product.categories.map(category => ({
+      label: category.name,
+      href: `/catalog/${category.slug}`
+    })),
+    { label: product.name }
+  ];
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumbs */}
-      <nav className="mb-6">
-        <ol className="flex items-center space-x-2 text-sm">
-          <li>
-            <Link href="/" className="text-muted-foreground hover:text-primary">
-              Главная
-            </Link>
-          </li>
-          <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
-          <li>
-            <Link
-              href="/catalog"
-              className="text-muted-foreground hover:text-primary">
-              Каталог
-            </Link>
-          </li>
-          {product.categories.map((category, index) => (
-            <React.Fragment key={category.id}>
-              <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
-              <li>
-                <Link
-                  href={`/catalog/${category.slug}`}
-                  className="text-muted-foreground hover:text-primary">
-                  {category.name}
-                </Link>
-              </li>
-            </React.Fragment>
-          ))}
-          <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
-          <li>
-            <span className="font-medium">{product.name}</span>
-          </li>
-        </ol>
-      </nav>
+      <div className="mb-6">
+        <BreadcrumbsComponent items={breadcrumbItems} />
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Product Images */}

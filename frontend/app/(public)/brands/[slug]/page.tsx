@@ -8,10 +8,10 @@ import { brandsApi } from "@/lib/api/brands"
 import { productsApi } from "@/lib/api/products"
 import { getImageUrl } from "@/lib/utils/image"
 import { 
-  ChevronRightIcon,
   GlobeAltIcon,
   MapPinIcon 
 } from "@heroicons/react/24/outline"
+import { BreadcrumbsComponent, BreadcrumbItemType } from "@/components/shared/BreadcrumbsComponent"
 
 interface BrandPageProps {
   params: Promise<{
@@ -89,25 +89,15 @@ export default async function BrandPage({ params, searchParams }: BrandPageProps
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumbs */}
-      <nav className="mb-6">
-        <ol className="flex items-center space-x-2 text-sm">
-          <li>
-            <Link href="/" className="text-muted-foreground hover:text-primary">
-              Главная
-            </Link>
-          </li>
-          <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
-          <li>
-            <Link href="/brands" className="text-muted-foreground hover:text-primary">
-              Производители
-            </Link>
-          </li>
-          <ChevronRightIcon className="w-4 h-4 text-muted-foreground" />
-          <li>
-            <span className="font-medium">{brand.name}</span>
-          </li>
-        </ol>
-      </nav>
+      <div className="mb-6">
+        <BreadcrumbsComponent 
+          items={[
+            { label: 'Главная', href: '/' },
+            { label: 'Производители', href: '/brands' },
+            { label: brand.name }
+          ] as BreadcrumbItemType[]}
+        />
+      </div>
 
       {/* Brand Info */}
       <Card className="p-6 mb-8">

@@ -30,16 +30,16 @@ export function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link href={`/catalog/${category.slug}`}>
       <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center text-center space-y-4">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col items-center text-center space-y-2 sm:space-y-4">
             <div className="text-blue-600">
               {icon}
             </div>
-            <h3 className="font-medium text-lg">
+            <h3 className="font-medium text-sm sm:text-lg line-clamp-2">
               {category.name}
             </h3>
             {category.productCount !== undefined && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {category.productCount} товаров
               </p>
             )}

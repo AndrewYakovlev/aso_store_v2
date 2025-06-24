@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { vehicleModelsApi } from '@/lib/api/vehicles';
 import { productsApi } from '@/lib/api/products';
 import { ModelContent } from './ModelContent';
+import { BreadcrumbsComponent, BreadcrumbItemType } from '@/components/shared/BreadcrumbsComponent';
 
 interface Props {
   params: Promise<{ brandSlug: string; modelSlug: string }>;
@@ -56,29 +57,16 @@ export default async function VehicleModelPage({ params, searchParams }: Props) 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumbs */}
-      <nav className="text-sm mb-6">
-        <ol className="flex items-center space-x-2">
-          <li>
-            <Link href="/" className="text-gray-500 hover:text-gray-700">
-              Главная
-            </Link>
-          </li>
-          <li className="text-gray-500">/</li>
-          <li>
-            <Link href="/vehicles" className="text-gray-500 hover:text-gray-700">
-              Каталог автомобилей
-            </Link>
-          </li>
-          <li className="text-gray-500">/</li>
-          <li>
-            <Link href={`/vehicles/${brandSlug}`} className="text-gray-500 hover:text-gray-700">
-              {model.brand?.name}
-            </Link>
-          </li>
-          <li className="text-gray-500">/</li>
-          <li className="text-gray-900">{model.name}</li>
-        </ol>
-      </nav>
+      <div className="mb-6">
+        <BreadcrumbsComponent 
+          items={[
+            { label: 'Главная', href: '/' },
+            { label: 'Каталог автомобилей', href: '/vehicles' },
+            { label: model.brand?.name || '', href: `/vehicles/${brandSlug}` },
+            { label: model.name }
+          ] as BreadcrumbItemType[]}
+        />
+      </div>
 
       {/* Model header */}
       <div className="mb-8">

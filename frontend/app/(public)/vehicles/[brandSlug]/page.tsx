@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { vehicleBrandsApi, vehicleModelsApi } from '@/lib/api/vehicles';
+import { BreadcrumbsComponent, BreadcrumbItemType } from '@/components/shared/BreadcrumbsComponent';
 
 interface Props {
   params: Promise<{ brandSlug: string }>;
@@ -60,23 +61,15 @@ export default async function VehicleBrandPage({ params }: Props) {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Breadcrumbs */}
-      <nav className="text-sm mb-6">
-        <ol className="flex items-center space-x-2">
-          <li>
-            <Link href="/" className="text-gray-500 hover:text-gray-700">
-              Главная
-            </Link>
-          </li>
-          <li className="text-gray-500">/</li>
-          <li>
-            <Link href="/vehicles" className="text-gray-500 hover:text-gray-700">
-              Каталог автомобилей
-            </Link>
-          </li>
-          <li className="text-gray-500">/</li>
-          <li className="text-gray-900">{brand.name}</li>
-        </ol>
-      </nav>
+      <div className="mb-6">
+        <BreadcrumbsComponent 
+          items={[
+            { label: 'Главная', href: '/' },
+            { label: 'Каталог автомобилей', href: '/vehicles' },
+            { label: brand.name }
+          ] as BreadcrumbItemType[]}
+        />
+      </div>
 
       {/* Brand header */}
       <div className="mb-8">

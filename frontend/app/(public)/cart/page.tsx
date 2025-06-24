@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { TrashIcon, MinusIcon, PlusIcon, ShoppingCartIcon, ClockIcon, TicketIcon } from '@heroicons/react/24/outline'
-import { useCart } from '@/lib/hooks/useCart'
+import { useCartContext } from '@/lib/contexts/CartContext'
 import { ProductImage } from '@/components/products/ProductImage'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -16,7 +16,7 @@ import { toast } from '@/components/ui/use-toast'
 
 export default function CartPage() {
   const router = useRouter()
-  const { cart, loading, updateCartItem, removeFromCart, clearCart } = useCart()
+  const { cart, loading, updateCartItem, removeFromCart, clearCart } = useCartContext()
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set())
   const [promoCode, setPromoCode] = useState('')
   const [applyingPromo, setApplyingPromo] = useState(false)
@@ -131,8 +131,8 @@ export default function CartPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Корзина</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold">Корзина</h1>
         <Button
           variant="outline"
           size="sm"
@@ -151,6 +151,7 @@ export default function CartPage() {
               });
             }
           }}
+          className="w-full sm:w-auto"
         >
           Очистить корзину
         </Button>
@@ -168,10 +169,10 @@ export default function CartPage() {
             const discount = oldPrice ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
 
             return (
-              <Card key={item.id} className="p-4">
-                <div className="flex gap-4">
+              <Card key={item.id} className="p-3 sm:p-4">
+                <div className="flex gap-3 sm:gap-4">
                   {/* Product/Offer image */}
-                  <div className="w-24 h-24 flex-shrink-0 relative">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 relative">
                     {isOffer ? (
                       item.offer?.image ? (
                         <img
@@ -186,130 +187,168 @@ export default function CartPage() {
                       )
                     ) : (
                       <Link href={`/product/${item.product?.slug}`}>
-                        {item.product?.images && item.product.images.length > 0 ? (
-                          <ProductImage
-                            src={item.product.images[0]}
-                            alt={item.product.name}
-                            sizes="96px"
-                            className="w-full h-full object-cover rounded"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-100 rounded flex items-center justify-center">
-                            <ShoppingCartIcon className="w-8 h-8 text-gray-400" />
-                          </div>
-                        )}
+                        {(() => {
+                          const mainImage = item.product?.productImages?.find(img => img.isMain);
+                          const imageUrl = mainImage?.url || item.product?.productImages?.[0]?.url || item.product?.images?.[0];
+                          
+                          return imageUrl ? (
+                            <img
+                              src={getImageUrl(imageUrl)}
+                              alt={item.product.name}
+                              className="w-full h-full object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-100 rounded flex items-center justify-center">
+                              <ShoppingCartIcon className="w-6 h-6 text-gray-400" />
+                            </div>
+                          );
+                        })()}
                       </Link>
-                    )}
-                    {isOffer && (item.offer?.isOriginal || item.offer?.isAnalog) && (
-                      <div className="absolute top-1 left-1">
-                        {item.offer?.isOriginal && (
-                          <Badge className="bg-green-600 text-white text-xs py-0 px-1">
-                            Оригинал
-                          </Badge>
-                        )}
-                        {item.offer?.isAnalog && (
-                          <Badge className="bg-blue-600 text-white text-xs py-0 px-1">
-                            Аналог
-                          </Badge>
-                        )}
-                      </div>
                     )}
                   </div>
 
                   {/* Product/Offer info */}
                   <div className="flex-1 min-w-0">
-                    {isOffer ? (
-                      <>
-                        <h3 className="text-lg font-medium line-clamp-2">
-                          {item.offer?.name}
-                        </h3>
-                        {item.offer?.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-1">
-                            {item.offer.description}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="secondary" className="text-xs">
-                            Товарное предложение
-                          </Badge>
-                          {item.offer?.deliveryDays !== undefined && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <ClockIcon className="w-3 h-3" />
-                              <span>Доставка: {item.offer.deliveryDays} дн.</span>
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                      <div className="flex-1">
+                        {isOffer ? (
+                          <>
+                            <h3 className="text-sm sm:text-base font-medium line-clamp-2">
+                              {item.offer?.name}
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+                              {item.offer?.isOriginal && (
+                                <Badge className="bg-green-600 text-white text-xs py-0 px-1">
+                                  Оригинал
+                                </Badge>
+                              )}
+                              {item.offer?.isAnalog && (
+                                <Badge className="bg-blue-600 text-white text-xs py-0 px-1">
+                                  Аналог
+                                </Badge>
+                              )}
+                              <Badge variant="secondary" className="text-xs">
+                                Предложение
+                              </Badge>
+                              {item.offer?.deliveryDays !== undefined && (
+                                <span className="text-xs text-muted-foreground">
+                                  {item.offer.deliveryDays} дн.
+                                </span>
+                              )}
                             </div>
+                          </>
+                        ) : (
+                          <>
+                            <Link 
+                              href={`/product/${item.product?.slug}`}
+                              className="text-sm sm:text-base font-medium hover:text-primary line-clamp-2 block"
+                            >
+                              {item.product?.name}
+                            </Link>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              Артикул: {item.product?.sku}
+                            </p>
+                            {item.product?.stock !== undefined && item.product.stock < 10 && (
+                              <p className="text-xs text-orange-600">
+                                Осталось {item.product.stock} шт.
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Desktop price and quantity */}
+                      <div className="hidden sm:flex flex-col items-end gap-2">
+                        <div className="text-right">
+                          <p className="text-base font-bold">
+                            {formatPrice(price * item.quantity)}
+                          </p>
+                          {oldPrice && (
+                            <p className="text-xs text-muted-foreground line-through">
+                              {formatPrice(oldPrice * item.quantity)}
+                            </p>
                           )}
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        <Link 
-                          href={`/product/${item.product?.slug}`}
-                          className="text-lg font-medium hover:text-primary line-clamp-2"
-                        >
-                          {item.product?.name}
-                        </Link>
-                        <p className="text-sm text-muted-foreground">
-                          Артикул: {item.product?.sku}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 w-7 p-0"
+                            onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1, item.offerId)}
+                            disabled={updatingItems.has(itemId) || item.quantity <= 1}
+                          >
+                            <MinusIcon className="w-3 h-3" />
+                          </Button>
+                          <span className="w-8 text-center text-sm font-medium">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 w-7 p-0"
+                            onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1, item.offerId)}
+                            disabled={updatingItems.has(itemId) || (isOffer ? false : item.quantity >= (item.product?.stock || 0))}
+                          >
+                            <PlusIcon className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 ml-2"
+                            onClick={() => handleRemoveItem(item.productId, item.offerId)}
+                            disabled={updatingItems.has(itemId)}
+                          >
+                            <TrashIcon className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Mobile price and controls */}
+                    <div className="flex sm:hidden items-center justify-between mt-2 pt-2 border-t">
+                      <div>
+                        <p className="text-sm font-bold">
+                          {formatPrice(price * item.quantity)}
                         </p>
-                        {item.product?.stock !== undefined && item.product.stock < 10 && (
-                          <p className="text-sm text-orange-600 mt-1">
-                            Осталось {item.product.stock} шт.
+                        {oldPrice && (
+                          <p className="text-xs text-muted-foreground line-through">
+                            {formatPrice(oldPrice * item.quantity)}
                           </p>
                         )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* Quantity and price */}
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-right">
-                      <p className="text-lg font-bold">
-                        {formatPrice(price * item.quantity)}
-                      </p>
-                      {oldPrice && (
-                        <div className="flex items-center gap-2 justify-end">
-                          <span className="text-sm text-muted-foreground line-through">
-                            {formatPrice(oldPrice * item.quantity)}
-                          </span>
-                          <Badge variant="destructive" className="text-xs">
-                            -{discount}%
-                          </Badge>
-                        </div>
-                      )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 w-7 p-0"
+                          onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1, item.offerId)}
+                          disabled={updatingItems.has(itemId) || item.quantity <= 1}
+                        >
+                          <MinusIcon className="w-3 h-3" />
+                        </Button>
+                        <span className="w-8 text-center text-sm font-medium">
+                          {item.quantity}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 w-7 p-0"
+                          onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1, item.offerId)}
+                          disabled={updatingItems.has(itemId) || (isOffer ? false : item.quantity >= (item.product?.stock || 0))}
+                        >
+                          <PlusIcon className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 ml-2"
+                          onClick={() => handleRemoveItem(item.productId, item.offerId)}
+                          disabled={updatingItems.has(itemId)}
+                        >
+                          <TrashIcon className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1, item.offerId)}
-                        disabled={updatingItems.has(itemId) || item.quantity <= 1}
-                      >
-                        <MinusIcon className="w-4 h-4" />
-                      </Button>
-                      <span className="w-12 text-center font-medium">
-                        {item.quantity}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 w-8 p-0"
-                        onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1, item.offerId)}
-                        disabled={updatingItems.has(itemId) || (isOffer ? false : item.quantity >= (item.product?.stock || 0))}
-                      >
-                        <PlusIcon className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-red-600 hover:text-red-700"
-                      onClick={() => handleRemoveItem(item.productId, item.offerId)}
-                      disabled={updatingItems.has(itemId)}
-                    >
-                      <TrashIcon className="w-4 h-4 mr-1" />
-                      Удалить
-                    </Button>
                   </div>
                 </div>
               </Card>
@@ -319,7 +358,7 @@ export default function CartPage() {
 
         {/* Order summary */}
         <div className="lg:col-span-1">
-          <Card className="p-6 sticky top-4">
+          <Card className="p-4 sm:p-6 sticky top-4">
             <h2 className="text-xl font-semibold mb-4">Итого</h2>
             
             <div className="space-y-2 mb-4">
