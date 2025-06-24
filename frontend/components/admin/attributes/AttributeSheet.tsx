@@ -1,10 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Attribute, AttributeType, CreateAttributeDto, UpdateAttributeDto, attributesApi } from "@/lib/api/attributes"
+import {
+  Attribute,
+  AttributeType,
+  CreateAttributeDto,
+  UpdateAttributeDto,
+  attributesApi,
+} from "@/lib/api/attributes"
 import { categoriesApi, Category } from "@/lib/api/categories"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
+import { SheetDescription } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -18,12 +25,15 @@ interface AttributeSheetProps {
 }
 
 interface CategoryAssignment {
-  categoryId: string;
-  isRequired: boolean;
-  sortOrder: number;
+  categoryId: string
+  isRequired: boolean
 }
 
-export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetProps) {
+export function AttributeSheet({
+  attribute,
+  onSave,
+  onCancel,
+}: AttributeSheetProps) {
   const { accessToken } = useAuth()
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
@@ -37,7 +47,9 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
     sortOrder: 0,
     options: [] as string[],
   })
-  const [categoryAssignments, setCategoryAssignments] = useState<CategoryAssignment[]>([])
+  const [categoryAssignments, setCategoryAssignments] = useState<
+    CategoryAssignment[]
+  >([])
 
   useEffect(() => {
     loadCategories()
@@ -53,16 +65,17 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
         isRequired: attribute.isRequired,
         isFilterable: attribute.isFilterable,
         sortOrder: attribute.sortOrder,
-        options: attribute.options?.map(opt => opt.value) || [],
+        options: attribute.options
+          ?.sort((a, b) => a.sortOrder - b.sortOrder)
+          .map(opt => opt.value) || [],
       })
-      
+
       // Загружаем связи с категориями
       if (attribute.categoryAttributes) {
         setCategoryAssignments(
           attribute.categoryAttributes.map(ca => ({
             categoryId: ca.categoryId,
             isRequired: ca.isRequired,
-            sortOrder: ca.sortOrder,
           }))
         )
       }
@@ -86,7 +99,10 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
 
     // При смене типа очистить опции если они больше не нужны
     if (field === "type") {
-      if (value !== AttributeType.SELECT_ONE && value !== AttributeType.SELECT_MANY) {
+      if (
+        value !== AttributeType.SELECT_ONE &&
+        value !== AttributeType.SELECT_MANY
+      ) {
         setFormData(prev => ({ ...prev, options: [] }))
       }
     }
@@ -102,7 +118,7 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
   const updateOption = (index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      options: prev.options.map((opt, i) => i === index ? value : opt),
+      options: prev.options.map((opt, i) => (i === index ? value : opt)),
     }))
   }
 
@@ -116,11 +132,15 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
   const addCategoryAssignment = () => {
     setCategoryAssignments(prev => [
       ...prev,
-      { categoryId: "", isRequired: false, sortOrder: 0 }
+      { categoryId: "", isRequired: false },
     ])
   }
 
-  const updateCategoryAssignment = (index: number, field: keyof CategoryAssignment, value: any) => {
+  const updateCategoryAssignment = (
+    index: number,
+    field: keyof CategoryAssignment,
+    value: any
+  ) => {
     setCategoryAssignments(prev =>
       prev.map((assignment, i) =>
         i === index ? { ...assignment, [field]: value } : assignment
@@ -132,36 +152,75 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
     setCategoryAssignments(prev => prev.filter((_, i) => i !== index))
   }
 
-  const isSelectType = formData.type === AttributeType.SELECT_ONE || formData.type === AttributeType.SELECT_MANY
+  const isSelectType =
+    formData.type === AttributeType.SELECT_ONE ||
+    formData.type === AttributeType.SELECT_MANY
 
   const updateCategoryAssignments = async (attributeId: string) => {
     // Получаем текущие связи с категориями
     const currentAssignments = attribute?.categoryAttributes || []
-    
+
     // Удаляем связи, которых больше нет
     for (const current of currentAssignments) {
-      const stillExists = categoryAssignments.some(ca => ca.categoryId === current.categoryId)
+      const stillExists = categoryAssignments.some(
+        ca => ca.categoryId === current.categoryId
+      )
       if (!stillExists) {
         try {
-          await attributesApi.removeFromCategory(current.categoryId, attributeId, accessToken!)
+          await attributesApi.removeFromCategory(
+            current.categoryId,
+            attributeId,
+            accessToken!
+          )
         } catch (error) {
           console.error("Failed to remove category assignment:", error)
         }
       }
     }
 
-    // Добавляем или обновляем новые связи
+    // Добавляем новые связи (только те, которых еще нет)
     for (const assignment of categoryAssignments) {
       if (!assignment.categoryId) continue
+
+      const alreadyExists = currentAssignments.some(
+        ca => ca.categoryId === assignment.categoryId
+      )
       
-      try {
-        await attributesApi.assignToCategory(assignment.categoryId, {
-          attributeId,
-          isRequired: assignment.isRequired,
-          sortOrder: assignment.sortOrder,
-        }, accessToken!)
-      } catch (error) {
-        console.error("Failed to assign to category:", error)
+      if (!alreadyExists) {
+        try {
+          await attributesApi.assignToCategory(
+            assignment.categoryId,
+            {
+              attributeIds: [attributeId],
+              isRequired: assignment.isRequired,
+            },
+            accessToken!
+          )
+        } catch (error) {
+          console.error("Failed to assign to category:", error)
+        }
+      } else {
+        // Если связь уже существует, но изменился isRequired, нужно удалить и создать заново
+        const current = currentAssignments.find(ca => ca.categoryId === assignment.categoryId)
+        if (current && current.isRequired !== assignment.isRequired) {
+          try {
+            await attributesApi.removeFromCategory(
+              assignment.categoryId,
+              attributeId,
+              accessToken!
+            )
+            await attributesApi.assignToCategory(
+              assignment.categoryId,
+              {
+                attributeIds: [attributeId],
+                isRequired: assignment.isRequired,
+              },
+              accessToken!
+            )
+          } catch (error) {
+            console.error("Failed to update category assignment:", error)
+          }
+        }
       }
     }
   }
@@ -172,7 +231,10 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
 
     try {
       // Валидация
-      if (isSelectType && formData.options.filter(opt => opt.trim()).length === 0) {
+      if (
+        isSelectType &&
+        formData.options.filter(opt => opt.trim()).length === 0
+      ) {
         alert("Для типа 'Выбор' необходимо добавить хотя бы одну опцию")
         return
       }
@@ -180,7 +242,11 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
       const submitData = {
         ...formData,
         unit: formData.unit.trim() || undefined,
-        options: isSelectType ? formData.options.filter(opt => opt.trim()) : undefined,
+        options: isSelectType
+          ? formData.options
+              .filter(opt => opt.trim())
+              .map((value, index) => ({ value, sortOrder: index }))
+          : undefined,
       }
 
       let attributeId: string
@@ -210,7 +276,10 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
           sortOrder: submitData.sortOrder,
           options: submitData.options,
         }
-        const newAttribute = await attributesApi.create(createData, accessToken!)
+        const newAttribute = await attributesApi.create(
+          createData,
+          accessToken!
+        )
         attributeId = newAttribute.id
       }
 
@@ -227,15 +296,19 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <SheetHeader>
+    <>
+      <SheetHeader className="border-b p-6 pb-4">
         <SheetTitle>
           {attribute ? "Редактировать атрибут" : "Добавить атрибут"}
         </SheetTitle>
+        <SheetDescription>
+          Заполните информацию об атрибуте товаров
+        </SheetDescription>
       </SheetHeader>
 
-      <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
-        <div className="flex-1 space-y-6 py-6">
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="space-y-6 pb-4">
           {/* Code */}
           {!attribute && (
             <div className="space-y-2">
@@ -273,20 +346,24 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
             <select
               id="type"
               value={formData.type}
-              onChange={e => handleInputChange("type", e.target.value as AttributeType)}
+              onChange={e =>
+                handleInputChange("type", e.target.value as AttributeType)
+              }
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-              required
-            >
+              required>
               <option value={AttributeType.TEXT}>Текст</option>
               <option value={AttributeType.NUMBER}>Число</option>
               <option value={AttributeType.COLOR}>Цвет</option>
               <option value={AttributeType.SELECT_ONE}>Выбор одного</option>
-              <option value={AttributeType.SELECT_MANY}>Выбор нескольких</option>
+              <option value={AttributeType.SELECT_MANY}>
+                Выбор нескольких
+              </option>
             </select>
           </div>
 
           {/* Unit */}
-          {(formData.type === AttributeType.NUMBER || formData.type === AttributeType.TEXT) && (
+          {(formData.type === AttributeType.NUMBER ||
+            formData.type === AttributeType.TEXT) && (
             <div className="space-y-2">
               <Label htmlFor="unit">Единица измерения</Label>
               <Input
@@ -315,8 +392,7 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => removeOption(index)}
-                    >
+                      onClick={() => removeOption(index)}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -325,8 +401,7 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
                   type="button"
                   variant="outline"
                   onClick={addOption}
-                  className="w-full"
-                >
+                  className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   Добавить вариант
                 </Button>
@@ -341,7 +416,9 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
               id="sortOrder"
               type="number"
               value={formData.sortOrder}
-              onChange={e => handleInputChange("sortOrder", parseInt(e.target.value) || 0)}
+              onChange={e =>
+                handleInputChange("sortOrder", parseInt(e.target.value) || 0)
+              }
               min="0"
             />
           </div>
@@ -353,7 +430,9 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
               <Switch
                 id="isRequired"
                 checked={formData.isRequired}
-                onCheckedChange={checked => handleInputChange("isRequired", checked)}
+                onCheckedChange={checked =>
+                  handleInputChange("isRequired", checked)
+                }
               />
             </div>
             <div className="flex items-center justify-between">
@@ -361,7 +440,9 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
               <Switch
                 id="isFilterable"
                 checked={formData.isFilterable}
-                onCheckedChange={checked => handleInputChange("isFilterable", checked)}
+                onCheckedChange={checked =>
+                  handleInputChange("isFilterable", checked)
+                }
               />
             </div>
           </div>
@@ -378,9 +459,14 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
                   <div className="flex gap-2">
                     <select
                       value={assignment.categoryId}
-                      onChange={e => updateCategoryAssignment(index, "categoryId", e.target.value)}
-                      className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                    >
+                      onChange={e =>
+                        updateCategoryAssignment(
+                          index,
+                          "categoryId",
+                          e.target.value
+                        )
+                      }
+                      className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
                       <option value="">Выберите категорию</option>
                       {categories.map(category => (
                         <option key={category.id} value={category.id}>
@@ -392,29 +478,18 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => removeCategoryAssignment(index)}
-                    >
+                      onClick={() => removeCategoryAssignment(index)}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm">Обязательный</Label>
-                      <Switch
-                        checked={assignment.isRequired}
-                        onCheckedChange={checked => updateCategoryAssignment(index, "isRequired", checked)}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-sm">Порядок</Label>
-                      <Input
-                        type="number"
-                        value={assignment.sortOrder}
-                        onChange={e => updateCategoryAssignment(index, "sortOrder", parseInt(e.target.value) || 0)}
-                        min="0"
-                        className="h-8"
-                      />
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Обязательный для этой категории</Label>
+                    <Switch
+                      checked={assignment.isRequired}
+                      onCheckedChange={checked =>
+                        updateCategoryAssignment(index, "isRequired", checked)
+                      }
+                    />
                   </div>
                 </div>
               ))}
@@ -422,17 +497,17 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
                 type="button"
                 variant="outline"
                 onClick={addCategoryAssignment}
-                className="w-full"
-              >
+                className="w-full">
                 <Plus className="h-4 w-4 mr-2" />
                 Добавить категорию
               </Button>
             </div>
           </div>
+          </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 pt-6 border-t">
+        <div className="flex gap-3 p-6 border-t bg-background mt-auto">
           <Button type="button" variant="outline" onClick={onCancel}>
             Отмена
           </Button>
@@ -442,6 +517,6 @@ export function AttributeSheet({ attribute, onSave, onCancel }: AttributeSheetPr
           </Button>
         </div>
       </form>
-    </div>
+    </>
   )
 }

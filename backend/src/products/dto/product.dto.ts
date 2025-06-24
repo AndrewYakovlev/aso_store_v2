@@ -3,6 +3,7 @@ import { CategoryDto } from '../../categories/dto';
 import { ProductAttributeValueDto } from '../../attributes/dto';
 import { BrandDto } from '../../brands/dto';
 import { ProductVehicleDto } from '../../product-vehicles/dto';
+import { ProductImageDto } from './product-image.dto';
 
 export class ProductDto {
   @ApiProperty()
@@ -23,6 +24,9 @@ export class ProductDto {
   @ApiProperty()
   price: number;
 
+  @ApiProperty({ required: false })
+  oldPrice?: number;
+
   @ApiProperty()
   stock: number;
 
@@ -34,6 +38,9 @@ export class ProductDto {
 
   @ApiProperty({ type: [String] })
   images: string[];
+
+  @ApiProperty({ type: [ProductImageDto], required: false })
+  productImages?: ProductImageDto[];
 
   @ApiProperty({ required: false })
   brandId?: string;

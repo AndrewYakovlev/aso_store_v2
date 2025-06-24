@@ -8,6 +8,7 @@ import { ProductImage } from "@/components/products/ProductImage"
 import { ProductActions } from "@/components/products/ProductActions"
 import { ProductAttributes } from "@/components/ProductAttributes"
 import { ProductVehicles } from "@/components/products/ProductVehicles"
+import { ProductImageGallery } from "@/components/products/ProductImageGallery"
 import { Card } from "@/components/ui/card"
 import { 
   ShoppingCartIcon, 
@@ -105,39 +106,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Product Images */}
-        <div>
-          <Card className="overflow-hidden">
-            <div className="relative aspect-square bg-gray-100">
-              {product.images.length > 0 ? (
-                <ProductImage
-                  src={product.images[0]}
-                  alt={product.name}
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                  iconSize="lg"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  <ShoppingCartIcon className="w-32 h-32" />
-                </div>
-              )}
-            </div>
-          </Card>
-          
-          {product.images.length > 1 && (
-            <div className="grid grid-cols-4 gap-2 mt-4">
-              {product.images.slice(1, 5).map((image, index) => (
-                <div key={index} className="relative aspect-square overflow-hidden rounded-lg border bg-gray-100">
-                  <ProductImage
-                    src={image}
-                    alt={`${product.name} ${index + 2}`}
-                    sizes="(max-width: 1024px) 25vw, 12.5vw"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductImageGallery 
+          images={product.productImages || []} 
+          productName={product.name}
+        />
 
         {/* Product Info */}
         <div>

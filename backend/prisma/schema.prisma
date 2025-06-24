@@ -146,9 +146,10 @@ model Product {
   slug         String  @unique
   description  String?
   price        Decimal @db.Decimal(10, 2)
+  oldPrice     Decimal? @db.Decimal(10, 2) // Старая цена для отображения скидки
   stock        Int     @default(0)
   isActive     Boolean @default(true)
-  images       Json    @default("[]") // Array of image URLs
+  images       Json    @default("[]") // Array of image URLs - @deprecated use productImages relation
   brandId      String? // Необязательная связь с брендом
   excludeFromPromoCodes Boolean @default(false) // Не применять промокоды к этому товару
   createdAt    DateTime @default(now())
@@ -163,10 +164,29 @@ model Product {
   favorites      Favorite[]
   attributes     ProductAttribute[]
   vehicles       ProductVehicle[]
+  productImages  ProductImage[]
 
   @@index([sku])
   @@index([slug])
   @@index([brandId])
+}
+
+// Product Images
+model ProductImage {
+  id           String   @id @default(uuid())
+  productId    String
+  url          String   // URL изображения
+  alt          String?  // Alt текст для SEO
+  sortOrder    Int      @default(0) // Порядок отображения
+  isMain       Boolean  @default(false) // Главное изображение
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([sortOrder])
 }
 
 // Many-to-many relation between products and categories

@@ -2,6 +2,7 @@ import { apiRequest } from './client';
 import { ProductAttributeValueDto } from '@/lib/api/attributes/types';
 import { BrandDto } from '@/lib/api/brands/types';
 import { VehicleModel } from '@/lib/api/vehicles';
+import type { ProductImage } from './product-images';
 
 export interface ProductVehicle {
   id: string;
@@ -23,9 +24,11 @@ export interface Product {
   slug: string;
   description?: string;
   price: number;
+  oldPrice?: number;
   stock: number;
   isActive: boolean;
   images: string[];
+  productImages?: ProductImage[];
   brandId?: string;
   brand?: BrandDto;
   categories: Category[];
@@ -55,9 +58,9 @@ export interface CreateProductDto {
   slug: string;
   description?: string;
   price: number;
+  oldPrice?: number;
   stock: number;
   isActive?: boolean;
-  images?: string[];
   brandId?: string;
   categoryIds?: string[];
 }
@@ -68,9 +71,9 @@ export interface UpdateProductDto {
   slug?: string;
   description?: string;
   price?: number;
+  oldPrice?: number;
   stock?: number;
   isActive?: boolean;
-  images?: string[];
   brandId?: string;
   categoryIds?: string[];
 }

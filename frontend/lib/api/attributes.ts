@@ -33,6 +33,11 @@ export interface Attribute {
   updatedAt: string;
 }
 
+export interface CreateAttributeOptionDto {
+  value: string;
+  sortOrder?: number;
+}
+
 export interface CreateAttributeDto {
   code: string;
   name: string;
@@ -41,7 +46,7 @@ export interface CreateAttributeDto {
   isRequired?: boolean;
   isFilterable?: boolean;
   sortOrder?: number;
-  options?: string[]; // For SELECT types
+  options?: CreateAttributeOptionDto[]; // For SELECT types
 }
 
 export interface UpdateAttributeDto {
@@ -51,7 +56,7 @@ export interface UpdateAttributeDto {
   isRequired?: boolean;
   isFilterable?: boolean;
   sortOrder?: number;
-  options?: string[]; // For SELECT types
+  options?: CreateAttributeOptionDto[]; // For SELECT types
 }
 
 export interface AttributesFilter {
@@ -76,10 +81,9 @@ export interface CategoryAttribute {
   };
 }
 
-export interface AssignAttributeToCategoryDto {
-  attributeId: string;
+export interface AssignAttributesToCategoryDto {
+  attributeIds: string[];
   isRequired?: boolean;
-  sortOrder?: number;
 }
 
 export interface ProductAttributeValue {
@@ -103,7 +107,12 @@ export interface SetProductAttributeDto {
   optionIds?: string[];
 }
 
+export interface BulkSetProductAttributesDto {
+  attributes: SetProductAttributeDto[];
+}
+
 // Attributes API
+
 export const attributesApi = {
   // Get all attributes
   async getAll(filter: AttributesFilter = {}): Promise<Attribute[]> {
@@ -169,8 +178,8 @@ export const attributesApi = {
     return apiRequest(`/attributes/category/${categoryId}`);
   },
 
-  // Assign attribute to category (Admin only)
-  async assignToCategory(categoryId: string, data: AssignAttributeToCategoryDto, accessToken: string): Promise<CategoryAttribute> {
+  // Assign attributes to category (Admin only)
+  async assignToCategory(categoryId: string, data: AssignAttributesToCategoryDto, accessToken: string): Promise<CategoryAttribute[]> {
     return apiRequest(`/attributes/category/${categoryId}`, {
       method: 'POST',
       headers: {
@@ -191,6 +200,28 @@ export const attributesApi = {
     });
   },
 
+  // Get attributes for multiple categories
+  async getAttributesByCategoryIds(categoryIds: string[]): Promise<CategoryAttributeDto[]> {
+    if (categoryIds.length === 0) return [];
+    
+    // Make requests for each category and combine results
+    const promises = categoryIds.map(id => this.getCategoryAttributes(id));
+    const results = await Promise.all(promises);
+    
+    // Flatten and deduplicate by attributeId
+    const attributesMap = new Map<string, CategoryAttributeDto>();
+    results.flat().forEach(attr => {
+      // Keep the one with highest priority (isRequired = true wins)
+      const existing = attributesMap.get(attr.attributeId);
+      if (!existing || attr.isRequired) {
+        attributesMap.set(attr.attributeId, attr);
+      }
+    });
+    
+    return Array.from(attributesMap.values())
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+  },
+
   // Get product attributes
   async getProductAttributes(productId: string): Promise<ProductAttributeValue[]> {
     return apiRequest(`/attributes/product/${productId}`);
@@ -209,7 +240,7 @@ export const attributesApi = {
   },
 
   // Set multiple product attributes (Admin/Manager)
-  async setProductAttributesBulk(productId: string, data: SetProductAttributeDto[], accessToken: string): Promise<ProductAttributeValue[]> {
+  async setProductAttributes(productId: string, data: BulkSetProductAttributesDto, accessToken: string): Promise<ProductAttributeValue[]> {
     return apiRequest(`/attributes/product/${productId}/bulk`, {
       method: 'POST',
       headers: {
@@ -228,5 +259,27 @@ export const attributesApi = {
         'Authorization': `Bearer ${accessToken}`,
       },
     });
+  },
+
+  // Get attributes for multiple categories
+  async getAttributesByCategoryIds(categoryIds: string[]): Promise<CategoryAttribute[]> {
+    if (categoryIds.length === 0) return [];
+    
+    // Make requests for each category and combine results
+    const promises = categoryIds.map(id => this.getCategoryAttributes(id));
+    const results = await Promise.all(promises);
+    
+    // Flatten and deduplicate by attributeId
+    const attributesMap = new Map<string, CategoryAttribute>();
+    results.flat().forEach(attr => {
+      // Keep the one with highest priority (isRequired = true wins)
+      const existing = attributesMap.get(attr.attributeId);
+      if (!existing || attr.isRequired) {
+        attributesMap.set(attr.attributeId, attr);
+      }
+    });
+    
+    return Array.from(attributesMap.values())
+      .sort((a, b) => a.sortOrder - b.sortOrder);
   },
 };

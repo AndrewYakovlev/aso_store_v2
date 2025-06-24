@@ -39,6 +39,13 @@ export class CreateProductDto {
   @Type(() => Number)
   price: number;
 
+  @ApiProperty({ description: 'Старая цена товара (для отображения скидки)', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  oldPrice?: number;
+
   @ApiProperty({ description: 'Количество на складе', default: 0 })
   @IsOptional()
   @IsNumber()
@@ -59,10 +66,12 @@ export class CreateProductDto {
   @ApiProperty({
     description: 'Массив ID категорий',
     type: [String],
+    required: false,
   })
+  @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true })
-  categoryIds: string[];
+  categoryIds?: string[];
 
   @ApiProperty({
     description: 'Массив URL изображений',

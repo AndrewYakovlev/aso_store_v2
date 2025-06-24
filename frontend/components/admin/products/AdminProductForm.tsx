@@ -8,6 +8,8 @@ import { brandsApi, BrandWithProductsCount } from '@/lib/api/brands';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { generateSlug } from '@/lib/utils/slug';
 import { Loader2 } from 'lucide-react';
+import { CategorySearchSelect } from './CategorySearchSelect';
+import { ProductImagesManager } from './ProductImagesManager';
 
 interface CategoryWithLevel extends Category {
   level: number;
@@ -33,14 +35,14 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
     slug: '',
     description: '',
     price: '',
+    oldPrice: '',
     stock: '',
     categoryIds: [] as string[],
     brandId: '',
     images: [] as string[],
+    productImages: [] as any[],
     isActive: true,
   });
-
-  const [newImageUrl, setNewImageUrl] = useState('');
 
   useEffect(() => {
     loadCategories();
@@ -117,10 +119,12 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
         slug: data.slug,
         description: data.description || '',
         price: data.price.toString(),
+        oldPrice: data.oldPrice?.toString() || '',
         stock: data.stock.toString(),
         categoryIds: data.categories.map(c => c.id),
         brandId: data.brandId || '',
         images: data.images,
+        productImages: data.productImages || [],
         isActive: data.isActive,
       });
     } catch (error) {
@@ -149,23 +153,6 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
     }));
   };
 
-  const handleAddImage = () => {
-    if (newImageUrl.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, newImageUrl.trim()],
-      }));
-      setNewImageUrl('');
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -178,10 +165,11 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
         slug: formData.slug,
         description: formData.description || undefined,
         price: parseFloat(formData.price),
+        oldPrice: formData.oldPrice ? parseFloat(formData.oldPrice) : undefined,
         stock: parseInt(formData.stock),
-        categoryIds: formData.categoryIds,
+        categoryIds: formData.categoryIds.length > 0 ? formData.categoryIds : undefined,
         brandId: formData.brandId || undefined,
-        images: formData.images,
+        images: formData.productImages.map(img => img.url),
         isActive: formData.isActive,
       };
 
@@ -294,6 +282,21 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
+              Старая цена (для отображения скидки)
+            </label>
+            <input
+              type="number"
+              value={formData.oldPrice}
+              onChange={(e) => setFormData(prev => ({ ...prev, oldPrice: e.target.value }))}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
+              min="0"
+              step="0.01"
+              placeholder="Оставьте пустым, если нет скидки"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Остаток на складе <span className="text-red-500">*</span>
             </label>
             <input
@@ -333,68 +336,26 @@ export function AdminProductForm({ productId }: AdminProductFormProps) {
       </div>
 
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Категории</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          Категории 
+          <span className="text-sm font-normal text-gray-500 ml-2">(необязательно)</span>
+        </h2>
         
-        <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-4">
-          {categories.map(category => (
-            <label key={category.id} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={formData.categoryIds.includes(category.id)}
-                onChange={() => handleCategoryToggle(category.id)}
-                className="mr-2 flex-shrink-0"
-              />
-              <span 
-                className="text-sm flex-1" 
-                style={{ paddingLeft: `${(category.level || 0) * 16}px` }}
-              >
-                {category.level > 0 && '└─ '}{category.name}
-              </span>
-            </label>
-          ))}
-        </div>
+        <CategorySearchSelect
+          categories={categories}
+          selectedIds={formData.categoryIds}
+          onToggle={handleCategoryToggle}
+        />
       </div>
 
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Изображения</h2>
         
-        <div className="flex gap-2 mb-4">
-          <input
-            type="url"
-            value={newImageUrl}
-            onChange={(e) => setNewImageUrl(e.target.value)}
-            placeholder="URL изображения"
-            className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500"
-          />
-          <button
-            type="button"
-            onClick={handleAddImage}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Добавить
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {formData.images.map((image, index) => (
-            <div key={index} className="relative group">
-              <img
-                src={image}
-                alt={`Изображение ${index + 1}`}
-                className="w-full h-32 object-cover rounded-lg"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(index)}
-                className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
+        <ProductImagesManager
+          productId={productId}
+          images={formData.productImages}
+          onImagesChange={(images) => setFormData(prev => ({ ...prev, productImages: images }))}
+        />
       </div>
 
       <div className="flex gap-4">

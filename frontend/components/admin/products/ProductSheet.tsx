@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { productsApi, Product, CreateProductDto, UpdateProductDto } from '@/lib/api/products';
 import { categoriesApi } from '@/lib/api/categories';
 import { brandsApi, BrandWithProductsCount } from '@/lib/api/brands';
+import { attributesApi, ProductAttributeValue, SetProductAttributeDto } from '@/lib/api/attributes';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { generateSlug } from '@/lib/utils/slug';
 import { Loader2 } from 'lucide-react';
@@ -12,6 +13,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { CategorySearchSelect } from './CategorySearchSelect';
+import { ProductImagesManager } from './ProductImagesManager';
+import { BrandCombobox } from './BrandCombobox';
+import { ProductAttributes } from './ProductAttributes';
 
 interface CategoryWithLevel {
   id: string;
@@ -36,6 +41,8 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<CategoryWithLevel[]>([]);
   const [brands, setBrands] = useState<BrandWithProductsCount[]>([]);
+  const [productAttributes, setProductAttributes] = useState<ProductAttributeValue[]>([]);
+  const [pendingAttributes, setPendingAttributes] = useState<SetProductAttributeDto[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -44,14 +51,13 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
     slug: '',
     description: '',
     price: '',
+    oldPrice: '',
     stock: '',
     categoryIds: [] as string[],
     brandId: '',
-    images: [] as string[],
+    productImages: [] as any[],
     isActive: true,
   });
-
-  const [newImageUrl, setNewImageUrl] = useState('');
 
   useEffect(() => {
     loadCategories();
@@ -63,12 +69,14 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
         slug: product.slug,
         description: product.description || '',
         price: product.price.toString(),
+        oldPrice: product.oldPrice?.toString() || '',
         stock: product.stock.toString(),
         categoryIds: product.categories.map(c => c.id),
         brandId: product.brandId || '',
-        images: product.images,
+        productImages: product.productImages || [],
         isActive: product.isActive,
       });
+      loadProductAttributes(product.id);
     } else {
       setFormData({
         name: '',
@@ -76,14 +84,17 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
         slug: '',
         description: '',
         price: '',
+        oldPrice: '',
         stock: '',
         categoryIds: [],
         brandId: '',
-        images: [],
+        productImages: [],
         isActive: true,
       });
+      setProductAttributes([]);
     }
     setError(null);
+    setPendingAttributes([]);
   }, [product]);
 
   const loadCategories = async () => {
@@ -141,6 +152,15 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
     }
   };
 
+  const loadProductAttributes = async (productId: string) => {
+    try {
+      const attributes = await attributesApi.getProductAttributes(productId);
+      setProductAttributes(attributes);
+    } catch (error) {
+      console.error('Failed to load product attributes:', error);
+    }
+  };
+
   const handleNameChange = (name: string) => {
     setFormData(prev => ({
       ...prev,
@@ -158,46 +178,76 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
     }));
   };
 
-  const handleAddImage = () => {
-    if (newImageUrl.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, newImageUrl.trim()],
-      }));
-      setNewImageUrl('');
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
 
     try {
+      // Не отправляем images, так как они управляются через отдельную таблицу ProductImage
       const data: CreateProductDto | UpdateProductDto = {
         name: formData.name,
         sku: formData.sku,
         slug: formData.slug,
         description: formData.description || undefined,
         price: parseFloat(formData.price),
+        oldPrice: formData.oldPrice ? parseFloat(formData.oldPrice) : undefined,
         stock: parseInt(formData.stock),
-        categoryIds: formData.categoryIds,
+        categoryIds: formData.categoryIds.length > 0 ? formData.categoryIds : undefined,
         brandId: formData.brandId || undefined,
-        images: formData.images,
         isActive: formData.isActive,
       };
 
+      let savedProductId: string;
+      
       if (product) {
         await productsApi.update(product.id, data as UpdateProductDto, accessToken!);
+        savedProductId = product.id;
       } else {
-        await productsApi.create(data as CreateProductDto, accessToken!);
+        const newProduct = await productsApi.create(data as CreateProductDto, accessToken!);
+        savedProductId = newProduct.id;
+      }
+
+      // Save product attributes
+      if (pendingAttributes.length > 0 && savedProductId) {
+        try {
+          await attributesApi.setProductAttributes(
+            savedProductId,
+            { attributes: pendingAttributes },
+            accessToken!
+          );
+        } catch (error) {
+          console.error('Failed to save product attributes:', error);
+        }
+      }
+
+      // Загружаем временные изображения (blob URL) после создания товара
+      const tempImages = formData.productImages.filter(img => 
+        img.url.startsWith('blob:') && (img as any)._file
+      );
+      
+      if (tempImages.length > 0 && savedProductId) {
+        // Импортируем API для изображений
+        const { productImagesApi } = await import('@/lib/api/product-images');
+        
+        for (const tempImage of tempImages) {
+          const file = (tempImage as any)._file as File;
+          if (file) {
+            try {
+              await productImagesApi.uploadImage(
+                savedProductId,
+                file,
+                { 
+                  alt: tempImage.alt,
+                  isMain: tempImage.isMain 
+                },
+                accessToken!
+              );
+            } catch (error) {
+              console.error('Failed to upload image after product save:', error);
+            }
+          }
+        }
       }
 
       onSave();
@@ -210,8 +260,8 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <SheetHeader className="px-6 py-4 border-b">
+    <div className="flex flex-col h-full overflow-hidden">
+      <SheetHeader className="px-6 py-4 border-b flex-shrink-0">
         <SheetTitle>
           {product ? 'Редактирование товара' : 'Создание товара'}
         </SheetTitle>
@@ -223,9 +273,9 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
         </SheetDescription>
       </SheetHeader>
 
-      <form onSubmit={handleSubmit} className="flex flex-col flex-1">
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
         {error && (
-          <div className="mx-6 mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+          <div className="mx-6 mt-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded flex-shrink-0">
             {error}
           </div>
         )}
@@ -279,18 +329,12 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Бренд
                 </label>
-                <select
+                <BrandCombobox
                   value={formData.brandId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, brandId: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Выберите бренд</option>
-                  {brands.map(brand => (
-                    <option key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setFormData(prev => ({ ...prev, brandId: value }))}
+                  brands={brands}
+                  onBrandsUpdate={loadBrands}
+                />
               </div>
 
               <div>
@@ -305,6 +349,21 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
                   min="0"
                   step="0.01"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Старая цена (для отображения скидки)
+                </label>
+                <input
+                  type="number"
+                  value={formData.oldPrice}
+                  onChange={(e) => setFormData(prev => ({ ...prev, oldPrice: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  min="0"
+                  step="0.01"
+                  placeholder="Оставьте пустым, если нет скидки"
                 />
               </div>
 
@@ -350,72 +409,44 @@ export function ProductSheet({ product, onSave, onCancel }: ProductSheetProps) {
 
           {/* Категории */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Категории</h3>
-            <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-4">
-              {categories.map(category => (
-                <label key={category.id} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.categoryIds.includes(category.id)}
-                    onChange={() => handleCategoryToggle(category.id)}
-                    className="mr-2 flex-shrink-0"
-                  />
-                  <span 
-                    className="text-sm flex-1" 
-                    style={{ paddingLeft: `${category.level * 16}px` }}
-                  >
-                    {category.level > 0 && '└─ '}{category.name}
-                  </span>
-                </label>
-              ))}
-            </div>
+            <h3 className="text-lg font-medium">
+              Категории
+              <span className="text-sm font-normal text-gray-500 ml-2">(необязательно)</span>
+            </h3>
+            <CategorySearchSelect
+              categories={categories}
+              selectedIds={formData.categoryIds}
+              onToggle={handleCategoryToggle}
+            />
+          </div>
+
+          {/* Характеристики */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">
+              Характеристики
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                (доступны после выбора категорий)
+              </span>
+            </h3>
+            <ProductAttributes
+              categoryIds={formData.categoryIds}
+              productAttributes={productAttributes}
+              onChange={setPendingAttributes}
+            />
           </div>
 
           {/* Изображения */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Изображения</h3>
-            
-            <div className="flex gap-2">
-              <input
-                type="url"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="URL изображения"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <button
-                type="button"
-                onClick={handleAddImage}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Добавить
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {formData.images.map((image, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={image}
-                    alt={`Изображение ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
+            <ProductImagesManager
+              productId={product?.id}
+              images={formData.productImages}
+              onImagesChange={(images) => setFormData(prev => ({ ...prev, productImages: images }))}
+            />
           </div>
         </div>
 
-        <div className="flex gap-3 p-6 border-t">
+        <div className="flex gap-3 p-6 border-t flex-shrink-0">
           <button
             type="button"
             onClick={onCancel}

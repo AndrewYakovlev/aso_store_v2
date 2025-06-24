@@ -59,18 +59,23 @@ export function ProductCard({ product }: ProductCardProps) {
     <Card className="group relative overflow-hidden hover:shadow-lg transition-shadow">
       <Link href={`/product/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden bg-gray-100">
-          {product.images.length > 0 ? (
-            <ProductImage
-              src={product.images[0]}
-              alt={product.name}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              <ShoppingCartIcon className="w-16 h-16" />
-            </div>
-          )}
+          {(() => {
+            // Находим главное изображение или берем первое
+            const mainImage = product.productImages?.find(img => img.isMain) || product.productImages?.[0];
+            
+            return mainImage ? (
+              <ProductImage
+                src={mainImage.url}
+                alt={mainImage.alt || product.name}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">
+                <ShoppingCartIcon className="w-16 h-16" />
+              </div>
+            );
+          })()}
         </div>
       </Link>
       

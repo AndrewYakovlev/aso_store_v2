@@ -201,7 +201,7 @@ export function AdminAttributesList() {
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-1/3">
+        <SheetContent className="w-1/3 max-h-screen overflow-hidden flex flex-col">
           <AttributeSheet
             attribute={editingAttribute}
             onSave={handleSheetSave}

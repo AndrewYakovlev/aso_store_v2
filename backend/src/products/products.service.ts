@@ -19,7 +19,7 @@ export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createProductDto: CreateProductDto): Promise<ProductDto> {
-    const { categoryIds, images, brandId, ...productData } = createProductDto;
+    const { categoryIds, images, brandId, oldPrice, ...productData } = createProductDto;
 
     // Check if SKU already exists
     const existingBySku = await this.prisma.product.findUnique({
@@ -41,13 +41,16 @@ export class ProductsService {
     const product = await this.prisma.product.create({
       data: {
         ...productData,
+        oldPrice,
         images: images || [],
         ...(brandId && { brand: { connect: { id: brandId } } }),
-        categories: {
-          create: categoryIds.map((categoryId) => ({
-            category: { connect: { id: categoryId } },
-          })),
-        },
+        ...(categoryIds && categoryIds.length > 0 && {
+          categories: {
+            create: categoryIds.map((categoryId) => ({
+              category: { connect: { id: categoryId } },
+            })),
+          },
+        }),
       },
       include: {
         brand: true,
@@ -55,6 +58,9 @@ export class ProductsService {
           include: {
             category: true,
           },
+        },
+        productImages: {
+          orderBy: [{ isMain: 'desc' }, { sortOrder: 'asc' }],
         },
       },
     });
@@ -254,6 +260,9 @@ export class ProductsService {
           },
         },
         specifications: true,
+        productImages: {
+          orderBy: [{ isMain: 'desc' }, { sortOrder: 'asc' }],
+        },
         attributes: {
           include: {
             attribute: {
@@ -298,6 +307,9 @@ export class ProductsService {
           },
         },
         specifications: true,
+        productImages: {
+          orderBy: [{ isMain: 'desc' }, { sortOrder: 'asc' }],
+        },
         attributes: {
           include: {
             attribute: {
@@ -337,6 +349,9 @@ export class ProductsService {
           },
         },
         specifications: true,
+        productImages: {
+          orderBy: [{ isMain: 'desc' }, { sortOrder: 'asc' }],
+        },
         attributes: {
           include: {
             attribute: {
@@ -369,7 +384,7 @@ export class ProductsService {
     id: string,
     updateProductDto: UpdateProductDto,
   ): Promise<ProductDto> {
-    const { categoryIds, images, brandId, ...productData } = updateProductDto;
+    const { categoryIds, images, brandId, oldPrice, ...productData } = updateProductDto;
 
     // Check if product exists
     const existing = await this.prisma.product.findUnique({
@@ -394,6 +409,7 @@ export class ProductsService {
       where: { id },
       data: {
         ...productData,
+        ...(oldPrice !== undefined && { oldPrice }),
         ...(images !== undefined && { images }),
         ...(brandId !== undefined && {
           brand: brandId ? { connect: { id: brandId } } : { disconnect: true },
@@ -401,9 +417,11 @@ export class ProductsService {
         ...(categoryIds !== undefined && {
           categories: {
             deleteMany: {},
-            create: categoryIds.map((categoryId) => ({
-              category: { connect: { id: categoryId } },
-            })),
+            ...(categoryIds.length > 0 && {
+              create: categoryIds.map((categoryId) => ({
+                category: { connect: { id: categoryId } },
+              })),
+            }),
           },
         }),
       },
@@ -415,6 +433,9 @@ export class ProductsService {
           },
         },
         specifications: true,
+        productImages: {
+          orderBy: [{ isMain: 'desc' }, { sortOrder: 'asc' }],
+        },
         attributes: {
           include: {
             attribute: {
@@ -478,6 +499,7 @@ export class ProductsService {
       slug: product.slug,
       description: product.description,
       price: product.price.toNumber(),
+      oldPrice: product.oldPrice ? product.oldPrice.toNumber() : undefined,
       stock: product.stock,
       isActive: product.isActive,
       excludeFromPromoCodes: product.excludeFromPromoCodes || false,
@@ -547,6 +569,20 @@ export class ProductsService {
 
         return attrValue;
       });
+    }
+
+    // Добавляем изображения товара
+    if (product.productImages) {
+      dto.productImages = product.productImages.map((img: any) => ({
+        id: img.id,
+        productId: img.productId,
+        url: img.url,
+        alt: img.alt,
+        sortOrder: img.sortOrder,
+        isMain: img.isMain,
+        createdAt: img.createdAt,
+        updatedAt: img.updatedAt,
+      }));
     }
 
     // Добавляем информацию об автомобилях
