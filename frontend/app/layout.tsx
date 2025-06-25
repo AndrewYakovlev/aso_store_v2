@@ -5,6 +5,7 @@ import { AnonymousTokenProvider } from '@/components/AnonymousTokenProvider';
 import { NotificationProvider } from '@/lib/contexts/NotificationContext';
 import { NotificationInitializer } from '@/components/NotificationInitializer';
 import { Toaster } from '@/components/ui/toaster';
+import { YandexMetrika } from '@/components/YandexMetrika';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
@@ -34,6 +35,7 @@ export default function RootLayout({
             <Toaster />
           </NotificationProvider>
         </AnonymousTokenProvider>
+        <YandexMetrika />
       </body>
     </html>
   );
