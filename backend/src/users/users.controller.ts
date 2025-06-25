@@ -110,4 +110,40 @@ export class UsersController {
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
+
+  @Get(':id/cart')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Получить корзину пользователя' })
+  @ApiResponse({ status: 200, description: 'Корзина пользователя' })
+  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
+  getUserCart(@Param('id') id: string) {
+    return this.usersService.getUserCart(id);
+  }
+
+  @Get(':id/favorites')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Получить избранное пользователя' })
+  @ApiResponse({ status: 200, description: 'Избранное пользователя' })
+  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
+  getUserFavorites(@Param('id') id: string) {
+    return this.usersService.getUserFavorites(id);
+  }
+
+  @Get(':id/chats')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Получить чаты пользователя' })
+  @ApiResponse({ status: 200, description: 'Чаты пользователя' })
+  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
+  getUserChats(@Param('id') id: string) {
+    return this.usersService.getUserChats(id);
+  }
+
+  @Get(':id/anonymous-users')
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Получить связанных анонимных пользователей' })
+  @ApiResponse({ status: 200, description: 'Список анонимных пользователей' })
+  @ApiResponse({ status: 404, description: 'Пользователь не найден' })
+  getUserAnonymousUsers(@Param('id') id: string) {
+    return this.usersService.getUserAnonymousUsers(id);
+  }
 }

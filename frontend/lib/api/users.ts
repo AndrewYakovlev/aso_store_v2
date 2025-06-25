@@ -162,4 +162,28 @@ export const usersApi = {
       token: accessToken,
     });
   },
+
+  async getUserCart(accessToken: string, id: string): Promise<any> {
+    return apiRequestWithAuth(`/users/${id}/cart`, {
+      token: accessToken,
+    });
+  },
+
+  async getUserFavorites(accessToken: string, id: string): Promise<any> {
+    return apiRequestWithAuth(`/users/${id}/favorites`, {
+      token: accessToken,
+    });
+  },
+
+  async getUserChats(accessToken: string, id: string): Promise<any> {
+    return apiRequestWithAuth(`/users/${id}/chats`, {
+      token: accessToken,
+    });
+  },
+
+  async getUserAnonymousUsers(accessToken: string, id: string): Promise<any[]> {
+    return apiRequestWithAuth(`/users/${id}/anonymous-users`, {
+      token: accessToken,
+    });
+  },
 };

@@ -7,15 +7,15 @@ import { Badge } from "@/components/ui/badge"
 import { 
   PhoneIcon, 
   EnvelopeIcon,
-  PencilSquareIcon,
+  EyeIcon,
   TrashIcon,
   ShoppingBagIcon,
   ChatBubbleLeftRightIcon
 } from "@heroicons/react/24/outline"
 import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface ColumnsProps {
-  onEdit: (user: User) => void
   onDelete: (id: string) => void
   deleting: string | null
 }
@@ -32,7 +32,7 @@ const roleColors: Record<Role, string> = {
   [Role.ADMIN]: 'destructive',
 }
 
-export const createUsersColumns = ({ onEdit, onDelete, deleting }: ColumnsProps): ColumnDef<User>[] => [
+export const createUsersColumns = ({ onDelete, deleting }: ColumnsProps): ColumnDef<User>[] => [
   {
     accessorKey: "phone",
     header: "Телефон",
@@ -114,15 +114,17 @@ export const createUsersColumns = ({ onEdit, onDelete, deleting }: ColumnsProps)
   {
     id: "actions",
     header: "Действия",
-    cell: ({ row }) => (
-      <div className="flex gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit(row.original)}
-        >
-          <PencilSquareIcon className="h-4 w-4" />
-        </Button>
+    cell: ({ row }) => {
+      const router = useRouter();
+      return (
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push(`/panel/users/${row.original.id}`)}
+          >
+            <EyeIcon className="h-4 w-4" />
+          </Button>
         <Button
           variant="ghost"
           size="sm"
@@ -136,6 +138,7 @@ export const createUsersColumns = ({ onEdit, onDelete, deleting }: ColumnsProps)
           )}
         </Button>
       </div>
-    ),
+    )
+    },
   },
 ]

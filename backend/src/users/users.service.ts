@@ -2,16 +2,29 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateUserDto, UpdateUserDto, UserFilterDto, UserDto } from './dto';
+import { CreateUserDto, UpdateUserDto, UserFilterDto } from './dto';
 import { Prisma, UserRole } from '@prisma/client';
 import { PaginatedResponse } from '../common/interfaces/paginated-response.interface';
 import { normalizePhone } from '../common/utils/phone.utils';
+import { CartService } from '../cart/cart.service';
+import { FavoritesService } from '../favorites/favorites.service';
+import { ChatsService } from '../chats/chats.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => CartService))
+    private cartService: CartService,
+    @Inject(forwardRef(() => FavoritesService))
+    private favoritesService: FavoritesService,
+    @Inject(forwardRef(() => ChatsService))
+    private chatsService: ChatsService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const phone = normalizePhone(createUserDto.phone);
@@ -27,9 +40,21 @@ export class UsersService {
       );
     }
 
+    // Преобразуем пустые строки в undefined
+    const cleanedData: Partial<CreateUserDto> = {};
+    (Object.keys(createUserDto) as Array<keyof CreateUserDto>).forEach((key) => {
+      const value = createUserDto[key];
+      if (value === '') {
+        // Пропускаем пустые строки, что эквивалентно undefined
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        cleanedData[key] = value as any;
+      }
+    });
+
     return this.prisma.user.create({
       data: {
-        ...createUserDto,
+        ...cleanedData,
         phone,
       },
     });
@@ -108,6 +133,7 @@ export class UsersService {
             orders: true,
             chats: true,
             favorites: true,
+            anonymousUsers: true,
           },
         },
         orders: {
@@ -117,6 +143,19 @@ export class UsersService {
             items: {
               include: {
                 product: true,
+              },
+            },
+          },
+        },
+        anonymousUsers: {
+          take: 5,
+          orderBy: { lastActivity: 'desc' },
+          include: {
+            _count: {
+              select: {
+                carts: true,
+                favorites: true,
+                chats: true,
               },
             },
           },
@@ -150,14 +189,27 @@ export class UsersService {
       updateUserDto.phone = phone;
     }
 
+    // Преобразуем пустые строки в undefined
+    const cleanedData: Partial<UpdateUserDto> = {};
+    (Object.keys(updateUserDto) as Array<keyof UpdateUserDto>).forEach((key) => {
+      const value = updateUserDto[key];
+      if (value === '') {
+        // Пропускаем пустые строки, что эквивалентно undefined
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        cleanedData[key] = value as any;
+      }
+    });
+
     return this.prisma.user.update({
       where: { id },
-      data: updateUserDto,
+      data: cleanedData,
     });
   }
 
   async remove(id: string) {
-    const user = await this.findOne(id);
+    // Проверяем, существует ли пользователь
+    await this.findOne(id);
 
     // Проверяем, можно ли удалить пользователя
     const ordersCount = await this.prisma.order.count({
@@ -205,9 +257,9 @@ export class UsersService {
     };
   }
 
-  async findOrCreateByPhone(phone: string, name?: string): Promise<any> {
+  async findOrCreateByPhone(phone: string, _name?: string): Promise<any> {
     const normalizedPhone = normalizePhone(phone);
-    
+
     // Попробуем найти существующего пользователя
     let user = await this.prisma.user.findUnique({
       where: { phone: normalizedPhone },
@@ -221,14 +273,14 @@ export class UsersService {
         },
       },
     });
-    
+
     let isNewUser = false;
     let orderStats: {
       count: number;
       totalAmount: number;
       lastOrderDate: Date | null;
     } | null = null;
-    
+
     // Если найден существующий пользователь, получаем статистику заказов
     if (user) {
       const orders = await this.prisma.order.findMany({
@@ -238,12 +290,19 @@ export class UsersService {
           createdAt: true,
         },
       });
-      
+
       orderStats = {
         count: orders.length,
-        totalAmount: orders.reduce((sum, order) => sum + order.totalAmount.toNumber(), 0),
-        lastOrderDate: orders.length > 0 ? 
-          orders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0].createdAt : null,
+        totalAmount: orders.reduce(
+          (sum, order) => sum + order.totalAmount.toNumber(),
+          0,
+        ),
+        lastOrderDate:
+          orders.length > 0
+            ? orders.sort(
+                (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+              )[0].createdAt
+            : null,
       };
     } else {
       // Если не найден, создаем нового
@@ -265,18 +324,88 @@ export class UsersService {
           },
         },
       });
-      
+
       orderStats = {
         count: 0,
         totalAmount: 0,
         lastOrderDate: null,
       };
     }
-    
+
     return {
       ...user,
       isNewUser,
       orderStats,
     };
+  }
+
+  async getUserCart(userId: string) {
+    // Проверяем существование пользователя
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    // Используем метод из CartService
+    return this.cartService.getCart(userId, undefined);
+  }
+
+  async getUserFavorites(userId: string) {
+    // Проверяем существование пользователя
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    // Используем метод из FavoritesService
+    return this.favoritesService.getFavorites(userId, undefined);
+  }
+
+  async getUserChats(userId: string) {
+    // Проверяем существование пользователя
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    // Используем метод из ChatsService
+    return this.chatsService.getUserChats(userId, null);
+  }
+
+  async getUserAnonymousUsers(userId: string) {
+    // Проверяем существование пользователя
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    // Получаем связанных анонимных пользователей
+    const anonymousUsers = await this.prisma.anonymousUser.findMany({
+      where: { userId },
+      include: {
+        _count: {
+          select: {
+            carts: true,
+            favorites: true,
+            chats: true,
+          },
+        },
+      },
+      orderBy: { lastActivity: 'desc' },
+    });
+
+    return anonymousUsers;
   }
 }

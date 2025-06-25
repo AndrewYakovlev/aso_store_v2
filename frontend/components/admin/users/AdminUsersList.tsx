@@ -64,10 +64,6 @@ export function AdminUsersList() {
     }
   }
 
-  const handleEdit = (user: User) => {
-    setEditingUser(user)
-    setSheetOpen(true)
-  }
 
   const handleCreate = () => {
     setEditingUser(null)
@@ -94,32 +90,23 @@ export function AdminUsersList() {
 
   if (loading && !users.length) {
     return (
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
   }
 
   return (
     <>
-      <div className="bg-white shadow rounded-lg">
-        <div className="p-6 border-b">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h2 className="text-xl font-semibold">Пользователи</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Управление пользователями и их ролями
-              </p>
-            </div>
-            <button
-              onClick={handleCreate}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
-              <PlusIcon className="h-5 w-5" />
-              Добавить пользователя
-            </button>
-          </div>
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2">
+            <PlusIcon className="h-5 w-5" />
+            Добавить пользователя
+          </button>
+        </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
@@ -160,11 +147,9 @@ export function AdminUsersList() {
               <option value="firstName:desc">По имени (Я-А)</option>
             </select>
           </div>
-        </div>
 
         <DataTable
           columns={createUsersColumns({
-            onEdit: handleEdit,
             onDelete: handleDelete,
             deleting,
           })}

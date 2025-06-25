@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Send, X, Package, Clock } from "lucide-react"
 import { chatApi } from "@/lib/api/chat"
 import { chatSocket } from "@/lib/chat/socket"
-import type { Chat, ChatMessage, CreateProductOfferDto } from "@/types/chat"
+import type { Chat, ChatMessage, CreateProductOfferDto, UpdateProductOfferDto } from "@/types/chat"
 import { formatDistanceToNow } from "date-fns"
 import { ru } from "date-fns/locale"
 import { useAuth } from "@/lib/contexts/AuthContext"
@@ -41,6 +41,7 @@ export default function ChatWindow({
   const [message, setMessage] = useState("")
   const [isSending, setIsSending] = useState(false)
   const [showOfferForm, setShowOfferForm] = useState(false)
+  const [editingOfferId, setEditingOfferId] = useState<string | null>(null)
   const [offerData, setOfferData] = useState<CreateProductOfferDto>({
     name: "",
     description: "",
@@ -193,8 +194,23 @@ export default function ChatWindow({
 
 
   const handleEditOffer = (offerId: string) => {
-    // TODO: Implement edit offer functionality
-    console.log('Edit offer:', offerId);
+    const message = messages.find(msg => msg.offer?.id === offerId);
+    if (!message?.offer) return;
+    
+    const offer = message.offer;
+    setEditingOfferId(offerId);
+    setOfferData({
+      name: offer.name,
+      description: offer.description || '',
+      price: offer.price,
+      oldPrice: offer.oldPrice,
+      images: offer.images || [],
+      deliveryDays: offer.deliveryDays,
+      isOriginal: offer.isOriginal,
+      isAnalog: offer.isAnalog,
+      expiresAt: offer.expiresAt,
+    });
+    setShowOfferForm(true);
   };
 
   const handleCancelOffer = async (offerId: string) => {
@@ -395,25 +411,74 @@ export default function ChatWindow({
       {/* Product offer form */}
       {showOfferForm && isManager && accessToken && (
         <div className="p-4 border-b bg-gray-50">
-          <h4 className="font-medium mb-3">Создать товарное предложение</h4>
+          <h4 className="font-medium mb-3">
+            {editingOfferId ? 'Редактировать товарное предложение' : 'Создать товарное предложение'}
+          </h4>
           <ProductOfferForm
+            initialData={editingOfferId ? offerData : undefined}
+            isEditing={!!editingOfferId}
             onSubmit={async (data) => {
               try {
-                await chatApi.createProductOffer(chat.id, data, accessToken);
-                setShowOfferForm(false);
-                setOfferData({ name: "", description: "", price: 0 });
+                if (editingOfferId) {
+                  // Update existing offer
+                  const updateData: UpdateProductOfferDto = {
+                    name: data.name,
+                    description: data.description,
+                    price: data.price,
+                    oldPrice: data.oldPrice ? Number(data.oldPrice) : undefined,
+                    images: data.images,
+                    deliveryDays: data.deliveryDays,
+                    isOriginal: data.isOriginal,
+                    isAnalog: data.isAnalog,
+                    expiresAt: data.expiresAt,
+                  };
+                  
+                  const updatedOffer = await chatApi.updateProductOffer(editingOfferId, updateData, accessToken);
+                  
+                  // Update the offer in local messages
+                  setMessages(prev => prev.map(msg => {
+                    if (msg.offer?.id === editingOfferId) {
+                      return {
+                        ...msg,
+                        offer: updatedOffer
+                      };
+                    }
+                    return msg;
+                  }));
+                  
+                  toast({
+                    title: 'Предложение обновлено',
+                    description: 'Товарное предложение успешно обновлено',
+                  });
+                } else {
+                  // Create new offer
+                  await chatApi.createProductOffer(chat.id, data, accessToken);
+                  
+                  // Reload chat to get updated messages with the offer
+                  const updatedChat = await chatApi.getChatById(
+                    chat.id,
+                    isManager ? accessToken : undefined
+                  );
+                  onChatUpdate?.(updatedChat);
+                }
                 
-                // Reload chat to get updated messages with the offer
-                const updatedChat = await chatApi.getChatById(
-                  chat.id,
-                  isManager ? accessToken : undefined
-                );
-                onChatUpdate?.(updatedChat);
+                setShowOfferForm(false);
+                setEditingOfferId(null);
+                setOfferData({ name: "", description: "", price: 0 });
               } catch (error) {
-                console.error("Failed to create offer:", error);
+                console.error("Failed to save offer:", error);
+                toast({
+                  title: 'Ошибка',
+                  description: editingOfferId ? 'Не удалось обновить предложение' : 'Не удалось создать предложение',
+                  variant: 'destructive',
+                });
               }
             }}
-            onCancel={() => setShowOfferForm(false)}
+            onCancel={() => {
+              setShowOfferForm(false);
+              setEditingOfferId(null);
+              setOfferData({ name: "", description: "", price: 0 });
+            }}
             accessToken={accessToken}
           />
         </div>

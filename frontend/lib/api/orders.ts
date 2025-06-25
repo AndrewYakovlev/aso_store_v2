@@ -110,6 +110,7 @@ export interface CreateManagerOrderData {
 
 export interface OrdersFilter {
   statusId?: string;
+  userId?: string;
   orderNumber?: string;
   page?: number;
   limit?: number;
@@ -207,6 +208,7 @@ export const ordersApi = {
     
     if (filter) {
       if (filter.statusId) params.append('statusId', filter.statusId);
+      if (filter.userId) params.append('userId', filter.userId);
       if (filter.orderNumber) params.append('orderNumber', filter.orderNumber);
       if (filter.page) params.append('page', filter.page.toString());
       if (filter.limit) params.append('limit', filter.limit.toString());

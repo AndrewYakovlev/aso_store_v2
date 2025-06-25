@@ -383,6 +383,7 @@ export class OrdersService {
   async findAllAdmin(filter: OrdersFilterDto): Promise<PaginatedOrdersDto> {
     const {
       statusId,
+      userId,
       orderNumber,
       page = 1,
       limit = 20,
@@ -391,6 +392,11 @@ export class OrdersService {
     } = filter;
 
     const where: Prisma.OrderWhereInput = {};
+
+    // Filter by user
+    if (userId) {
+      where.userId = userId;
+    }
 
     // Filter by status
     if (statusId) {

@@ -15,6 +15,11 @@ export class OrdersFilterDto {
   @IsOptional()
   statusId?: string;
 
+  @ApiProperty({ description: 'ID пользователя', required: false })
+  @IsUUID()
+  @IsOptional()
+  userId?: string;
+
   @ApiProperty({ description: 'Поиск по номеру заказа', required: false })
   @IsString()
   @IsOptional()

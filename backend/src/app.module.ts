@@ -25,6 +25,7 @@ import { StatisticsModule } from './statistics/statistics.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { SettingsModule } from './settings/settings.module';
+import { AnonymousUsersModule } from './anonymous-users/anonymous-users.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { SettingsModule } from './settings/settings.module';
     UploadsModule,
     PromoCodesModule,
     SettingsModule,
+    AnonymousUsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

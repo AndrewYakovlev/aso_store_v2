@@ -126,7 +126,7 @@ export default function OrderDetailPage({ params }: PageProps) {
                         />
                       ) : (
                         <Image
-                          src={item.product?.images?.[0] || '/placeholder.png'}
+                          src={getImageUrl(item.product?.images?.[0] || '/placeholder.png')}
                           alt={item.product?.name || ''}
                           fill
                           className="object-cover rounded"

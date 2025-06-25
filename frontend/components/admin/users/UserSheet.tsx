@@ -62,14 +62,19 @@ export function UserSheet({ user, onSave, onCancel }: UserSheetProps) {
     setLoading(true)
 
     try {
+      // Преобразуем пустые строки в undefined
+      const cleanedData = Object.entries(formData).reduce((acc, [key, value]) => {
+        if (value === '') {
+          acc[key] = undefined;
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as any);
+
       const submitData = {
-        ...formData,
+        ...cleanedData,
         phone: normalizePhone(formData.phone), // Нормализуем телефон перед отправкой
-        email: formData.email || undefined,
-        lastName: formData.lastName || undefined,
-        middleName: formData.middleName || undefined,
-        companyName: formData.companyName || undefined,
-        companyInn: formData.companyInn || undefined,
       }
 
       if (user) {

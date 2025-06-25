@@ -21,6 +21,8 @@ interface ProductOfferFormProps {
   onSubmit: (data: CreateProductOfferDto) => Promise<void>
   onCancel: () => void
   accessToken: string
+  initialData?: CreateProductOfferDto
+  isEditing?: boolean
 }
 
 interface ImageItem {
@@ -32,15 +34,21 @@ export function ProductOfferForm({
   onSubmit,
   onCancel,
   accessToken,
+  initialData,
+  isEditing = false,
 }: ProductOfferFormProps) {
-  const [data, setData] = useState<CreateProductOfferDto>({
-    name: "",
-    description: "",
-    price: 0,
-    images: [],
-  })
+  const [data, setData] = useState<CreateProductOfferDto>(
+    initialData || {
+      name: "",
+      description: "",
+      price: 0,
+      images: [],
+    }
+  )
   const [uploading, setUploading] = useState(false)
-  const [images, setImages] = useState<ImageItem[]>([])
+  const [images, setImages] = useState<ImageItem[]>(
+    initialData?.images?.map(url => ({ url, preview: getImageUrl(url) })) || []
+  )
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -385,7 +393,7 @@ export function ProductOfferForm({
 
       <div className="flex gap-2 pt-4">
         <Button type="submit" className="flex-1">
-          Отправить предложение
+          {isEditing ? 'Обновить предложение' : 'Отправить предложение'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>
           Отмена

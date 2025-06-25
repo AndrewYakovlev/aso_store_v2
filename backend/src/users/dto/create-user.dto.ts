@@ -29,7 +29,7 @@ export class CreateUserDto {
 
   @ApiProperty({ required: false, description: 'Email' })
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'Email должен быть корректным' })
   email?: string;
 
   @ApiProperty({ required: false, description: 'Название компании' })
