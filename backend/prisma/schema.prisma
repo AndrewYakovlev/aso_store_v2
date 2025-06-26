@@ -279,16 +279,17 @@ model Favorite {
 
 // Order status - dynamic, stored in DB
 model OrderStatus {
-  id        String   @id @default(uuid())
-  code      String   @unique
-  name      String
-  color     String   @default("#6B7280") // Default gray color
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  isFinal   Boolean  @default(false) // Indicates if this is a final status
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  color       String   @default("#6B7280") // Default gray color
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  isFinal     Boolean  @default(false) // Indicates if this is a final status
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      Order[]
 }
 
 // Delivery method - dynamic, stored in DB

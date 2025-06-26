@@ -27,9 +27,13 @@ export class CreateOrderStatusDto {
   })
   color: string;
 
-  @ApiProperty({ description: 'Описание статуса' })
+  @ApiProperty({ 
+    description: 'Описание статуса',
+    required: false,
+  })
+  @IsOptional()
   @IsString()
-  description: string;
+  description?: string;
 
   @ApiProperty({
     required: false,

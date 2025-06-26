@@ -36,7 +36,7 @@ export function OrderStatusSheet({ status, onSave, onCancel }: OrderStatusSheetP
         code: status.code,
         name: status.name,
         color: status.color,
-        description: status.description,
+        description: status.description || "",
         isActive: status.isActive,
         isFinal: status.isFinal,
         sortOrder: status.sortOrder,
@@ -56,17 +56,24 @@ export function OrderStatusSheet({ status, onSave, onCancel }: OrderStatusSheetP
     setLoading(true)
 
     try {
+      // Убеждаемся, что sortOrder - это число
+      const dataToSend = {
+        ...formData,
+        sortOrder: Number(formData.sortOrder),
+      }
+
       if (status) {
-        const { code, ...updateData } = formData
+        const { code, ...updateData } = dataToSend
         await orderStatusesApi.update(accessToken!, status.id, updateData)
       } else {
-        await orderStatusesApi.create(accessToken!, formData as CreateOrderStatusDto)
+        await orderStatusesApi.create(accessToken!, dataToSend as CreateOrderStatusDto)
       }
 
       onSave()
     } catch (error: any) {
       console.error("Failed to save order status:", error)
-      alert(error.response?.data?.message || "Ошибка при сохранении статуса")
+      const errorMessage = error.response?.data?.message || error.message || "Ошибка при сохранении статуса"
+      alert(Array.isArray(errorMessage) ? errorMessage.join('\n') : errorMessage)
     } finally {
       setLoading(false)
     }
@@ -126,14 +133,13 @@ export function OrderStatusSheet({ status, onSave, onCancel }: OrderStatusSheetP
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Описание *</Label>
+            <Label htmlFor="description">Описание</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={e => handleInputChange("description", e.target.value)}
               placeholder="Заказ ожидает оплаты от клиента"
               rows={3}
-              required
             />
           </div>
 

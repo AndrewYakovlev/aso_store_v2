@@ -9,7 +9,7 @@ export interface OrderStatus {
   code: string;
   name: string;
   color: string;
-  description: string;
+  description: string | null;
   isActive: boolean;
   isFinal: boolean;
   sortOrder: number;
@@ -24,7 +24,7 @@ export interface CreateOrderStatusDto {
   code: string;
   name: string;
   color: string;
-  description: string;
+  description?: string;
   isActive?: boolean;
   isFinal?: boolean;
   sortOrder?: number;
