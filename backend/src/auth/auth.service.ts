@@ -5,6 +5,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { JwtService } from './services/jwt.service';
 import { AnonymousUserService } from './services/anonymous-user.service';
 import { OtpService } from './services/otp.service';
@@ -220,7 +221,7 @@ export class AuthService {
     dto: UpdateProfileDto,
   ): Promise<UserProfileDto> {
     // Подготавливаем данные для обновления
-    const updateData: any = {};
+    const updateData: Prisma.UserUpdateInput = {};
 
     if (dto.firstName !== undefined) {
       updateData.firstName = dto.firstName;

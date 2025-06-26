@@ -120,7 +120,7 @@ export class ProductImagesController {
   ): Promise<ProductImageDto> {
     console.log('Upload request received for product:', productId);
     console.log('File:', file?.filename);
-    
+
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -133,7 +133,7 @@ export class ProductImagesController {
     } else if (typeof body.isMain === 'boolean') {
       isMain = body.isMain;
     }
-    
+
     const createDto: CreateProductImageDto = {
       url,
       alt: body.alt,

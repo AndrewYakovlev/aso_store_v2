@@ -42,15 +42,17 @@ export class UsersService {
 
     // Преобразуем пустые строки в undefined
     const cleanedData: Partial<CreateUserDto> = {};
-    (Object.keys(createUserDto) as Array<keyof CreateUserDto>).forEach((key) => {
-      const value = createUserDto[key];
-      if (value === '') {
-        // Пропускаем пустые строки, что эквивалентно undefined
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        cleanedData[key] = value as any;
-      }
-    });
+    (Object.keys(createUserDto) as Array<keyof CreateUserDto>).forEach(
+      (key) => {
+        const value = createUserDto[key];
+        if (value === '') {
+          // Пропускаем пустые строки, что эквивалентно undefined
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          cleanedData[key] = value as any;
+        }
+      },
+    );
 
     return this.prisma.user.create({
       data: {
@@ -191,15 +193,17 @@ export class UsersService {
 
     // Преобразуем пустые строки в undefined
     const cleanedData: Partial<UpdateUserDto> = {};
-    (Object.keys(updateUserDto) as Array<keyof UpdateUserDto>).forEach((key) => {
-      const value = updateUserDto[key];
-      if (value === '') {
-        // Пропускаем пустые строки, что эквивалентно undefined
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        cleanedData[key] = value as any;
-      }
-    });
+    (Object.keys(updateUserDto) as Array<keyof UpdateUserDto>).forEach(
+      (key) => {
+        const value = updateUserDto[key];
+        if (value === '') {
+          // Пропускаем пустые строки, что эквивалентно undefined
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          cleanedData[key] = value as any;
+        }
+      },
+    );
 
     return this.prisma.user.update({
       where: { id },

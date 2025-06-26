@@ -21,7 +21,9 @@ export class NotificationsService {
     if (publicKey && privateKey && subject) {
       webpush.setVapidDetails(subject, publicKey, privateKey);
     } else {
-      this.logger.warn('VAPID keys not configured. Push notifications will not work.');
+      this.logger.warn(
+        'VAPID keys not configured. Push notifications will not work.',
+      );
     }
   }
 
@@ -90,26 +92,35 @@ export class NotificationsService {
     anonymousUserId: string | undefined,
     notification: SendNotificationDto,
   ) {
-    const subscriptions = await this.getUserSubscriptions(userId, anonymousUserId);
-    
+    const subscriptions = await this.getUserSubscriptions(
+      userId,
+      anonymousUserId,
+    );
+
     const results = await Promise.allSettled(
-      subscriptions.map(sub => this.sendNotification(sub, notification))
+      subscriptions.map((sub) => this.sendNotification(sub, notification)),
     );
 
     // Log results
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
-        this.logger.error(`Failed to send notification to subscription ${subscriptions[index].id}:`, result.reason);
+        this.logger.error(
+          `Failed to send notification to subscription ${subscriptions[index].id}:`,
+          result.reason,
+        );
       }
     });
 
     return {
-      sent: results.filter(r => r.status === 'fulfilled').length,
-      failed: results.filter(r => r.status === 'rejected').length,
+      sent: results.filter((r) => r.status === 'fulfilled').length,
+      failed: results.filter((r) => r.status === 'rejected').length,
     };
   }
 
-  async sendNotificationToEndpoint(endpoint: string, notification: SendNotificationDto) {
+  async sendNotificationToEndpoint(
+    endpoint: string,
+    notification: SendNotificationDto,
+  ) {
     const subscription = await this.prisma.pushSubscription.findUnique({
       where: { endpoint, isActive: true },
     });
@@ -122,7 +133,12 @@ export class NotificationsService {
   }
 
   private async sendNotification(
-    subscription: { endpoint: string; p256dh: string; auth: string; id: string },
+    subscription: {
+      endpoint: string;
+      p256dh: string;
+      auth: string;
+      id: string;
+    },
     notification: SendNotificationDto,
   ) {
     const pushSubscription = {
@@ -147,11 +163,16 @@ export class NotificationsService {
           requireInteraction: notification.requireInteraction,
         }),
       );
-      
-      this.logger.log(`Notification sent successfully to subscription ${subscription.id}`);
+
+      this.logger.log(
+        `Notification sent successfully to subscription ${subscription.id}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send notification to subscription ${subscription.id}:`, error);
-      
+      this.logger.error(
+        `Failed to send notification to subscription ${subscription.id}:`,
+        error,
+      );
+
       // Handle invalid subscriptions
       if (error.statusCode === 410 || error.statusCode === 404) {
         // Subscription is no longer valid, mark as inactive
@@ -160,7 +181,7 @@ export class NotificationsService {
           data: { isActive: false },
         });
       }
-      
+
       throw error;
     }
   }

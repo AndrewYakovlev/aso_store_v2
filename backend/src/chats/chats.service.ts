@@ -16,6 +16,50 @@ import {
   ProductOfferDto,
 } from './dto/chat.dto';
 import { Decimal } from '@prisma/client/runtime/library';
+import type {
+  Chat,
+  ChatMessage,
+  ProductOffer,
+  AnonymousUser,
+} from '@prisma/client';
+
+type ChatWithDetails = Chat & {
+  messages: (ChatMessage & {
+    offer?: ProductOffer | null;
+  })[];
+  offers: (ProductOffer & {
+    chat: {
+      managerId: string | null;
+    } | null;
+  })[];
+  user?: {
+    firstName: string | null;
+    lastName: string | null;
+    phone: string | null;
+    role: string;
+  } | null;
+  anonymousUser?: AnonymousUser | null;
+};
+
+type ChatForList = Chat & {
+  messages: ChatMessage[];
+  user?: {
+    firstName: string | null;
+    lastName: string | null;
+    phone: string | null;
+  } | null;
+  anonymousUser?: AnonymousUser | null;
+};
+
+type MessageWithOffer = ChatMessage & {
+  offer?: ProductOffer | null;
+};
+
+type ManagerInfo = {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+};
 
 @Injectable()
 export class ChatsService {
@@ -245,28 +289,35 @@ export class ChatsService {
 
     // Send push notification to the recipient
     try {
-      const recipientId = senderId === chat.userId ? chat.managerId : chat.userId;
-      const recipientAnonymousId = senderId === chat.anonymousUserId ? null : chat.anonymousUserId;
-      
+      const recipientId =
+        senderId === chat.userId ? chat.managerId : chat.userId;
+      const recipientAnonymousId =
+        senderId === chat.anonymousUserId ? null : chat.anonymousUserId;
+
       if (recipientId || recipientAnonymousId) {
         // Get sender info for notification
         const sender = await this.prisma.user.findUnique({
           where: { id: senderId },
           select: { firstName: true, lastName: true },
         });
-        
-        const senderName = sender 
-          ? `${sender.firstName || ''} ${sender.lastName || ''}`.trim() || 'Менеджер'
-          : chat.user ? `${chat.user.firstName || ''} ${chat.user.lastName || ''}`.trim() || 'Покупатель' : 'Покупатель';
-        
+
+        const senderName = sender
+          ? `${sender.firstName || ''} ${sender.lastName || ''}`.trim() ||
+            'Менеджер'
+          : chat.user
+            ? `${chat.user.firstName || ''} ${chat.user.lastName || ''}`.trim() ||
+              'Покупатель'
+            : 'Покупатель';
+
         await this.notificationsService.sendNotificationToUser(
           recipientId || undefined,
           recipientAnonymousId || undefined,
           {
             title: `Новое сообщение от ${senderName}`,
-            body: sendMessageDto.content.length > 100 
-              ? sendMessageDto.content.substring(0, 100) + '...' 
-              : sendMessageDto.content,
+            body:
+              sendMessageDto.content.length > 100
+                ? sendMessageDto.content.substring(0, 100) + '...'
+                : sendMessageDto.content,
             icon: '/icon-192x192.png',
             badge: '/badge-72x72.png',
             tag: `chat-${chatId}`,
@@ -306,7 +357,7 @@ export class ChatsService {
       });
     }
 
-    return this.formatMessageDto(message, chat, manager);
+    return this.formatMessageDto(message, undefined, manager || undefined);
   }
 
   async sendSystemMessage(
@@ -347,7 +398,7 @@ export class ChatsService {
   }
 
   async assignManager(chatId: string, managerId: string): Promise<ChatDto> {
-    const chat = await this.prisma.chat.update({
+    await this.prisma.chat.update({
       where: { id: chatId },
       data: { managerId },
     });
@@ -412,7 +463,9 @@ export class ChatsService {
         oldPrice: createProductOfferDto.oldPrice
           ? new Decimal(createProductOfferDto.oldPrice)
           : null,
-        image: createProductOfferDto.image || (createProductOfferDto.images?.[0] ?? null),
+        image:
+          createProductOfferDto.image ||
+          (createProductOfferDto.images?.[0] ?? null),
         images: createProductOfferDto.images || [],
         deliveryDays: createProductOfferDto.deliveryDays,
         isOriginal: createProductOfferDto.isOriginal || false,
@@ -422,7 +475,7 @@ export class ChatsService {
     });
 
     // Create a message with the offer
-    const message = await this.prisma.chatMessage.create({
+    await this.prisma.chatMessage.create({
       data: {
         chatId,
         senderId: managerId,
@@ -437,24 +490,25 @@ export class ChatsService {
     try {
       const recipientId = chat.userId;
       const recipientAnonymousId = chat.anonymousUserId;
-      
+
       if (recipientId || recipientAnonymousId) {
         // Get manager info for notification
         const manager = await this.prisma.user.findUnique({
           where: { id: managerId },
           select: { firstName: true, lastName: true },
         });
-        
-        const managerName = manager 
-          ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() || 'Менеджер'
+
+        const managerName = manager
+          ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() ||
+            'Менеджер'
           : 'Менеджер';
-        
+
         await this.notificationsService.sendNotificationToUser(
           recipientId || undefined,
           recipientAnonymousId || undefined,
           {
             title: `Новое предложение от ${managerName}`,
-            body: `${offer.name} - ${offer.price} ₽`,
+            body: `${offer.name} - ${offer.price.toString()} ₽`,
             icon: offer.image || '/icon-192x192.png',
             badge: '/badge-72x72.png',
             tag: `offer-${offer.id}`,
@@ -537,11 +591,12 @@ export class ChatsService {
         price: updateProductOfferDto.price
           ? new Decimal(updateProductOfferDto.price)
           : undefined,
-        oldPrice: updateProductOfferDto.oldPrice !== undefined
-          ? updateProductOfferDto.oldPrice
-            ? new Decimal(updateProductOfferDto.oldPrice)
-            : null
-          : undefined,
+        oldPrice:
+          updateProductOfferDto.oldPrice !== undefined
+            ? updateProductOfferDto.oldPrice
+              ? new Decimal(updateProductOfferDto.oldPrice)
+              : null
+            : undefined,
         images: updateProductOfferDto.images,
         image: updateProductOfferDto.images?.[0] ?? undefined,
         deliveryDays: updateProductOfferDto.deliveryDays,
@@ -573,9 +628,9 @@ export class ChatsService {
 
     const updatedOffer = await this.prisma.productOffer.update({
       where: { id: offerId },
-      data: { 
+      data: {
         isCancelled: true,
-        isActive: false 
+        isActive: false,
       },
     });
 
@@ -583,7 +638,7 @@ export class ChatsService {
   }
 
   async closeChat(chatId: string): Promise<ChatDto> {
-    const chat = await this.prisma.chat.update({
+    await this.prisma.chat.update({
       where: { id: chatId },
       data: { isActive: false },
     });
@@ -594,15 +649,11 @@ export class ChatsService {
   }
 
   private async formatChatDto(
-    chat: any,
+    chat: ChatWithDetails,
     currentUserId: string | null,
   ): Promise<ChatDto> {
     // Load manager info if chat has managerId
-    let manager: {
-      id: string;
-      firstName: string | null;
-      lastName: string | null;
-    } | null = null;
+    let manager: ManagerInfo | null = null;
     if (chat.managerId) {
       manager = await this.prisma.user.findUnique({
         where: { id: chat.managerId },
@@ -615,10 +666,10 @@ export class ChatsService {
     }
 
     const messages = chat.messages.map((msg) =>
-      this.formatMessageDto(msg, chat, manager),
+      this.formatMessageDto(msg, chat, manager || undefined),
     );
     const offers = chat.offers.map((offer) =>
-      this.formatProductOfferDto(offer, manager),
+      this.formatProductOfferDto(offer, manager || undefined),
     );
 
     // Count unread messages that are not from the current user
@@ -631,9 +682,9 @@ export class ChatsService {
 
     return {
       id: chat.id,
-      userId: chat.userId,
-      anonymousUserId: chat.anonymousUserId,
-      managerId: chat.managerId,
+      userId: chat.userId || undefined,
+      anonymousUserId: chat.anonymousUserId || undefined,
+      managerId: chat.managerId || undefined,
       isActive: chat.isActive,
       createdAt: chat.createdAt,
       updatedAt: chat.updatedAt,
@@ -645,15 +696,11 @@ export class ChatsService {
   }
 
   async formatChatListDto(
-    chat: any,
+    chat: ChatForList,
     currentUserId: string | null,
   ): Promise<ChatListDto> {
     // Load manager info if chat has managerId
-    let manager: {
-      id: string;
-      firstName: string | null;
-      lastName: string | null;
-    } | null = null;
+    let manager: ManagerInfo | null = null;
     if (chat.managerId) {
       manager = await this.prisma.user.findUnique({
         where: { id: chat.managerId },
@@ -666,7 +713,7 @@ export class ChatsService {
     }
 
     const lastMessage = chat.messages[0]
-      ? this.formatMessageDto(chat.messages[0], chat, manager)
+      ? this.formatMessageDto(chat.messages[0], chat, manager || undefined)
       : undefined;
 
     // Count all unread messages in the chat that are not from the current user
@@ -680,9 +727,9 @@ export class ChatsService {
 
     return {
       id: chat.id,
-      userId: chat.userId,
-      anonymousUserId: chat.anonymousUserId,
-      managerId: chat.managerId,
+      userId: chat.userId || undefined,
+      anonymousUserId: chat.anonymousUserId || undefined,
+      managerId: chat.managerId || undefined,
       isActive: chat.isActive,
       createdAt: chat.createdAt,
       updatedAt: chat.updatedAt,
@@ -691,14 +738,14 @@ export class ChatsService {
       customerName: chat.user
         ? `${chat.user.firstName || ''} ${chat.user.lastName || ''}`.trim()
         : 'Анонимный пользователь',
-      customerPhone: chat.user?.phone,
+      customerPhone: chat.user?.phone || undefined,
     };
   }
 
   private formatMessageDto(
-    message: any,
-    chat?: any,
-    manager?: any,
+    message: MessageWithOffer,
+    chat?: ChatWithDetails | ChatForList,
+    manager?: ManagerInfo,
   ): ChatMessageDto {
     let senderName = 'Неизвестный';
     let senderRole: 'customer' | 'manager' | 'system' = 'customer';
@@ -733,43 +780,46 @@ export class ChatsService {
       chatId: message.chatId,
       senderId: message.senderId,
       content: message.content,
-      offerId: message.offerId,
+      offerId: message.offerId || undefined,
       offer: message.offer
         ? this.formatProductOfferDto(message.offer, manager)
         : undefined,
       isRead: message.isRead,
       isDelivered: message.isDelivered,
-      deliveredAt: message.deliveredAt,
-      readAt: message.readAt,
+      deliveredAt: message.deliveredAt || undefined,
+      readAt: message.readAt || undefined,
       createdAt: message.createdAt,
       senderName,
       senderRole,
     };
   }
 
-  private formatProductOfferDto(offer: any, manager?: any): ProductOfferDto {
+  private formatProductOfferDto(
+    offer: ProductOffer,
+    manager?: ManagerInfo,
+  ): ProductOfferDto {
     return {
       id: offer.id,
-      chatId: offer.chatId,
+      chatId: offer.chatId || '',
       managerId: offer.managerId,
       name: offer.name,
-      description: offer.description,
+      description: offer.description || undefined,
       price: offer.price,
-      oldPrice: offer.oldPrice,
-      image: offer.image,
+      oldPrice: offer.oldPrice || undefined,
+      image: offer.image || undefined,
       images: offer.images || [],
-      deliveryDays: offer.deliveryDays,
+      deliveryDays: offer.deliveryDays || undefined,
       isOriginal: offer.isOriginal,
       isAnalog: offer.isAnalog,
       isActive: offer.isActive,
       isCancelled: offer.isCancelled || false,
       createdAt: offer.createdAt,
-      expiresAt: offer.expiresAt,
+      expiresAt: offer.expiresAt || undefined,
       managerName: manager
         ? `${manager.firstName || ''} ${manager.lastName || ''}`.trim() ||
           'Менеджер'
         : 'Менеджер',
-      messageId: offer.messageId,
+      messageId: undefined,
     };
   }
 }

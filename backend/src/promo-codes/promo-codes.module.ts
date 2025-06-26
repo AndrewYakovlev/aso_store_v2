@@ -15,6 +15,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
     PromoCodeTriggersService,
     PromoCodeValidationService,
   ],
-  exports: [PromoCodesService, PromoCodeTriggersService, PromoCodeValidationService],
+  exports: [
+    PromoCodesService,
+    PromoCodeTriggersService,
+    PromoCodeValidationService,
+  ],
 })
 export class PromoCodesModule {}

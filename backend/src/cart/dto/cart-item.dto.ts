@@ -18,7 +18,10 @@ export class CartItemDto {
   @ApiPropertyOptional({ description: 'ID товарного предложения' })
   offerId?: string;
 
-  @ApiPropertyOptional({ description: 'Товарное предложение', type: CartProductOfferDto })
+  @ApiPropertyOptional({
+    description: 'Товарное предложение',
+    type: CartProductOfferDto,
+  })
   offer?: CartProductOfferDto;
 
   @ApiProperty({ description: 'Количество' })
@@ -26,7 +29,4 @@ export class CartItemDto {
 
   @ApiProperty({ description: 'Дата добавления' })
   createdAt: Date;
-
-  @ApiProperty({ description: 'Дата обновления' })
-  updatedAt: Date;
 }

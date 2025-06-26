@@ -59,7 +59,10 @@ export class CreateManagerOrderItemDto {
   @IsUUID()
   offerId?: string;
 
-  @ApiProperty({ description: 'Данные для создания нового товарного предложения', required: false })
+  @ApiProperty({
+    description: 'Данные для создания нового товарного предложения',
+    required: false,
+  })
   @IsOptional()
   @ValidateNested()
   @Type(() => CreateManagerProductOfferDto)
@@ -70,7 +73,9 @@ export class CreateManagerOrderItemDto {
   @Min(1)
   quantity: number;
 
-  @ApiProperty({ description: 'Цена за единицу (может быть изменена менеджером)' })
+  @ApiProperty({
+    description: 'Цена за единицу (может быть изменена менеджером)',
+  })
   @IsNumber()
   @Min(0)
   price: number;
@@ -135,7 +140,10 @@ export class CreateManagerOrderDto {
   @IsString()
   comment?: string;
 
-  @ApiProperty({ description: 'Товары в заказе', type: [CreateManagerOrderItemDto] })
+  @ApiProperty({
+    description: 'Товары в заказе',
+    type: [CreateManagerOrderItemDto],
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateManagerOrderItemDto)

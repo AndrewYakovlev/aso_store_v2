@@ -103,9 +103,15 @@ export class CategoryTreeDto extends CategoryDto {
   })
   children: CategoryTreeDto[];
 
-  constructor(category: any) {
+  constructor(
+    category: Partial<Category> & {
+      _count?: { products: number };
+      children?: any[];
+      parent?: any;
+    },
+  ) {
     super(category);
     this.children =
-      category.children?.map((child: any) => new CategoryTreeDto(child)) || [];
+      category.children?.map((child) => new CategoryTreeDto(child)) ?? [];
   }
 }

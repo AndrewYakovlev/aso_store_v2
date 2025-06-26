@@ -25,7 +25,7 @@ async function importCategories() {
     // Читаем JSON файл
     const filePath = path.join(__dirname, '../../files/categories.json');
     const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const data: CatalogData = JSON.parse(fileContent);
+    const data: CatalogData = JSON.parse(fileContent) as CatalogData;
 
     if (!data.catalog || !data.catalog.categories) {
       throw new Error('Неверная структура файла categories.json');
@@ -35,7 +35,7 @@ async function importCategories() {
     async function createCategory(
       category: CategoryData,
       parentId: string | null = null,
-      depth: number = 0
+      depth: number = 0,
     ): Promise<void> {
       try {
         // Проверяем, существует ли категория
@@ -46,7 +46,9 @@ async function importCategories() {
         });
 
         if (existingCategory) {
-          console.log(`${'  '.repeat(depth)}Категория "${category.name}" уже существует, пропускаем`);
+          console.log(
+            `${'  '.repeat(depth)}Категория "${category.name}" уже существует, пропускаем`,
+          );
         } else {
           // Создаем категорию
           const createdCategory = await prisma.category.create({
@@ -60,7 +62,9 @@ async function importCategories() {
             },
           });
 
-          console.log(`${'  '.repeat(depth)}✅ Создана категория: ${category.name} (ID: ${createdCategory.id})`);
+          console.log(
+            `${'  '.repeat(depth)}✅ Создана категория: ${category.name} (ID: ${createdCategory.id})`,
+          );
         }
 
         // Получаем ID категории для использования в подкатегориях
@@ -81,7 +85,10 @@ async function importCategories() {
           }
         }
       } catch (error) {
-        console.error(`Ошибка при создании категории "${category.name}":`, error);
+        console.error(
+          `Ошибка при создании категории "${category.name}":`,
+          error,
+        );
       }
     }
 
@@ -102,7 +109,6 @@ async function importCategories() {
     console.log(`- Всего категорий: ${totalCategories}`);
     console.log(`- Категорий верхнего уровня: ${topLevelCategories}`);
     console.log(`- Подкатегорий: ${totalCategories - topLevelCategories}`);
-
   } catch (error) {
     console.error('Ошибка при импорте категорий:', error);
   } finally {
@@ -111,4 +117,9 @@ async function importCategories() {
 }
 
 // Запускаем импорт
-importCategories();
+importCategories()
+  .then(() => console.log('Импорт категорий завершен'))
+  .catch((error) => {
+    console.error('Ошибка выполнения скрипта:', error);
+    process.exit(1);
+  });

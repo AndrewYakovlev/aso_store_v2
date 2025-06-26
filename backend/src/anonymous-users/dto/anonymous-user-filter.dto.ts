@@ -8,22 +8,22 @@ export class AnonymousUserFilterDto extends PaginationDto {
   @IsString()
   search?: string;
 
-  @ApiProperty({ 
-    required: false, 
+  @ApiProperty({
+    required: false,
     enum: ['createdAt', 'lastActivity'],
     default: 'lastActivity',
-    description: 'Field to sort by' 
+    description: 'Field to sort by',
   })
   @IsOptional()
   @IsString()
   @IsEnum(['createdAt', 'lastActivity'])
   sortBy?: 'createdAt' | 'lastActivity' = 'lastActivity';
 
-  @ApiProperty({ 
+  @ApiProperty({
     required: false,
     enum: ['asc', 'desc'],
     default: 'desc',
-    description: 'Sort order'
+    description: 'Sort order',
   })
   @IsOptional()
   @IsString()

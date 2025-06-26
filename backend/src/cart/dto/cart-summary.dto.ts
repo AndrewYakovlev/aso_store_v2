@@ -7,7 +7,10 @@ export class PromoCodeInfoDto {
   @ApiProperty({ description: 'Сумма скидки' })
   discountAmount: number;
 
-  @ApiProperty({ description: 'Тип скидки', enum: ['FIXED_AMOUNT', 'PERCENTAGE'] })
+  @ApiProperty({
+    description: 'Тип скидки',
+    enum: ['FIXED_AMOUNT', 'PERCENTAGE'],
+  })
   discountType: string;
 
   @ApiProperty({ description: 'Ошибка валидации', required: false })

@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsObject, IsArray, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsObject,
+  IsArray,
+  IsBoolean,
+} from 'class-validator';
 
 class NotificationActionDto {
   @ApiProperty({ description: 'Action identifier' })
@@ -47,7 +54,10 @@ export class SendNotificationDto {
   @IsOptional()
   actions?: NotificationActionDto[];
 
-  @ApiProperty({ description: 'Notification tag for grouping', required: false })
+  @ApiProperty({
+    description: 'Notification tag for grouping',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   tag?: string;

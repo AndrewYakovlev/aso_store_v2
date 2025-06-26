@@ -266,12 +266,12 @@ export class CategoriesService {
         return true;
       }
 
-      const parent = await this.prisma.category.findUnique({
+      const parent = (await this.prisma.category.findUnique({
         where: { id: currentParentId },
         select: { parentId: true },
-      });
+      })) as { parentId: string | null } | null;
 
-      currentParentId = parent?.parentId || null;
+      currentParentId = parent?.parentId ?? null;
     }
 
     return false;
@@ -282,14 +282,23 @@ export class CategoriesService {
     let currentId: string | null = categoryId;
 
     while (currentId) {
-      const category = await this.prisma.category.findUnique({
+      const category = (await this.prisma.category.findUnique({
         where: { id: currentId },
         include: {
           _count: {
             select: { products: true },
           },
         },
-      });
+      })) as {
+        id: string;
+        name: string;
+        description: string | null;
+        isActive: boolean;
+        slug: string;
+        sortOrder: number;
+        parentId: string | null;
+        _count: { products: number };
+      } | null;
 
       if (!category) break;
 

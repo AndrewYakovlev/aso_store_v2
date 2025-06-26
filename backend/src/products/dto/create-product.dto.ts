@@ -39,7 +39,10 @@ export class CreateProductDto {
   @Type(() => Number)
   price: number;
 
-  @ApiProperty({ description: 'Старая цена товара (для отображения скидки)', required: false })
+  @ApiProperty({
+    description: 'Старая цена товара (для отображения скидки)',
+    required: false,
+  })
   @IsOptional()
   @IsNumber()
   @Min(0)

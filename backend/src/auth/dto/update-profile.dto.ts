@@ -32,7 +32,8 @@ export class UpdateProfileDto {
   })
   @IsOptional()
   @ValidateIf(
-    (o) => o.email !== '' && o.email !== null && o.email !== undefined,
+    (o: UpdateProfileDto) =>
+      o.email !== '' && o.email !== null && o.email !== undefined,
   )
   @IsEmail({}, { message: 'Неверный формат email' })
   email?: string;
@@ -51,7 +52,7 @@ export class UpdateProfileDto {
   })
   @IsOptional()
   @ValidateIf(
-    (o) =>
+    (o: UpdateProfileDto) =>
       o.companyInn !== '' &&
       o.companyInn !== null &&
       o.companyInn !== undefined,

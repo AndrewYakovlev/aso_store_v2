@@ -38,8 +38,8 @@ export class ProductImagesService {
       select: { sortOrder: true },
     });
 
-    const sortOrder = createProductImageDto.sortOrder ?? 
-      ((maxOrder?.sortOrder ?? -1) + 1);
+    const sortOrder =
+      createProductImageDto.sortOrder ?? (maxOrder?.sortOrder ?? -1) + 1;
 
     const image = await this.prisma.productImage.create({
       data: {
@@ -88,7 +88,10 @@ export class ProductImagesService {
       where: { id },
       data: {
         ...updateProductImageDto,
-        alt: updateProductImageDto.alt !== undefined ? (updateProductImageDto.alt ?? null) : undefined,
+        alt:
+          updateProductImageDto.alt !== undefined
+            ? (updateProductImageDto.alt ?? null)
+            : undefined,
       },
     });
 
@@ -123,7 +126,9 @@ export class ProductImagesService {
     });
 
     if (images.length !== imageIds.length) {
-      throw new NotFoundException('Some images not found or belong to another product');
+      throw new NotFoundException(
+        'Some images not found or belong to another product',
+      );
     }
 
     // Обновляем порядок

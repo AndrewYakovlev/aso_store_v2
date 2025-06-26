@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { 
-  IsString, 
-  IsNotEmpty, 
-  IsEnum, 
-  IsNumber, 
-  IsOptional, 
-  IsBoolean, 
-  IsInt, 
-  Min, 
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  Min,
   Max,
   IsDateString,
   Matches,
@@ -18,7 +18,9 @@ export class CreatePromoCodeDto {
   @ApiProperty({ description: 'Promo code (will be uppercased)' })
   @IsString()
   @IsNotEmpty()
-  @Matches(/^[A-Z0-9]+$/i, { message: 'Code must contain only letters and numbers' })
+  @Matches(/^[A-Z0-9]+$/i, {
+    message: 'Code must contain only letters and numbers',
+  })
   code: string;
 
   @ApiProperty({ required: false })

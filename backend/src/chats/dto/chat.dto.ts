@@ -23,7 +23,9 @@ export class ProductOfferDto {
   @ApiPropertyOptional()
   oldPrice?: number | Decimal;
 
-  @ApiPropertyOptional({ description: 'Image URL (deprecated, use images instead)' })
+  @ApiPropertyOptional({
+    description: 'Image URL (deprecated, use images instead)',
+  })
   image?: string;
 
   @ApiProperty({ type: [String] })

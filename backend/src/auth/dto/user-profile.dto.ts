@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsPhoneNumber } from 'class-validator';
 import { UserRole } from '@prisma/client';
 
 export class UserProfileDto {

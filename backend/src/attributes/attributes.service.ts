@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AttributeType } from '@prisma/client';
+import { AttributeType, Attribute, AttributeOption } from '@prisma/client';
 import {
   AttributeDto,
   CreateAttributeDto,
@@ -15,6 +15,26 @@ import {
   SetProductAttributeDto,
   BulkSetProductAttributesDto,
 } from './dto';
+
+// Type for attribute with options
+type AttributeWithOptions = Attribute & {
+  options: AttributeOption[];
+};
+
+// Type for category attribute relation
+type CategoryAttributeRelation = {
+  categoryId: string;
+  attributeId: string;
+  isRequired: boolean;
+  sortOrder: number;
+  category?: any; // Can be more specific if needed
+};
+
+// Type for attributes with all possible includes (for mapToAttributeDto)
+type AttributeWithIncludes = Attribute & {
+  options?: AttributeOption[];
+  categories?: CategoryAttributeRelation[];
+};
 
 @Injectable()
 export class AttributesService {
@@ -461,7 +481,7 @@ export class AttributesService {
 
   // Private methods
   private validateAttributeValue(
-    attribute: any,
+    attribute: AttributeWithOptions,
     dto: SetProductAttributeDto,
   ): void {
     switch (attribute.type) {
@@ -496,9 +516,11 @@ export class AttributesService {
           );
         }
         // Validate option exists
-        const validOptionIds = new Set(attribute.options.map((o: any) => o.id));
-        if (!validOptionIds.has(dto.optionIds[0])) {
-          throw new BadRequestException('Invalid option ID');
+        {
+          const validOptionIds = new Set(attribute.options.map((o) => o.id));
+          if (!validOptionIds.has(dto.optionIds[0])) {
+            throw new BadRequestException('Invalid option ID');
+          }
         }
         break;
 
@@ -509,17 +531,19 @@ export class AttributesService {
           );
         }
         // Validate all options exist
-        const validOptions = new Set(attribute.options.map((o: any) => o.id));
-        for (const optionId of dto.optionIds) {
-          if (!validOptions.has(optionId)) {
-            throw new BadRequestException(`Invalid option ID: ${optionId}`);
+        {
+          const validOptions = new Set(attribute.options.map((o) => o.id));
+          for (const optionId of dto.optionIds) {
+            if (!validOptions.has(optionId)) {
+              throw new BadRequestException(`Invalid option ID: ${optionId}`);
+            }
           }
         }
         break;
     }
   }
 
-  private mapToAttributeDto(attribute: any): AttributeDto {
+  private mapToAttributeDto(attribute: AttributeWithIncludes): AttributeDto {
     return {
       id: attribute.id,
       code: attribute.code,
@@ -529,19 +553,19 @@ export class AttributesService {
       isRequired: attribute.isRequired,
       isFilterable: attribute.isFilterable,
       sortOrder: attribute.sortOrder,
-      options: attribute.options?.map((opt: any) => ({
+      options: attribute.options?.map((opt) => ({
         id: opt.id,
         attributeId: opt.attributeId,
         value: opt.value,
         sortOrder: opt.sortOrder,
       })),
-      categoryAttributes: attribute.categories?.map((ca: any) => ({
+      categoryAttributes: attribute.categories?.map((ca) => ({
         categoryId: ca.categoryId,
         attributeId: ca.attributeId,
         attribute: undefined, // Avoid circular reference
         isRequired: ca.isRequired,
         sortOrder: ca.sortOrder,
-        category: ca.category,
+        category: undefined, // Avoid circular reference
       })),
       createdAt: attribute.createdAt,
       updatedAt: attribute.updatedAt,

@@ -19,7 +19,7 @@ export class PromoCodeTriggersService {
 
   async getActiveTriggers(): Promise<PromoCodeTriggerDto[]> {
     const now = new Date();
-    
+
     const triggers = await this.prisma.promoCodeTrigger.findMany({
       where: {
         isActive: true,
@@ -73,9 +73,12 @@ export class PromoCodeTriggersService {
           discountValue: dto.discountValue
             ? new Decimal(dto.discountValue)
             : undefined,
-          minOrderAmount: dto.minOrderAmount !== undefined
-            ? dto.minOrderAmount ? new Decimal(dto.minOrderAmount) : null
-            : undefined,
+          minOrderAmount:
+            dto.minOrderAmount !== undefined
+              ? dto.minOrderAmount
+                ? new Decimal(dto.minOrderAmount)
+                : null
+              : undefined,
         },
       });
     }
@@ -85,7 +88,7 @@ export class PromoCodeTriggersService {
 
   async handleRegistration(userId: string): Promise<void> {
     const now = new Date();
-    
+
     // Get active registration trigger
     const trigger = await this.prisma.promoCodeTrigger.findFirst({
       where: {
@@ -120,7 +123,9 @@ export class PromoCodeTriggersService {
     } while (attempts < maxAttempts);
 
     if (attempts >= maxAttempts) {
-      this.logger.error('Failed to generate unique promo code after 10 attempts');
+      this.logger.error(
+        'Failed to generate unique promo code after 10 attempts',
+      );
       return;
     }
 
@@ -155,35 +160,42 @@ export class PromoCodeTriggersService {
       },
     });
 
-    this.logger.log(`Created registration promo code ${code} for user ${userId}`);
+    this.logger.log(
+      `Created registration promo code ${code} for user ${userId}`,
+    );
 
     // Send push notification about new promo code
     try {
-      const discountText = trigger.discountType === 'PERCENTAGE' 
-        ? `${trigger.discountValue}%` 
-        : `${trigger.discountValue} ₽`;
-      
-      await this.notificationsService.sendNotificationToUser(userId, undefined, {
-        title: 'Подарок за регистрацию! 🎁',
-        body: `Вы получили промокод ${code} на скидку ${discountText}. Действует ${trigger.validityDays} дней!`,
-        icon: '/icon-192x192.png',
-        tag: 'promo-code',
-        data: {
-          type: 'promo-code',
-          promoCode: code,
-          url: '/account/promo-codes',
+      const discountText =
+        trigger.discountType === 'PERCENTAGE'
+          ? `${trigger.discountValue}%`
+          : `${trigger.discountValue} ₽`;
+
+      await this.notificationsService.sendNotificationToUser(
+        userId,
+        undefined,
+        {
+          title: 'Подарок за регистрацию! 🎁',
+          body: `Вы получили промокод ${code} на скидку ${discountText}. Действует ${trigger.validityDays} дней!`,
+          icon: '/icon-192x192.png',
+          tag: 'promo-code',
+          data: {
+            type: 'promo-code',
+            promoCode: code,
+            url: '/account/promo-codes',
+          },
+          actions: [
+            {
+              action: 'view',
+              title: 'Посмотреть',
+            },
+            {
+              action: 'copy',
+              title: 'Скопировать код',
+            },
+          ],
         },
-        actions: [
-          {
-            action: 'view',
-            title: 'Посмотреть',
-          },
-          {
-            action: 'copy',
-            title: 'Скопировать код',
-          },
-        ],
-      });
+      );
     } catch (error) {
       this.logger.error('Failed to send promo code notification:', error);
     }

@@ -5,6 +5,7 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from '../auth/auth.service';
 import { PromoCodeValidationService } from '../promo-codes/promo-code-validation.service';
@@ -18,6 +19,84 @@ import {
   CartProductOfferDto,
 } from './dto';
 import { ProductDto } from '../products/dto';
+
+// Define specific payload types for complex includes
+type CartWithRelations = Prisma.CartGetPayload<{
+  include: {
+    items: {
+      include: {
+        product: {
+          include: {
+            categories: {
+              include: {
+                category: true;
+              };
+            };
+            specifications: true;
+            attributes: {
+              include: {
+                attribute: {
+                  include: {
+                    options: true;
+                  };
+                };
+              };
+            };
+            productImages: true;
+          };
+        };
+        offer: true;
+      };
+    };
+  };
+}>;
+
+type CartItemWithRelations = Prisma.CartItemGetPayload<{
+  include: {
+    product: {
+      include: {
+        categories: {
+          include: {
+            category: true;
+          };
+        };
+        specifications: true;
+        attributes: {
+          include: {
+            attribute: {
+              include: {
+                options: true;
+              };
+            };
+          };
+        };
+        productImages: true;
+      };
+    };
+    offer: true;
+  };
+}>;
+
+type ProductWithDetails = Prisma.ProductGetPayload<{
+  include: {
+    categories: {
+      include: {
+        category: true;
+      };
+    };
+    specifications: true;
+    attributes: {
+      include: {
+        attribute: {
+          include: {
+            options: true;
+          };
+        };
+      };
+    };
+    productImages: true;
+  };
+}>;
 
 @Injectable()
 export class CartService {
@@ -125,10 +204,14 @@ export class CartService {
 
     // Validate that either productId or offerId is provided, but not both
     if (!addToCartDto.productId && !addToCartDto.offerId) {
-      throw new BadRequestException('Either productId or offerId must be provided');
+      throw new BadRequestException(
+        'Either productId or offerId must be provided',
+      );
     }
     if (addToCartDto.productId && addToCartDto.offerId) {
-      throw new BadRequestException('Cannot provide both productId and offerId');
+      throw new BadRequestException(
+        'Cannot provide both productId and offerId',
+      );
     }
 
     let productId: string | undefined;
@@ -282,8 +365,19 @@ export class CartService {
               },
             },
             specifications: true,
+            attributes: {
+              include: {
+                attribute: {
+                  include: {
+                    options: true,
+                  },
+                },
+              },
+            },
+            productImages: true,
           },
         },
+        offer: true,
       },
     });
 
@@ -313,7 +407,10 @@ export class CartService {
     }
 
     // Check if offer is still active and not cancelled
-    if (cartItem.offer && (cartItem.offer.isCancelled || !cartItem.offer.isActive)) {
+    if (
+      cartItem.offer &&
+      (cartItem.offer.isCancelled || !cartItem.offer.isActive)
+    ) {
       throw new BadRequestException('This offer is no longer available');
     }
 
@@ -323,6 +420,26 @@ export class CartService {
         quantity: updateCartItemDto.quantity,
       },
       include: {
+        product: {
+          include: {
+            categories: {
+              include: {
+                category: true,
+              },
+            },
+            specifications: true,
+            attributes: {
+              include: {
+                attribute: {
+                  include: {
+                    options: true,
+                  },
+                },
+              },
+            },
+            productImages: true,
+          },
+        },
         offer: true,
       },
     });
@@ -387,7 +504,6 @@ export class CartService {
     });
   }
 
-
   async mergeCarts(anonymousUserId: string, userId: string): Promise<void> {
     const anonymousCart = await this.prisma.cart.findFirst({
       where: { anonymousUserId },
@@ -411,7 +527,9 @@ export class CartService {
 
     // Get existing items with offers
     const existingOfferIds = new Map(
-      existingItems.filter(item => item.offerId).map((item) => [item.offerId, item]),
+      existingItems
+        .filter((item) => item.offerId)
+        .map((item) => [item.offerId, item]),
     );
 
     // Merge items
@@ -471,24 +589,24 @@ export class CartService {
     });
   }
 
-  private formatCart(cart: any): CartDto {
-    const items = cart.items.map((item: any) => this.formatCartItem(item));
+  private formatCart(cart: CartWithRelations): CartDto {
+    const items = cart.items.map((item) => this.formatCartItem(item));
     const totalQuantity = items.reduce(
       (sum: number, item: CartItemDto) => sum + item.quantity,
       0,
     );
-    const totalPrice = items.reduce(
-      (sum: number, item: CartItemDto) => {
-        if (item.product) {
-          return sum + item.product.price * item.quantity;
-        } else if (item.offer) {
-          const price = typeof item.offer.price === 'number' ? item.offer.price : Number(item.offer.price);
-          return sum + price * item.quantity;
-        }
-        return sum;
-      },
-      0,
-    );
+    const totalPrice = items.reduce((sum: number, item: CartItemDto) => {
+      if (item.product) {
+        return sum + item.product.price * item.quantity;
+      } else if (item.offer) {
+        const price =
+          typeof item.offer.price === 'number'
+            ? item.offer.price
+            : Number(item.offer.price);
+        return sum + price * item.quantity;
+      }
+      return sum;
+    }, 0);
 
     return {
       id: cart.id,
@@ -502,19 +620,25 @@ export class CartService {
     };
   }
 
-  private formatCartItem(item: any): CartItemDto {
+  private formatCartItem(item: CartItemWithRelations): CartItemDto {
     if (item.offer) {
       // This is a product offer item
       return {
         id: item.id,
         cartId: item.cartId,
-        offerId: item.offerId,
+        offerId: item.offerId ?? undefined,
         offer: {
           id: item.offer.id,
           name: item.offer.name,
           description: item.offer.description || undefined,
-          price: item.offer.price.toNumber ? item.offer.price.toNumber() : Number(item.offer.price),
-          oldPrice: item.offer.oldPrice ? (item.offer.oldPrice.toNumber ? item.offer.oldPrice.toNumber() : Number(item.offer.oldPrice)) : undefined,
+          price: item.offer.price.toNumber
+            ? item.offer.price.toNumber()
+            : Number(item.offer.price),
+          oldPrice: item.offer.oldPrice
+            ? item.offer.oldPrice.toNumber
+              ? item.offer.oldPrice.toNumber()
+              : Number(item.offer.oldPrice)
+            : undefined,
           image: item.offer.image || undefined,
           deliveryDays: item.offer.deliveryDays || undefined,
           isOriginal: item.offer.isOriginal,
@@ -524,7 +648,6 @@ export class CartService {
         } as CartProductOfferDto,
         quantity: item.quantity,
         createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
       };
     }
 
@@ -532,19 +655,18 @@ export class CartService {
     return {
       id: item.id,
       cartId: item.cartId,
-      productId: item.productId,
+      productId: item.productId ?? undefined,
       product: item.product ? this.formatProduct(item.product) : undefined,
       quantity: item.quantity,
       createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
     };
   }
 
-  private formatProduct(product: any): ProductDto {
+  private formatProduct(product: ProductWithDetails): ProductDto {
     // Format categories if they exist
-    let categories = [];
+    let categories: any[] = [];
     if (product.categories && Array.isArray(product.categories)) {
-      categories = product.categories.map((pc: any) => {
+      categories = product.categories.map((pc) => {
         if (pc.category) {
           // This is a ProductCategory relation
           return {
@@ -558,7 +680,7 @@ export class CartService {
           };
         }
         // This is already a category object
-        return pc;
+        return pc as any;
       });
     }
 
@@ -566,15 +688,18 @@ export class CartService {
       id: product.id,
       name: product.name,
       slug: product.slug,
-      description: product.description || undefined,
-      price: product.price.toNumber ? product.price.toNumber() : product.price,
+      description: product.description ?? undefined,
+      price:
+        typeof product.price === 'number'
+          ? product.price
+          : Number(product.price),
       sku: product.sku,
       stock: product.stock,
-      images: product.images || [],
+      images: Array.isArray(product.images) ? (product.images as string[]) : [],
       productImages: product.productImages || [],
       isActive: product.isActive,
       excludeFromPromoCodes: product.excludeFromPromoCodes || false,
-      categories,
+      categories: categories as any,
       specifications: product.specifications || undefined,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
@@ -582,7 +707,7 @@ export class CartService {
 
     // Добавляем атрибуты если они есть
     if (product.attributes && product.attributes.length > 0) {
-      formatted.attributes = product.attributes.map((pa: any) => {
+      formatted.attributes = product.attributes.map((pa) => {
         const attrValue: any = {
           attributeId: pa.attributeId,
           attribute: {
@@ -590,7 +715,7 @@ export class CartService {
             code: pa.attribute.code,
             name: pa.attribute.name,
             type: pa.attribute.type,
-            unit: pa.attribute.unit,
+            unit: pa.attribute.unit || undefined,
             isRequired: pa.attribute.isRequired,
             isFilterable: pa.attribute.isFilterable,
             sortOrder: pa.attribute.sortOrder,
@@ -620,7 +745,7 @@ export class CartService {
     promoCode?: string,
   ): Promise<CartSummaryDto> {
     const cart = await this.getCart(userId, anonymousUserId);
-    
+
     const summary: CartSummaryDto = {
       totalQuantity: cart.totalQuantity,
       totalPrice: cart.totalPrice,
@@ -629,17 +754,21 @@ export class CartService {
 
     if (promoCode) {
       // Convert cart items to validation format
-      const itemsForValidation = cart.items.map(item => ({
+      const itemsForValidation = cart.items.map((item) => ({
         productId: item.productId,
         offerId: item.offerId,
         quantity: item.quantity,
-        product: item.product ? {
-          price: { toNumber: () => item.product!.price } as any,
-          excludeFromPromoCodes: item.product!.excludeFromPromoCodes,
-        } : undefined,
-        offer: item.offer ? {
-          price: { toNumber: () => item.offer!.price } as any,
-        } : undefined,
+        product: item.product
+          ? {
+              price: { toNumber: () => item.product!.price } as any,
+              excludeFromPromoCodes: item.product.excludeFromPromoCodes,
+            }
+          : undefined,
+        offer: item.offer
+          ? {
+              price: { toNumber: () => item.offer!.price } as any,
+            }
+          : undefined,
       }));
 
       const validation = await this.promoCodeValidation.validatePromoCode(
@@ -649,8 +778,9 @@ export class CartService {
       );
 
       if (validation.isValid && validation.discountAmount) {
-        const promoCodeData = await this.promoCodesService.findByCode(promoCode);
-        
+        const promoCodeData =
+          await this.promoCodesService.findByCode(promoCode);
+
         return {
           ...summary,
           promoCode: {

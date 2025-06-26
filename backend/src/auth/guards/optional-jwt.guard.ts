@@ -7,8 +7,10 @@ export class OptionalJwtGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
+  handleRequest(err: any, user: any, info: any): any {
     // Don't throw error if no token provided
+    void err;
+    void info;
     if (!user) {
       return null;
     }

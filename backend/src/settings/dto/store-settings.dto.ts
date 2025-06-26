@@ -21,6 +21,8 @@ export class UpdateSettingDto {
   @IsNotEmpty()
   key: string;
 
-  @ApiProperty({ description: 'Setting value (can be any JSON-serializable value)' })
+  @ApiProperty({
+    description: 'Setting value (can be any JSON-serializable value)',
+  })
   value: any;
 }

@@ -18,7 +18,11 @@ export class OrderItemDto {
   @ApiProperty({ description: 'Товар', type: ProductDto, required: false })
   product?: ProductDto;
 
-  @ApiProperty({ description: 'Товарное предложение', type: ProductOfferDto, required: false })
+  @ApiProperty({
+    description: 'Товарное предложение',
+    type: ProductOfferDto,
+    required: false,
+  })
   offer?: ProductOfferDto;
 
   @ApiProperty({ description: 'Количество' })

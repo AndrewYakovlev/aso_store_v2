@@ -63,20 +63,24 @@ export class OrdersService {
     } else {
       // Обновляем существующего пользователя, если менеджер изменил данные
       const updateData: any = {};
-      
+
       // Обновляем имя, только если оно изменилось
-      if (createManagerOrderDto.customerName && 
-          createManagerOrderDto.customerName !== user.firstName &&
-          createManagerOrderDto.customerName !== 'Клиент') {
+      if (
+        createManagerOrderDto.customerName &&
+        createManagerOrderDto.customerName !== user.firstName &&
+        createManagerOrderDto.customerName !== 'Клиент'
+      ) {
         updateData.firstName = createManagerOrderDto.customerName;
       }
-      
+
       // Обновляем email, если он предоставлен и отличается
-      if (createManagerOrderDto.customerEmail && 
-          createManagerOrderDto.customerEmail !== user.email) {
+      if (
+        createManagerOrderDto.customerEmail &&
+        createManagerOrderDto.customerEmail !== user.email
+      ) {
         updateData.email = createManagerOrderDto.customerEmail;
       }
-      
+
       // Обновляем пользователя, если есть изменения
       if (Object.keys(updateData).length > 0) {
         user = await this.prisma.user.update({
@@ -148,7 +152,7 @@ export class OrdersService {
           create: await Promise.all(
             createManagerOrderDto.items.map(async (item) => {
               let offerId = item.offerId;
-              
+
               // Если есть данные для создания нового товарного предложения
               if (item.offerData && !item.offerId && !item.productId) {
                 const offer = await this.prisma.productOffer.create({
@@ -168,7 +172,7 @@ export class OrdersService {
                 });
                 offerId = offer.id;
               }
-              
+
               return {
                 productId: item.productId,
                 offerId,
@@ -248,24 +252,28 @@ export class OrdersService {
     }
 
     // Calculate initial amounts
-    let subtotalAmount = cart.totalPrice;
+    const subtotalAmount = cart.totalPrice;
     let discountAmount = 0;
     let promoCodeId: string | null = null;
 
     // Validate and apply promo code if provided
     if (createOrderDto.promoCode) {
       // Convert cart items to validation format
-      const itemsForValidation = cart.items.map(item => ({
+      const itemsForValidation = cart.items.map((item) => ({
         productId: item.productId,
         offerId: item.offerId,
         quantity: item.quantity,
-        product: item.product ? {
-          price: { toNumber: () => item.product!.price } as any,
-          excludeFromPromoCodes: item.product!.excludeFromPromoCodes,
-        } : undefined,
-        offer: item.offer ? {
-          price: { toNumber: () => item.offer!.price } as any,
-        } : undefined,
+        product: item.product
+          ? {
+              price: { toNumber: () => item.product!.price } as any,
+              excludeFromPromoCodes: item.product.excludeFromPromoCodes,
+            }
+          : undefined,
+        offer: item.offer
+          ? {
+              price: { toNumber: () => item.offer!.price } as any,
+            }
+          : undefined,
       }));
 
       const validation = await this.promoCodeValidation.validatePromoCode(
@@ -327,11 +335,14 @@ export class OrdersService {
             if (item.product) {
               price = item.product.price;
             } else if (item.offer) {
-              price = typeof item.offer.price === 'number' ? item.offer.price : Number(item.offer.price);
+              price =
+                typeof item.offer.price === 'number'
+                  ? item.offer.price
+                  : Number(item.offer.price);
             } else {
               throw new Error('Cart item has neither product nor offer');
             }
-            
+
             return {
               productId: item.productId,
               offerId: item.offerId,
@@ -777,7 +788,8 @@ export class OrdersService {
       comment: order.comment || undefined,
       createdByManagerId: order.createdByManagerId || undefined,
       createdByManagerName: order.createdByManager
-        ? `${order.createdByManager.firstName || ''} ${order.createdByManager.lastName || ''}`.trim() || order.createdByManager.phone
+        ? `${order.createdByManager.firstName || ''} ${order.createdByManager.lastName || ''}`.trim() ||
+          order.createdByManager.phone
         : undefined,
       isManagerCreated: order.isManagerCreated || false,
       items: order.items.map((item: any) => ({

@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsBoolean, IsNumber, IsUrl, IsUUID, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsBoolean,
+  IsNumber,
+  IsUrl,
+  IsUUID,
+  IsArray,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateProductImageDto {
@@ -52,7 +60,11 @@ export class ProductImageDto {
   @ApiProperty({ description: 'URL изображения' })
   url: string;
 
-  @ApiProperty({ description: 'Alt текст для SEO', required: false, nullable: true })
+  @ApiProperty({
+    description: 'Alt текст для SEO',
+    required: false,
+    nullable: true,
+  })
   alt?: string | null;
 
   @ApiProperty({ description: 'Порядок отображения' })
@@ -69,9 +81,9 @@ export class ProductImageDto {
 }
 
 export class ReorderProductImagesDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Массив ID изображений в нужном порядке',
-    type: [String]
+    type: [String],
   })
   @IsArray()
   @IsUUID('4', { each: true })

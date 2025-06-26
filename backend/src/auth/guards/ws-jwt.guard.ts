@@ -3,6 +3,13 @@ import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 
+interface JwtPayload {
+  sub: string;
+  iat?: number;
+  exp?: number;
+  [key: string]: any;
+}
+
 @Injectable()
 export class WsJwtGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
@@ -16,7 +23,7 @@ export class WsJwtGuard implements CanActivate {
         throw new WsException('Unauthorized');
       }
 
-      const payload = await this.jwtService.verifyAsync(token);
+      const payload: JwtPayload = await this.jwtService.verifyAsync(token);
       client['user'] = payload;
 
       return true;

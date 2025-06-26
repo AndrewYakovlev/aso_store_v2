@@ -7,8 +7,18 @@ export class OptionalAuthGuard extends AuthGuard(['jwt', 'anonymous']) {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any) {
+  handleRequest(
+    err: any,
+    user: any,
+    info: any,
+    context: ExecutionContext,
+    status?: any,
+  ): any {
     // Don't throw error if no user found
+    void err;
+    void info;
+    void context;
+    void status;
     return user || null;
   }
 }

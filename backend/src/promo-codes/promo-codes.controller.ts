@@ -11,9 +11,9 @@ import {
   Req,
   UnauthorizedException,
 } from '@nestjs/common';
-import { 
-  ApiTags, 
-  ApiOperation, 
+import {
+  ApiTags,
+  ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiQuery,
@@ -27,7 +27,10 @@ import { PromoCodeDto } from './dto/promo-code.dto';
 import { PromoCodeUsageDto } from './dto/promo-code-usage.dto';
 import { PromoCodeTriggerDto } from './dto/promo-code-trigger.dto';
 import { UpdatePromoCodeTriggerDto } from './dto/update-promo-code-trigger.dto';
-import { ValidatePromoCodeDto, ValidatePromoCodeResponseDto } from './dto/validate-promo-code.dto';
+import {
+  ValidatePromoCodeDto,
+  ValidatePromoCodeResponseDto,
+} from './dto/validate-promo-code.dto';
 import { PaginatedPromoCodesDto } from './dto/paginated-promo-codes.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard';
@@ -76,8 +79,10 @@ export class PromoCodesController {
     @Query('limit') limit?: string,
   ) {
     return this.promoCodesService.findAll({
-      isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
-      isPublic: isPublic === 'true' ? true : isPublic === 'false' ? false : undefined,
+      isActive:
+        isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+      isPublic:
+        isPublic === 'true' ? true : isPublic === 'false' ? false : undefined,
       search,
       page: page ? parseInt(page) : 1,
       limit: limit ? parseInt(limit) : 20,
@@ -126,22 +131,29 @@ export class PromoCodesController {
     @Req() req: RequestWithUser,
   ): Promise<ValidatePromoCodeResponseDto> {
     const userId = req.user?.id || undefined;
-    
+
     // Get cart items
-    const cart = await this.cartService.getCart(userId, req.anonymousUserId || undefined);
-    
+    const cart = await this.cartService.getCart(
+      userId,
+      req.anonymousUserId || undefined,
+    );
+
     // Convert cart items to validation format
-    const itemsForValidation = cart.items.map(item => ({
+    const itemsForValidation = cart.items.map((item) => ({
       productId: item.productId,
       offerId: item.offerId,
       quantity: item.quantity,
-      product: item.product ? {
-        price: { toNumber: () => item.product!.price } as any,
-        excludeFromPromoCodes: item.product!.excludeFromPromoCodes,
-      } : undefined,
-      offer: item.offer ? {
-        price: { toNumber: () => item.offer!.price } as any,
-      } : undefined,
+      product: item.product
+        ? {
+            price: { toNumber: () => item.product!.price } as any,
+            excludeFromPromoCodes: item.product.excludeFromPromoCodes,
+          }
+        : undefined,
+      offer: item.offer
+        ? {
+            price: { toNumber: () => item.offer!.price } as any,
+          }
+        : undefined,
     }));
 
     const result = await this.validationService.validatePromoCode(
@@ -151,8 +163,10 @@ export class PromoCodesController {
     );
 
     if (result.isValid) {
-      const promoCode = await this.promoCodesService.findByCode(validateDto.code);
-      
+      const promoCode = await this.promoCodesService.findByCode(
+        validateDto.code,
+      );
+
       return {
         ...result,
         discountType: promoCode?.discountType,
@@ -257,10 +271,7 @@ export class PromoCodesController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Assign promo code to user' })
   @ApiResponse({ status: 204 })
-  assignToUser(
-    @Param('id') id: string,
-    @Param('userId') userId: string,
-  ) {
+  assignToUser(@Param('id') id: string, @Param('userId') userId: string) {
     return this.promoCodesService.assignToUser(id, userId);
   }
 }

@@ -177,7 +177,8 @@ export class PromoCodeValidationService {
       );
     } else {
       // PERCENTAGE
-      discountAmount = (eligibleAmount * promoCode.discountValue.toNumber()) / 100;
+      discountAmount =
+        (eligibleAmount * promoCode.discountValue.toNumber()) / 100;
     }
 
     return {

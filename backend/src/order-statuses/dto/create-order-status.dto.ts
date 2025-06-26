@@ -27,7 +27,7 @@ export class CreateOrderStatusDto {
   })
   color: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Описание статуса',
     required: false,
   })

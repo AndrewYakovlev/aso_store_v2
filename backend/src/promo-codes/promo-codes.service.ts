@@ -49,7 +49,13 @@ export class PromoCodesService {
     search?: string;
     page?: number;
     limit?: number;
-  }): Promise<{ items: PromoCodeDto[]; total: number; page: number; limit: number; totalPages: number }> {
+  }): Promise<{
+    items: PromoCodeDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     const where: any = {};
 
     if (filters?.isActive !== undefined) {
@@ -153,9 +159,12 @@ export class PromoCodesService {
         discountValue: dto.discountValue
           ? new Decimal(dto.discountValue)
           : undefined,
-        minOrderAmount: dto.minOrderAmount !== undefined
-          ? dto.minOrderAmount ? new Decimal(dto.minOrderAmount) : null
-          : undefined,
+        minOrderAmount:
+          dto.minOrderAmount !== undefined
+            ? dto.minOrderAmount
+              ? new Decimal(dto.minOrderAmount)
+              : null
+            : undefined,
       },
     });
 
@@ -307,11 +316,11 @@ export class PromoCodesService {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const length = 8;
     let code = prefix || '';
-    
+
     for (let i = 0; i < length; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    
+
     return code;
   }
 
@@ -352,19 +361,19 @@ export class PromoCodesService {
     const skip = (page - 1) * limit;
 
     const where: any = {};
-    
+
     if (filters.promoCodeId) {
       where.promoCodeId = filters.promoCodeId;
     }
-    
+
     if (filters.userId) {
       where.userId = filters.userId;
     }
-    
+
     if (filters.orderId) {
       where.orderId = filters.orderId;
     }
-    
+
     if (filters.dateFrom || filters.dateTo) {
       where.createdAt = {};
       if (filters.dateFrom) {
@@ -404,12 +413,14 @@ export class PromoCodesService {
         discountValue: usage.promoCode.discountValue.toNumber(),
       },
       userId: usage.userId,
-      user: usage.user ? {
-        id: usage.user.id,
-        phone: usage.user.phone,
-        firstName: usage.user.firstName,
-        lastName: usage.user.lastName,
-      } : null,
+      user: usage.user
+        ? {
+            id: usage.user.id,
+            phone: usage.user.phone,
+            firstName: usage.user.firstName,
+            lastName: usage.user.lastName,
+          }
+        : null,
       orderId: usage.orderId,
       order: {
         id: usage.order.id,
@@ -439,10 +450,7 @@ export class PromoCodesService {
   ): Promise<number> {
     if (promoCode.discountType === DiscountType.FIXED_AMOUNT) {
       // Fixed amount discount
-      const discount = Math.min(
-        promoCode.discountValue,
-        eligibleAmount,
-      );
+      const discount = Math.min(promoCode.discountValue, eligibleAmount);
       return Math.max(0, discount);
     } else {
       // Percentage discount

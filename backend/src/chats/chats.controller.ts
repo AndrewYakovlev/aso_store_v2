@@ -35,6 +35,7 @@ import {
   ProductOfferDto,
 } from './dto/chat.dto';
 import { ChatsGateway } from './chats.gateway';
+import { RequestWithUser } from '../auth/interfaces/request-with-user.interface';
 
 @ApiTags('chats')
 @Controller('chats')
@@ -50,12 +51,13 @@ export class ChatsController {
   @ApiOperation({ summary: 'Create new chat or get existing active chat' })
   @ApiResponse({ status: 201, type: ChatDto })
   async createChat(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Body() createChatDto: CreateChatDto,
   ): Promise<ChatDto> {
-    const userId = req.user?.type !== 'anonymous' ? req.user?.id : null;
-    const anonymousUserId =
-      req.user?.type === 'anonymous' ? req.user?.id : null;
+    const userId: string | null =
+      req.user?.type !== 'anonymous' ? req.user?.id || null : null;
+    const anonymousUserId: string | null =
+      req.user?.type === 'anonymous' ? req.user?.id || null : null;
 
     const chat = await this.chatsService.createChat(
       userId,
@@ -80,10 +82,11 @@ export class ChatsController {
   @UseGuards(OptionalAuthGuard)
   @ApiOperation({ summary: 'Get user chats' })
   @ApiResponse({ status: 200, type: [ChatListDto] })
-  async getUserChats(@Request() req): Promise<ChatListDto[]> {
-    const userId = req.user?.type !== 'anonymous' ? req.user?.id : null;
-    const anonymousUserId =
-      req.user?.type === 'anonymous' ? req.user?.id : null;
+  async getUserChats(@Request() req: RequestWithUser): Promise<ChatListDto[]> {
+    const userId: string | null =
+      req.user?.type !== 'anonymous' ? req.user?.id || null : null;
+    const anonymousUserId: string | null =
+      req.user?.type === 'anonymous' ? req.user?.id || null : null;
 
     return this.chatsService.getUserChats(userId, anonymousUserId);
   }
@@ -94,7 +97,12 @@ export class ChatsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get chats for manager' })
   @ApiResponse({ status: 200, type: [ChatListDto] })
-  async getManagerChats(@Request() req): Promise<ChatListDto[]> {
+  async getManagerChats(
+    @Request() req: RequestWithUser,
+  ): Promise<ChatListDto[]> {
+    if (!req.user?.id) {
+      throw new BadRequestException('User ID is required');
+    }
     return this.chatsService.getManagerChats(req.user.id);
   }
 
@@ -103,11 +111,15 @@ export class ChatsController {
   @ApiOperation({ summary: 'Get chat by ID' })
   @ApiParam({ name: 'id', description: 'Chat ID' })
   @ApiResponse({ status: 200, type: ChatDto })
-  async getChatById(@Request() req, @Param('id') id: string): Promise<ChatDto> {
-    const userId = req.user?.type !== 'anonymous' ? req.user?.id : null;
-    const anonymousUserId =
-      req.user?.type === 'anonymous' ? req.user?.id : null;
-    const isManager =
+  async getChatById(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+  ): Promise<ChatDto> {
+    const userId: string | null =
+      req.user?.type !== 'anonymous' ? req.user?.id || null : null;
+    const anonymousUserId: string | null =
+      req.user?.type === 'anonymous' ? req.user?.id || null : null;
+    const isManager: boolean =
       req.user?.role === 'MANAGER' || req.user?.role === 'ADMIN';
 
     return this.chatsService.getChatById(
@@ -124,11 +136,11 @@ export class ChatsController {
   @ApiParam({ name: 'id', description: 'Chat ID' })
   @ApiResponse({ status: 201, type: ChatMessageDto })
   async sendMessage(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body() sendMessageDto: SendMessageDto,
   ): Promise<ChatMessageDto> {
-    const senderId = req.user?.id;
+    const senderId: string | undefined = req.user?.id;
     if (!senderId) {
       throw new BadRequestException('Sender ID is required');
     }
@@ -175,10 +187,10 @@ export class ChatsController {
   @ApiParam({ name: 'id', description: 'Chat ID' })
   @ApiResponse({ status: 200 })
   async markMessagesAsRead(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
   ): Promise<{ count: number }> {
-    const userId = req.user?.id;
+    const userId: string | undefined = req.user?.id;
     if (!userId) {
       throw new BadRequestException('User ID is required');
     }
@@ -205,9 +217,12 @@ export class ChatsController {
   @ApiParam({ name: 'id', description: 'Chat ID' })
   @ApiResponse({ status: 200, type: ChatDto })
   async assignManager(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
   ): Promise<ChatDto> {
+    if (!req.user?.id) {
+      throw new BadRequestException('User ID is required');
+    }
     return this.chatsService.assignManager(id, req.user.id);
   }
 
@@ -219,10 +234,14 @@ export class ChatsController {
   @ApiParam({ name: 'id', description: 'Chat ID' })
   @ApiResponse({ status: 201, type: ProductOfferDto })
   async createProductOffer(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body() createProductOfferDto: CreateProductOfferDto,
   ): Promise<ProductOfferDto> {
+    if (!req.user?.id) {
+      throw new BadRequestException('User ID is required');
+    }
+
     const offer = await this.chatsService.createProductOffer(
       id,
       req.user.id,
@@ -230,8 +249,15 @@ export class ChatsController {
     );
 
     // Get the chat with the new message to emit through WebSocket
-    const chat = await this.chatsService.getChatById(id, req.user.id, null, true);
-    const messageWithOffer = chat.messages.find(msg => msg.offerId === offer.id);
+    const chat = await this.chatsService.getChatById(
+      id,
+      req.user.id,
+      null,
+      true,
+    );
+    const messageWithOffer = chat.messages.find(
+      (msg) => msg.offerId === offer.id,
+    );
 
     if (messageWithOffer && this.chatsGateway.server) {
       // Emit the message with offer through WebSocket
@@ -259,11 +285,18 @@ export class ChatsController {
   @ApiParam({ name: 'offerId', description: 'Offer ID' })
   @ApiResponse({ status: 200, type: ProductOfferDto })
   async updateProductOffer(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('offerId') offerId: string,
     @Body() updateProductOfferDto: UpdateProductOfferDto,
   ): Promise<ProductOfferDto> {
-    return this.chatsService.updateProductOffer(offerId, req.user.id, updateProductOfferDto);
+    if (!req.user?.id) {
+      throw new BadRequestException('User ID is required');
+    }
+    return this.chatsService.updateProductOffer(
+      offerId,
+      req.user.id,
+      updateProductOfferDto,
+    );
   }
 
   @Patch('offers/:offerId/cancel')
@@ -274,9 +307,12 @@ export class ChatsController {
   @ApiParam({ name: 'offerId', description: 'Offer ID' })
   @ApiResponse({ status: 200, type: ProductOfferDto })
   async cancelProductOffer(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('offerId') offerId: string,
   ): Promise<ProductOfferDto> {
+    if (!req.user?.id) {
+      throw new BadRequestException('User ID is required');
+    }
     return this.chatsService.cancelProductOffer(offerId, req.user.id);
   }
 
@@ -288,9 +324,12 @@ export class ChatsController {
   @ApiParam({ name: 'offerId', description: 'Offer ID' })
   @ApiResponse({ status: 200, type: ProductOfferDto })
   async deactivateOffer(
-    @Request() req,
+    @Request() req: RequestWithUser,
     @Param('offerId') offerId: string,
   ): Promise<ProductOfferDto> {
+    if (!req.user?.id) {
+      throw new BadRequestException('User ID is required');
+    }
     return this.chatsService.deactivateOffer(offerId, req.user.id);
   }
 

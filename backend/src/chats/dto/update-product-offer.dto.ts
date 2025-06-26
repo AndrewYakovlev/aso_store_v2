@@ -22,21 +22,27 @@ export class UpdateProductOfferDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ description: 'Price of the product offer', minimum: 0 })
+  @ApiPropertyOptional({
+    description: 'Price of the product offer',
+    minimum: 0,
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   price?: number;
 
-  @ApiPropertyOptional({ description: 'Old price (before discount)', minimum: 0 })
+  @ApiPropertyOptional({
+    description: 'Old price (before discount)',
+    minimum: 0,
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   oldPrice?: number;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: 'Array of image URLs of the product',
-    type: [String]
+    type: [String],
   })
   @IsOptional()
   @IsString({ each: true })
@@ -56,7 +62,7 @@ export class UpdateProductOfferDto {
   @ApiPropertyOptional({ description: 'Is this an analog product' })
   @IsOptional()
   @IsBoolean()
-  @ValidateIf((o) => o.isOriginal !== true)
+  @ValidateIf((o: UpdateProductOfferDto) => o.isOriginal !== true)
   isAnalog?: boolean;
 
   @ApiPropertyOptional({ description: 'Is the offer active' })

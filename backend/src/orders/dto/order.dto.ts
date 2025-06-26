@@ -74,10 +74,16 @@ export class OrderDto {
   @ApiProperty({ description: 'Товары в заказе', type: [OrderItemDto] })
   items: OrderItemDto[];
 
-  @ApiProperty({ description: 'ID менеджера, создавшего заказ', required: false })
+  @ApiProperty({
+    description: 'ID менеджера, создавшего заказ',
+    required: false,
+  })
   createdByManagerId?: string;
 
-  @ApiProperty({ description: 'Имя менеджера, создавшего заказ', required: false })
+  @ApiProperty({
+    description: 'Имя менеджера, создавшего заказ',
+    required: false,
+  })
   createdByManagerName?: string;
 
   @ApiProperty({ description: 'Заказ создан менеджером' })

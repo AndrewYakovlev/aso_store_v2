@@ -29,22 +29,25 @@ export class CreateProductOfferDto {
   @Min(0)
   price: number;
 
-  @ApiPropertyOptional({ description: 'Old price (before discount)', minimum: 0 })
+  @ApiPropertyOptional({
+    description: 'Old price (before discount)',
+    minimum: 0,
+  })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   oldPrice?: number;
 
-  @ApiPropertyOptional({ 
-    description: 'Image URL of the product (deprecated, use images instead)'
+  @ApiPropertyOptional({
+    description: 'Image URL of the product (deprecated, use images instead)',
   })
   @IsOptional()
   @IsString()
   image?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: 'Array of image URLs of the product',
-    type: [String]
+    type: [String],
   })
   @IsOptional()
   @IsString({ each: true })
@@ -64,7 +67,7 @@ export class CreateProductOfferDto {
   @ApiPropertyOptional({ description: 'Is this an analog product' })
   @IsOptional()
   @IsBoolean()
-  @ValidateIf((o) => o.isOriginal !== true) // Can't be both original and analog
+  @ValidateIf((o: CreateProductOfferDto) => o.isOriginal !== true) // Can't be both original and analog
   isAnalog?: boolean;
 
   @ApiPropertyOptional({ description: 'Expiry date of the offer' })

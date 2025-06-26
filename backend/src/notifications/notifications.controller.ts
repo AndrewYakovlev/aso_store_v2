@@ -8,7 +8,12 @@ import {
   Req,
   Get,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -23,7 +28,10 @@ export class NotificationsController {
   @Post('subscribe')
   @UseGuards(OptionalJwtGuard)
   @ApiOperation({ summary: 'Subscribe to push notifications' })
-  @ApiResponse({ status: 201, description: 'Subscription created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Subscription created successfully',
+  })
   async subscribe(
     @Body() createSubscriptionDto: CreateSubscriptionDto,
     @Req() req: RequestWithUser,
@@ -40,7 +48,10 @@ export class NotificationsController {
 
   @Delete('unsubscribe/:endpoint')
   @ApiOperation({ summary: 'Unsubscribe from push notifications' })
-  @ApiResponse({ status: 200, description: 'Subscription removed successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Subscription removed successfully',
+  })
   async unsubscribe(@Param('endpoint') endpoint: string) {
     return this.notificationsService.removeSubscription(endpoint);
   }

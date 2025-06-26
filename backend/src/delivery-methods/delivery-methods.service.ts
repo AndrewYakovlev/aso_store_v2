@@ -28,7 +28,7 @@ export class DeliveryMethodsService {
     });
 
     if (mainAddress) {
-      const pickupMethod = methods.find(m => m.code === 'pickup');
+      const pickupMethod = methods.find((m) => m.code === 'pickup');
       if (pickupMethod) {
         const addressParts = [
           'г.',

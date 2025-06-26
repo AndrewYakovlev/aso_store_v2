@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { startOfDay, endOfDay, subDays, startOfWeek, startOfMonth, endOfWeek, endOfMonth } from 'date-fns';
+import {
+  startOfDay,
+  endOfDay,
+  subDays,
+  startOfWeek,
+  startOfMonth,
+  endOfWeek,
+  endOfMonth,
+} from 'date-fns';
 import { Decimal } from '@prisma/client/runtime/library';
 
 @Injectable()
@@ -20,7 +28,7 @@ export class StatisticsService {
     ] = await Promise.all([
       // Общее количество заказов
       this.prisma.order.count(),
-      
+
       // Общая выручка (только оплаченные заказы)
       this.prisma.order.aggregate({
         where: {
@@ -33,7 +41,7 @@ export class StatisticsService {
           totalAmount: true,
         },
       }),
-      
+
       // Количество уникальных клиентов
       this.prisma.user.count({
         where: {
@@ -42,14 +50,14 @@ export class StatisticsService {
           },
         },
       }),
-      
+
       // Количество активных товаров
       this.prisma.product.count({
         where: {
           isActive: true,
         },
       }),
-      
+
       // Активные заказы (не завершенные)
       this.prisma.order.count({
         where: {
@@ -60,7 +68,7 @@ export class StatisticsService {
           },
         },
       }),
-      
+
       // Заказы за сегодня
       this.prisma.order.count({
         where: {
@@ -70,7 +78,7 @@ export class StatisticsService {
           },
         },
       }),
-      
+
       // Выручка за сегодня
       this.prisma.order.aggregate({
         where: {
@@ -91,19 +99,23 @@ export class StatisticsService {
 
     return {
       totalOrders,
-      totalRevenue: (totalRevenue._sum.totalAmount || new Decimal(0)).toString(),
+      totalRevenue: (
+        totalRevenue._sum.totalAmount || new Decimal(0)
+      ).toString(),
       totalCustomers,
       totalProducts,
       activeOrders,
       todayOrders,
-      todayRevenue: (todayRevenue._sum.totalAmount || new Decimal(0)).toString(),
+      todayRevenue: (
+        todayRevenue._sum.totalAmount || new Decimal(0)
+      ).toString(),
     };
   }
 
   // Статистика по периодам
   async getPeriodicStatistics(period: 'day' | 'week' | 'month' = 'week') {
     const periods = this.generatePeriods(period);
-    
+
     const statistics = await Promise.all(
       periods.map(async ({ start, end, label }) => {
         const [orders, revenue] = await Promise.all([
@@ -163,11 +175,13 @@ export class StatisticsService {
     });
 
     // Получаем информацию о товарах
-    const productIds = topProducts.map(item => item.productId).filter(id => id !== null);
+    const productIds = topProducts
+      .map((item) => item.productId)
+      .filter((id) => id !== null);
     const products = await this.prisma.product.findMany({
       where: {
         id: {
-          in: productIds as string[],
+          in: productIds,
         },
       },
       include: {
@@ -180,17 +194,17 @@ export class StatisticsService {
       },
     });
 
-    const productsMap = new Map(products.map(p => [p.id, p]));
+    const productsMap = new Map(products.map((p) => [p.id, p]));
 
     return topProducts
-      .filter(item => item.productId !== null)
-      .map(item => {
+      .filter((item) => item.productId !== null)
+      .map((item) => {
         const product = productsMap.get(item.productId!);
         const categoryName = product?.categories?.[0]?.category?.name || '';
         const quantity = item._sum?.quantity || 0;
         const price = item._sum?.price || new Decimal(0);
         const totalRevenue = new Decimal(price).mul(quantity);
-        
+
         return {
           productId: item.productId as string,
           productName: product?.name || 'Товар удален',
@@ -219,7 +233,7 @@ export class StatisticsService {
       },
     });
 
-    return statuses.map(status => ({
+    return statuses.map((status) => ({
       statusId: status.id,
       statusName: status.name,
       statusColor: status.color,
@@ -272,7 +286,7 @@ export class StatisticsService {
   // Статистика по новым клиентам
   async getNewCustomersStatistics(days: number = 30) {
     const startDate = subDays(new Date(), days);
-    
+
     const newCustomers = await this.prisma.user.count({
       where: {
         createdAt: {
@@ -295,12 +309,15 @@ export class StatisticsService {
     return {
       newCustomers,
       customersWithOrders,
-      conversionRate: newCustomers > 0 ? (customersWithOrders / newCustomers) * 100 : 0,
+      conversionRate:
+        newCustomers > 0 ? (customersWithOrders / newCustomers) * 100 : 0,
     };
   }
 
   // Вспомогательный метод для генерации периодов
-  private generatePeriods(period: 'day' | 'week' | 'month'): Array<{ start: Date; end: Date; label: string }> {
+  private generatePeriods(
+    period: 'day' | 'week' | 'month',
+  ): Array<{ start: Date; end: Date; label: string }> {
     const periods: Array<{ start: Date; end: Date; label: string }> = [];
     const now = new Date();
 
@@ -312,14 +329,19 @@ export class StatisticsService {
           periods.push({
             start: startOfDay(date),
             end: endOfDay(date),
-            label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' }),
+            label: date.toLocaleDateString('ru-RU', {
+              weekday: 'short',
+              day: 'numeric',
+            }),
           });
         }
         break;
       case 'week':
         // Последние 4 недели
         for (let i = 3; i >= 0; i--) {
-          const weekStart = startOfWeek(subDays(now, i * 7), { weekStartsOn: 1 });
+          const weekStart = startOfWeek(subDays(now, i * 7), {
+            weekStartsOn: 1,
+          });
           const weekEnd = endOfWeek(subDays(now, i * 7), { weekStartsOn: 1 });
           periods.push({
             start: weekStart,

@@ -26,7 +26,7 @@ import { PromoCodesModule } from '../promo-codes/promo-codes.module';
     forwardRef(() => PromoCodesModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_ACCESS_SECRET'),
         signOptions: { expiresIn: '15m' },
       }),

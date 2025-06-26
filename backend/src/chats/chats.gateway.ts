@@ -7,10 +7,8 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { UseGuards } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { ChatsService } from './chats.service';
-import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -56,21 +54,21 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         userId,
         anonymousUserId,
       );
-      chats.forEach((chat) => {
-        client.join(`chat:${chat.id}`);
+      for (const chat of chats) {
+        void client.join(`chat:${chat.id}`);
         console.log(`Client ${client.id} auto-joined chat:${chat.id}`);
-      });
+      }
 
       // If manager, join manager room
       if (userRole === 'MANAGER' || userRole === 'ADMIN') {
-        client.join('managers');
+        void client.join('managers');
       }
 
       console.log(`Client ${client.id} connected for user ${userKey}`);
     }
   }
 
-  async handleDisconnect(client: AuthenticatedSocket) {
+  handleDisconnect(client: AuthenticatedSocket) {
     const userKey = client.userId || client.anonymousUserId;
     if (userKey && this.userSockets.has(userKey)) {
       this.userSockets.get(userKey)!.delete(client.id);
@@ -82,21 +80,21 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('joinChat')
-  async handleJoinChat(
+  handleJoinChat(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() chatId: string,
   ) {
-    client.join(`chat:${chatId}`);
+    void client.join(`chat:${chatId}`);
     console.log(`Client ${client.id} joined chat:${chatId}`);
     return { success: true };
   }
 
   @SubscribeMessage('leaveChat')
-  async handleLeaveChat(
+  handleLeaveChat(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() chatId: string,
   ) {
-    client.leave(`chat:${chatId}`);
+    void client.leave(`chat:${chatId}`);
     return { success: true };
   }
 
@@ -143,7 +141,9 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       return { success: true, message };
     } catch (error) {
-      return { error: error.message };
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
   }
 
@@ -169,12 +169,14 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       return { success: true, ...result };
     } catch (error) {
-      return { error: error.message };
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
   }
 
   @SubscribeMessage('typing')
-  async handleTyping(
+  handleTyping(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { chatId: string; isTyping: boolean },
   ) {
@@ -194,19 +196,19 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   // Method to emit events from service layer
-  emitNewChat(chat: any) {
+  emitNewChat(chat: Record<string, unknown>) {
     // Notify managers about new chat
     this.server.to('managers').emit('newChat', chat);
   }
 
-  emitChatUpdate(chatId: string, update: any) {
+  emitChatUpdate(chatId: string, update: Record<string, unknown>) {
     this.server.to(`chat:${chatId}`).emit('chatUpdate', {
       chatId,
       ...update,
     });
   }
 
-  emitNewOffer(chatId: string, offer: any) {
+  emitNewOffer(chatId: string, offer: Record<string, unknown>) {
     this.server.to(`chat:${chatId}`).emit('newOffer', {
       chatId,
       offer,

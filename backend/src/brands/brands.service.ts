@@ -4,12 +4,11 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Brand } from '@prisma/client';
 import {
   CreateBrandDto,
   UpdateBrandDto,
   BrandDto,
-  BrandWithCountDto,
   BrandsFilterDto,
   PaginatedBrandsDto,
 } from './dto';
@@ -181,15 +180,15 @@ export class BrandsService {
     });
   }
 
-  private mapToDto(brand: any): BrandDto {
+  private mapToDto(brand: Brand): BrandDto {
     return {
       id: brand.id,
       name: brand.name,
       slug: brand.slug,
-      description: brand.description,
-      logo: brand.logo,
-      website: brand.website,
-      country: brand.country,
+      description: brand.description ?? undefined,
+      logo: brand.logo ?? undefined,
+      website: brand.website ?? undefined,
+      country: brand.country ?? undefined,
       isActive: brand.isActive,
       sortOrder: brand.sortOrder,
       createdAt: brand.createdAt,

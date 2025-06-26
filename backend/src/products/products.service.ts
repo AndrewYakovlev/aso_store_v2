@@ -19,7 +19,8 @@ export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createProductDto: CreateProductDto): Promise<ProductDto> {
-    const { categoryIds, images, brandId, oldPrice, ...productData } = createProductDto;
+    const { categoryIds, images, brandId, oldPrice, ...productData } =
+      createProductDto;
 
     // Check if SKU already exists
     const existingBySku = await this.prisma.product.findUnique({
@@ -44,13 +45,14 @@ export class ProductsService {
         oldPrice,
         images: images || [],
         ...(brandId && { brand: { connect: { id: brandId } } }),
-        ...(categoryIds && categoryIds.length > 0 && {
-          categories: {
-            create: categoryIds.map((categoryId) => ({
-              category: { connect: { id: categoryId } },
-            })),
-          },
-        }),
+        ...(categoryIds &&
+          categoryIds.length > 0 && {
+            categories: {
+              create: categoryIds.map((categoryId) => ({
+                category: { connect: { id: categoryId } },
+              })),
+            },
+          }),
       },
       include: {
         brand: true,
@@ -384,7 +386,8 @@ export class ProductsService {
     id: string,
     updateProductDto: UpdateProductDto,
   ): Promise<ProductDto> {
-    const { categoryIds, images, brandId, oldPrice, ...productData } = updateProductDto;
+    const { categoryIds, images, brandId, oldPrice, ...productData } =
+      updateProductDto;
 
     // Check if product exists
     const existing = await this.prisma.product.findUnique({

@@ -1,13 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsNotEmpty,
-  IsBoolean,
-  IsOptional,
-  IsNumber,
-  IsArray,
-  IsUUID,
-} from 'class-validator';
+import { IsBoolean, IsOptional, IsArray, IsUUID } from 'class-validator';
 
 export class CategoryAttributeDto {
   @ApiProperty({ description: 'ID категории' })

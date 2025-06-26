@@ -79,7 +79,7 @@ async function importVehicles() {
     // Читаем файл с данными
     const dataPath = path.join(__dirname, '../../files/cars.json');
     const rawData = fs.readFileSync(dataPath, 'utf-8');
-    const brands: CarBrand[] = JSON.parse(rawData);
+    const brands: CarBrand[] = JSON.parse(rawData) as CarBrand[];
 
     console.log(`Найдено ${brands.length} марок автомобилей для импорта`);
 
@@ -91,7 +91,9 @@ async function importVehicles() {
     for (const brand of brands) {
       try {
         // Проверяем, существует ли марка
-        let vehicleBrand: Awaited<ReturnType<typeof prisma.vehicleBrand.findUnique>> = await prisma.vehicleBrand.findUnique({
+        let vehicleBrand: Awaited<
+          ReturnType<typeof prisma.vehicleBrand.findUnique>
+        > = await prisma.vehicleBrand.findUnique({
           where: { externalId: brand.id },
         });
 

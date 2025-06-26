@@ -122,15 +122,29 @@ export class BrandsController {
             .fill(null)
             .map(() => Math.round(Math.random() * 16).toString(16))
             .join('');
-          cb(null, `brand-${Date.now()}-${randomName}${extname(file.originalname)}`);
+          cb(
+            null,
+            `brand-${Date.now()}-${randomName}${extname(file.originalname)}`,
+          );
         },
       }),
       fileFilter: (req, file, cb) => {
-        const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        const allowedMimes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'image/webp',
+        ];
         if (allowedMimes.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException('Недопустимый формат файла. Разрешены только JPEG, PNG, GIF, WebP'), false);
+          cb(
+            new BadRequestException(
+              'Недопустимый формат файла. Разрешены только JPEG, PNG, GIF, WebP',
+            ),
+            false,
+          );
         }
       },
       limits: {
