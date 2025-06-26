@@ -24,7 +24,6 @@ export function UserProfileTab({ user, onUpdate }: UserProfileTabProps) {
     email: user.email || '',
     companyName: user.companyName || '',
     companyInn: user.companyInn || '',
-    defaultShippingAddress: user.defaultShippingAddress || '',
     role: user.role,
   });
 
@@ -69,7 +68,6 @@ export function UserProfileTab({ user, onUpdate }: UserProfileTabProps) {
       email: user.email || '',
       companyName: user.companyName || '',
       companyInn: user.companyInn || '',
-      defaultShippingAddress: user.defaultShippingAddress || '',
       role: user.role,
     });
     setIsEditing(false);
@@ -215,18 +213,6 @@ export function UserProfileTab({ user, onUpdate }: UserProfileTabProps) {
           />
         </div>
 
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Адрес доставки по умолчанию
-          </label>
-          <textarea
-            value={formData.defaultShippingAddress}
-            onChange={(e) => setFormData({ ...formData, defaultShippingAddress: e.target.value })}
-            disabled={!isEditing}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-          />
-        </div>
       </div>
 
       <div className="mt-6 pt-6 border-t">

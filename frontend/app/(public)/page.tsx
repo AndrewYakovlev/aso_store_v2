@@ -1,16 +1,20 @@
-import { categoriesApi } from '@/lib/api/categories';
-import { CategoriesGrid } from '@/components/categories/CategoriesGrid';
-import { VehicleSelector } from '@/components/VehicleSelector';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { TruckIcon, ShieldCheckIcon, CreditCardIcon } from '@heroicons/react/24/outline';
+import { categoriesApi } from "@/lib/api/categories"
+import { CategoriesGrid } from "@/components/categories/CategoriesGrid"
+import { VehicleSelector } from "@/components/VehicleSelector"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import {
+  TruckIcon,
+  ShieldCheckIcon,
+  CreditCardIcon,
+} from "@heroicons/react/24/outline"
 
 // Force dynamic rendering to avoid API calls during build
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export default async function Home() {
   // Fetch root categories
-  const categories = await categoriesApi.getTree(true);
+  const categories = await categoriesApi.getTree(true)
 
   return (
     <div className="flex flex-col">
@@ -22,8 +26,8 @@ export default async function Home() {
               Автозапчасти для всех марок автомобилей
             </h1>
             <p className="text-xl mb-8 text-blue-100">
-              Широкий выбор оригинальных и аналоговых запчастей. 
-              Быстрая доставка по всей России.
+              Широкий выбор оригинальных и аналоговых запчастей. Быстрая
+              доставка по всей России.
             </p>
             <Link href="/catalog">
               <Button size="lg" variant="secondary">
@@ -51,7 +55,7 @@ export default async function Home() {
               </div>
               <h3 className="text-lg font-semibold mb-2">Быстрая доставка</h3>
               <p className="text-muted-foreground">
-                Доставка по Москве от 1 дня, по России от 2 дней
+                Доставка по Бежецку от 1 дня, по России от 2 дней
               </p>
             </div>
             <div className="text-center">
@@ -82,19 +86,16 @@ export default async function Home() {
       {/* Call to Action */}
       <section className="py-16 bg-gray-100">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Не нашли нужную запчасть?
-          </h2>
+          <h2 className="text-3xl font-bold mb-4">Не нашли нужную запчасть?</h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Наши эксперты помогут подобрать необходимые детали для вашего автомобиля
+            Наши эксперты помогут подобрать необходимые детали для вашего
+            автомобиля
           </p>
           <Link href="/contacts">
-            <Button size="lg">
-              Связаться с нами
-            </Button>
+            <Button size="lg">Связаться с нами</Button>
           </Link>
         </div>
       </section>
     </div>
-  );
+  )
 }

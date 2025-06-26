@@ -131,7 +131,7 @@ export function VehicleModelSheet({ model, onSave, onCancel }: VehicleModelSheet
         slug: formData.slug,
         class: formData.class,
         yearFrom: formData.yearFrom,
-        yearTo: formData.yearTo,
+        yearTo: formData.yearTo ?? undefined,
         image: imageUrl || undefined,
         isActive: formData.isActive,
         sortOrder: formData.sortOrder,

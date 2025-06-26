@@ -1,83 +1,89 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { User } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { useToast } from "@/components/ui/use-toast"
 
 export interface ProfileFormData {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  companyName?: string;
-  companyInn?: string;
-  defaultShippingAddress?: string;
+  firstName?: string
+  lastName?: string
+  email?: string
+  companyName?: string
+  companyInn?: string
+  defaultShippingAddress?: string
 }
 
 interface ProfileFormProps {
   user: {
-    id: string;
-    phone: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    companyName?: string;
-    companyInn?: string;
-    defaultShippingAddress?: string;
-    role: string;
-  };
-  onUpdate: (data: ProfileFormData) => Promise<void>;
+    id: string
+    phone: string
+    firstName?: string
+    lastName?: string
+    email?: string
+    companyName?: string
+    companyInn?: string
+    defaultShippingAddress?: string
+    role: string
+  }
+  onUpdate: (data: ProfileFormData) => Promise<void>
 }
 
 export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
+
   const {
     register,
     handleSubmit,
     formState: { errors, isDirty },
   } = useForm<ProfileFormData>({
     defaultValues: {
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      email: user.email || '',
-      companyName: user.companyName || '',
-      companyInn: user.companyInn || '',
-      defaultShippingAddress: user.defaultShippingAddress || '',
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email || "",
+      companyName: user.companyName || "",
+      companyInn: user.companyInn || "",
+      defaultShippingAddress: user.defaultShippingAddress || "",
     },
-  });
+  })
 
   const onSubmit = async (data: ProfileFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       // Очищаем пустые строки перед отправкой
       const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
-        if (value === '' || value === null) {
-          return acc;
+        if (value === "" || value === null) {
+          return acc
         }
-        return { ...acc, [key]: value };
-      }, {} as ProfileFormData);
-      
-      await onUpdate(cleanedData);
+        return { ...acc, [key]: value }
+      }, {} as ProfileFormData)
+
+      await onUpdate(cleanedData)
       toast({
-        title: 'Профиль обновлен',
-        description: 'Ваши данные успешно сохранены',
-      });
+        title: "Профиль обновлен",
+        description: "Ваши данные успешно сохранены",
+      })
     } catch (error) {
       toast({
-        title: 'Ошибка',
-        description: 'Не удалось обновить профиль',
-        variant: 'destructive',
-      });
+        title: "Ошибка",
+        description: "Не удалось обновить профиль",
+        variant: "destructive",
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <Card>
@@ -86,9 +92,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
           <User className="h-5 w-5" />
           <CardTitle>Личные данные</CardTitle>
         </div>
-        <CardDescription>
-          Обновите информацию вашего профиля
-        </CardDescription>
+        <CardDescription>Обновите информацию вашего профиля</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -97,16 +101,18 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
               <Label htmlFor="firstName">Имя</Label>
               <Input
                 id="firstName"
-                {...register('firstName', {
+                {...register("firstName", {
                   minLength: {
                     value: 2,
-                    message: 'Имя должно содержать минимум 2 символа',
+                    message: "Имя должно содержать минимум 2 символа",
                   },
                 })}
                 disabled={isLoading}
               />
               {errors.firstName && (
-                <p className="text-sm text-red-500">{errors.firstName.message}</p>
+                <p className="text-sm text-red-500">
+                  {errors.firstName.message}
+                </p>
               )}
             </div>
 
@@ -114,16 +120,18 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
               <Label htmlFor="lastName">Фамилия</Label>
               <Input
                 id="lastName"
-                {...register('lastName', {
+                {...register("lastName", {
                   minLength: {
                     value: 2,
-                    message: 'Фамилия должна содержать минимум 2 символа',
+                    message: "Фамилия должна содержать минимум 2 символа",
                   },
                 })}
                 disabled={isLoading}
               />
               {errors.lastName && (
-                <p className="text-sm text-red-500">{errors.lastName.message}</p>
+                <p className="text-sm text-red-500">
+                  {errors.lastName.message}
+                </p>
               )}
             </div>
           </div>
@@ -146,17 +154,20 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
             <Input
               id="email"
               type="email"
-              {...register('email', {
+              {...register("email", {
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Неверный формат email',
+                  message: "Неверный формат email",
                 },
-                validate: (value) => {
+                validate: value => {
                   // Если поле пустое, валидация проходит успешно
-                  if (!value || value.trim() === '') return true;
+                  if (!value || value.trim() === "") return true
                   // Если поле заполнено, проверяем формат
-                  return /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value) || 'Неверный формат email';
-                }
+                  return (
+                    /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value) ||
+                    "Неверный формат email"
+                  )
+                },
               })}
               disabled={isLoading}
               placeholder="example@mail.com"
@@ -168,13 +179,15 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
 
           {/* B2B поля */}
           <div className="space-y-4 border-t pt-4">
-            <h3 className="text-sm font-medium">Данные компании (для юридических лиц)</h3>
-            
+            <h3 className="text-sm font-medium">
+              Данные компании (для юридических лиц)
+            </h3>
+
             <div className="space-y-2">
               <Label htmlFor="companyName">Название компании</Label>
               <Input
                 id="companyName"
-                {...register('companyName')}
+                {...register("companyName")}
                 disabled={isLoading}
               />
             </div>
@@ -183,39 +196,42 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
               <Label htmlFor="companyInn">ИНН</Label>
               <Input
                 id="companyInn"
-                {...register('companyInn', {
+                {...register("companyInn", {
                   pattern: {
                     value: /^\d{10}$|^\d{12}$/,
-                    message: 'ИНН должен содержать 10 или 12 цифр',
+                    message: "ИНН должен содержать 10 или 12 цифр",
                   },
                 })}
                 disabled={isLoading}
               />
               {errors.companyInn && (
-                <p className="text-sm text-red-500">{errors.companyInn.message}</p>
+                <p className="text-sm text-red-500">
+                  {errors.companyInn.message}
+                </p>
               )}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="defaultShippingAddress">Адрес доставки по умолчанию</Label>
+            <Label htmlFor="defaultShippingAddress">
+              Адрес доставки по умолчанию
+            </Label>
             <Input
               id="defaultShippingAddress"
-              {...register('defaultShippingAddress')}
+              {...register("defaultShippingAddress")}
               disabled={isLoading}
-              placeholder="г. Москва, ул. Ленина, д. 1"
+              placeholder="г. Бежецк, ул. Ленина, д. 1"
             />
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isLoading || !isDirty}
-            className="w-full md:w-auto"
-          >
-            {isLoading ? 'Сохранение...' : 'Сохранить изменения'}
+            className="w-full md:w-auto">
+            {isLoading ? "Сохранение..." : "Сохранить изменения"}
           </Button>
         </form>
       </CardContent>
     </Card>
-  );
+  )
 }
