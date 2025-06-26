@@ -3,16 +3,19 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { VehicleBrandWithCount } from "@/lib/api/vehicles";
 import { Badge } from "@/components/ui/badge";
-import { PencilIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, EyeIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { getImageUrl } from "@/lib/utils/image";
 
 interface VehicleBrandsColumnsProps {
   onEdit: (brand: VehicleBrandWithCount) => void;
   onViewModels: (brand: VehicleBrandWithCount) => void;
+  onDelete: (brand: VehicleBrandWithCount) => void;
 }
 
 export const createVehicleBrandsColumns = ({
   onEdit,
   onViewModels,
+  onDelete,
 }: VehicleBrandsColumnsProps): ColumnDef<VehicleBrandWithCount>[] => [
   {
     accessorKey: "logo",
@@ -21,7 +24,7 @@ export const createVehicleBrandsColumns = ({
       const brand = row.original;
       return brand.logo ? (
         <img
-          src={brand.logo}
+          src={getImageUrl(brand.logo)}
           alt={brand.name}
           className="h-10 w-10 object-contain"
         />
@@ -115,6 +118,16 @@ export const createVehicleBrandsColumns = ({
             title="Редактировать"
           >
             <PencilIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(brand);
+            }}
+            className="text-red-600 hover:text-red-900"
+            title="Удалить"
+          >
+            <TrashIcon className="h-4 w-4" />
           </button>
         </div>
       );

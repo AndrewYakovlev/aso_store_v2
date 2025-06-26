@@ -6,6 +6,7 @@ import { apiRequestWithAuth } from './client-with-auth';
 // Types
 export interface DeliveryMethod {
   id: string;
+  code: string;
   name: string;
   description: string;
   price: number;
@@ -19,6 +20,7 @@ export interface DeliveryMethod {
 }
 
 export interface CreateDeliveryMethodDto {
+  code: string;
   name: string;
   description: string;
   price: number;

@@ -5,6 +5,7 @@ import { vehicleModelsApi } from '@/lib/api/vehicles';
 import { productsApi } from '@/lib/api/products';
 import { ModelContent } from './ModelContent';
 import { BreadcrumbsComponent, BreadcrumbItemType } from '@/components/shared/BreadcrumbsComponent';
+import { getImageUrl } from '@/lib/utils/image';
 
 interface Props {
   params: Promise<{ brandSlug: string; modelSlug: string }>;
@@ -73,7 +74,7 @@ export default async function VehicleModelPage({ params, searchParams }: Props) 
         <div className="flex items-start gap-6">
           {model.image && (
             <img
-              src={model.image}
+              src={getImageUrl(model.image)}
               alt={`${model.brand?.name} ${model.name}`}
               className="w-48 h-32 object-cover rounded-lg"
             />

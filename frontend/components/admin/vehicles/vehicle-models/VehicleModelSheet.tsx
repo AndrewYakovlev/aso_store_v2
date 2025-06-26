@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { VehicleModel, VehicleBrand, vehicleBrandsApi } from "@/lib/api/vehicles"
+import { VehicleModel, VehicleBrand, vehicleBrandsApi, vehicleModelsApi } from "@/lib/api/vehicles"
+import { uploadsApi } from "@/lib/api/uploads"
 import { generateSlug } from "@/lib/utils/slug"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
@@ -104,22 +105,50 @@ export function VehicleModelSheet({ model, onSave, onCancel }: VehicleModelSheet
     setLoading(true)
 
     try {
-      // Here we would implement the API call to create/update vehicle model
-      // For now, we'll just simulate the API call
-      console.log("Vehicle model data:", formData)
-      console.log("Image file:", imageFile)
-      
-      // TODO: Implement actual API calls
-      // if (model) {
-      //   await vehicleModelsApi.update(model.id, formData, accessToken!)
-      // } else {
-      //   await vehicleModelsApi.create(formData, accessToken!)
-      // }
+      if (!accessToken) {
+        throw new Error("Не авторизован")
+      }
+
+      let imageUrl = formData.image
+
+      // Загрузка изображения, если выбран новый файл
+      if (imageFile) {
+        try {
+          const uploadResult = await uploadsApi.uploadImage(imageFile, accessToken)
+          imageUrl = uploadResult.url
+        } catch (uploadError) {
+          console.error("Failed to upload image:", uploadError)
+          throw new Error("Ошибка при загрузке изображения")
+        }
+      }
+
+      // Подготовка данных для отправки
+      const modelData = {
+        externalId: formData.slug, // Используем slug как externalId
+        brandId: formData.brandId,
+        name: formData.name,
+        nameCyrillic: formData.nameCyrillic,
+        slug: formData.slug,
+        class: formData.class,
+        yearFrom: formData.yearFrom,
+        yearTo: formData.yearTo,
+        image: imageUrl || undefined,
+        isActive: formData.isActive,
+        sortOrder: formData.sortOrder,
+      }
+
+      if (model) {
+        // Обновление существующей модели
+        await vehicleModelsApi.update(model.id, modelData, accessToken)
+      } else {
+        // Создание новой модели
+        await vehicleModelsApi.create(modelData, accessToken)
+      }
 
       onSave()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save vehicle model:", error)
-      alert("Ошибка при сохранении модели автомобиля")
+      alert(error.message || "Ошибка при сохранении модели автомобиля")
     } finally {
       setLoading(false)
     }

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { vehicleBrandsApi, vehicleModelsApi } from '@/lib/api/vehicles';
 import { BreadcrumbsComponent, BreadcrumbItemType } from '@/components/shared/BreadcrumbsComponent';
+import { getImageUrl } from '@/lib/utils/image';
 
 interface Props {
   params: Promise<{ brandSlug: string }>;
@@ -76,7 +77,7 @@ export default async function VehicleBrandPage({ params }: Props) {
         <div className="flex items-center gap-4 mb-4">
           {brand.logo && (
             <img
-              src={brand.logo}
+              src={getImageUrl(brand.logo)}
               alt={brand.name}
               className="h-16 w-auto object-contain"
             />
@@ -112,7 +113,7 @@ export default async function VehicleBrandPage({ params }: Props) {
                   >
                     {model.image && (
                       <img
-                        src={model.image}
+                        src={getImageUrl(model.image)}
                         alt={model.name}
                         className="w-full h-32 object-cover rounded mb-3"
                       />

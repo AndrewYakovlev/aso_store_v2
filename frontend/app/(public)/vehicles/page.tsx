@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { vehicleBrandsApi } from '@/lib/api/vehicles';
+import { getImageUrl } from '@/lib/utils/image';
 
 // Force dynamic rendering to avoid API calls during build
 export const dynamic = 'force-dynamic'
@@ -11,8 +12,13 @@ export const metadata: Metadata = {
 };
 
 export default async function VehicleBrandsPage() {
-  // Get popular brands
-  const popularBrands = await vehicleBrandsApi.getPopular(15);
+  // Get all popular brands (with high limit to get all)
+  const popularBrandsUnsorted = await vehicleBrandsApi.getPopular(100);
+  
+  // Sort popular brands alphabetically by name
+  const popularBrands = [...popularBrandsUnsorted].sort((a, b) => 
+    a.name.localeCompare(b.name, 'ru')
+  );
   
   // Get all brands grouped by country
   const allBrands = await vehicleBrandsApi.getAll({
@@ -52,7 +58,7 @@ export default async function VehicleBrandsPage() {
               >
                 {brand.logo ? (
                   <img
-                    src={brand.logo}
+                    src={getImageUrl(brand.logo)}
                     alt={brand.name}
                     className="h-12 w-auto mx-auto mb-3 object-contain group-hover:scale-110 transition-transform"
                   />

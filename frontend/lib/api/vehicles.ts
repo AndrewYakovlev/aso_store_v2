@@ -115,6 +115,32 @@ export const vehicleBrandsApi = {
   async getById(id: string): Promise<VehicleBrand> {
     return apiRequest(`/vehicle-brands/${id}`);
   },
+
+  // Create new vehicle brand
+  async create(data: Omit<VehicleBrand, 'id' | 'createdAt' | 'updatedAt'>, token: string): Promise<VehicleBrand> {
+    return apiRequest('/vehicle-brands', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      token,
+    });
+  },
+
+  // Update vehicle brand
+  async update(id: string, data: Partial<Omit<VehicleBrand, 'id' | 'createdAt' | 'updatedAt'>>, token: string): Promise<VehicleBrand> {
+    return apiRequest(`/vehicle-brands/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+      token,
+    });
+  },
+
+  // Delete vehicle brand
+  async delete(id: string, token: string): Promise<void> {
+    return apiRequest(`/vehicle-brands/${id}`, {
+      method: 'DELETE',
+      token,
+    });
+  },
 };
 
 // Vehicle Models API
@@ -155,5 +181,31 @@ export const vehicleModelsApi = {
   // Get vehicle model by ID
   async getById(id: string): Promise<VehicleModel> {
     return apiRequest(`/vehicle-models/${id}`);
+  },
+
+  // Create new vehicle model
+  async create(data: Omit<VehicleModel, 'id' | 'createdAt' | 'updatedAt'>, token: string): Promise<VehicleModel> {
+    return apiRequest('/vehicle-models', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      token,
+    });
+  },
+
+  // Update vehicle model
+  async update(id: string, data: Partial<Omit<VehicleModel, 'id' | 'createdAt' | 'updatedAt'>>, token: string): Promise<VehicleModel> {
+    return apiRequest(`/vehicle-models/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+      token,
+    });
+  },
+
+  // Delete vehicle model
+  async delete(id: string, token: string): Promise<void> {
+    return apiRequest(`/vehicle-models/${id}`, {
+      method: 'DELETE',
+      token,
+    });
   },
 };

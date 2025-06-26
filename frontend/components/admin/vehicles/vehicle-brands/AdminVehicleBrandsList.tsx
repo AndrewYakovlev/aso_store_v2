@@ -181,6 +181,25 @@ export function AdminVehicleBrandsList() {
     router.push(`/panel/vehicles/models?brand=${brand.id}`)
   }
 
+  const handleDelete = async (brand: VehicleBrandWithCount) => {
+    if (!confirm(`Удалить марку "${brand.name}"? Это действие нельзя отменить.`)) {
+      return
+    }
+
+    try {
+      if (!accessToken) {
+        throw new Error("Не авторизован")
+      }
+
+      await vehicleBrandsApi.delete(brand.id, accessToken)
+      // Перезагрузить список после удаления
+      await loadBrands(search, countryFilter, popularFilter, currentPage)
+    } catch (error: any) {
+      console.error("Failed to delete vehicle brand:", error)
+      alert(error.message || "Ошибка при удалении марки автомобиля")
+    }
+  }
+
   const handleSheetClose = () => {
     setSheetOpen(false)
     setEditingBrand(null)
@@ -260,6 +279,7 @@ export function AdminVehicleBrandsList() {
         columns={createVehicleBrandsColumns({
           onEdit: handleEdit,
           onViewModels: handleViewModels,
+          onDelete: handleDelete,
         })}
         data={brands}
       />

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { VehicleBrand } from "@/lib/api/vehicles"
+import { VehicleBrand, vehicleBrandsApi } from "@/lib/api/vehicles"
+import { uploadsApi } from "@/lib/api/uploads"
 import { generateSlug } from "@/lib/utils/slug"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
@@ -86,22 +87,48 @@ export function VehicleBrandSheet({ brand, onSave, onCancel }: VehicleBrandSheet
     setLoading(true)
 
     try {
-      // Here we would implement the API call to create/update vehicle brand
-      // For now, we'll just simulate the API call
-      console.log("Vehicle brand data:", formData)
-      console.log("Logo file:", logoFile)
-      
-      // TODO: Implement actual API calls
-      // if (brand) {
-      //   await vehicleBrandsApi.update(brand.id, formData, accessToken!)
-      // } else {
-      //   await vehicleBrandsApi.create(formData, accessToken!)
-      // }
+      if (!accessToken) {
+        throw new Error("Не авторизован")
+      }
+
+      let logoUrl = formData.logo
+
+      // Загрузка логотипа, если выбран новый файл
+      if (logoFile) {
+        try {
+          const uploadResult = await uploadsApi.uploadImage(logoFile, accessToken)
+          logoUrl = uploadResult.url
+        } catch (uploadError) {
+          console.error("Failed to upload logo:", uploadError)
+          throw new Error("Ошибка при загрузке логотипа")
+        }
+      }
+
+      // Подготовка данных для отправки
+      const brandData = {
+        externalId: formData.slug, // Используем slug как externalId
+        name: formData.name,
+        nameCyrillic: formData.nameCyrillic,
+        slug: formData.slug,
+        country: formData.country || undefined,
+        logo: logoUrl || undefined,
+        popular: formData.popular,
+        isActive: formData.isActive,
+        sortOrder: formData.sortOrder,
+      }
+
+      if (brand) {
+        // Обновление существующей марки
+        await vehicleBrandsApi.update(brand.id, brandData, accessToken)
+      } else {
+        // Создание новой марки
+        await vehicleBrandsApi.create(brandData, accessToken)
+      }
 
       onSave()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save vehicle brand:", error)
-      alert("Ошибка при сохранении марки автомобиля")
+      alert(error.message || "Ошибка при сохранении марки автомобиля")
     } finally {
       setLoading(false)
     }

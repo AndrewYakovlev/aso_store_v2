@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { DeliveryMethod, CreateDeliveryMethodDto, deliveryMethodsApi } from "@/lib/api/delivery-methods"
 import { useAuth } from "@/lib/contexts/AuthContext"
+import { generateSlug } from "@/lib/utils/slug"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,6 +22,7 @@ export function DeliveryMethodSheet({ method, onSave, onCancel }: DeliveryMethod
   const { accessToken } = useAuth()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
+    code: "",
     name: "",
     description: "",
     price: 0,
@@ -31,6 +33,7 @@ export function DeliveryMethodSheet({ method, onSave, onCancel }: DeliveryMethod
   useEffect(() => {
     if (method) {
       setFormData({
+        code: method.code,
         name: method.name,
         description: method.description,
         price: method.price,
@@ -45,6 +48,14 @@ export function DeliveryMethodSheet({ method, onSave, onCancel }: DeliveryMethod
       ...prev,
       [field]: value,
     }))
+
+    // Автоматически генерировать код при изменении названия для нового метода
+    if (field === "name" && !method) {
+      setFormData(prev => ({
+        ...prev,
+        code: generateSlug(value),
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,16 +63,26 @@ export function DeliveryMethodSheet({ method, onSave, onCancel }: DeliveryMethod
     setLoading(true)
 
     try {
+      // Убеждаемся, что price - это число
+      const dataToSend = {
+        ...formData,
+        price: Number(formData.price),
+        sortOrder: Number(formData.sortOrder),
+      }
+
       if (method) {
-        await deliveryMethodsApi.update(accessToken!, method.id, formData)
+        // При обновлении не отправляем код
+        const { code, ...updateData } = dataToSend
+        await deliveryMethodsApi.update(accessToken!, method.id, updateData)
       } else {
-        await deliveryMethodsApi.create(accessToken!, formData as CreateDeliveryMethodDto)
+        await deliveryMethodsApi.create(accessToken!, dataToSend as CreateDeliveryMethodDto)
       }
 
       onSave()
     } catch (error: any) {
       console.error("Failed to save delivery method:", error)
-      alert(error.response?.data?.message || "Ошибка при сохранении метода доставки")
+      const errorMessage = error.response?.data?.message || error.message || "Ошибка при сохранении метода доставки"
+      alert(Array.isArray(errorMessage) ? errorMessage.join('\n') : errorMessage)
     } finally {
       setLoading(false)
     }
@@ -88,6 +109,23 @@ export function DeliveryMethodSheet({ method, onSave, onCancel }: DeliveryMethod
               required
             />
           </div>
+
+          {/* Code - только для новых методов */}
+          {!method && (
+            <div className="space-y-2">
+              <Label htmlFor="code">Код метода *</Label>
+              <Input
+                id="code"
+                value={formData.code}
+                onChange={e => handleInputChange("code", e.target.value)}
+                placeholder="pickup"
+                required
+              />
+              <p className="text-sm text-gray-600">
+                Уникальный код для идентификации метода. Генерируется автоматически из названия.
+              </p>
+            </div>
+          )}
 
           {/* Description */}
           <div className="space-y-2">

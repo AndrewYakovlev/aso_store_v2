@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { PaymentMethod, CreatePaymentMethodDto, paymentMethodsApi } from "@/lib/api/payment-methods"
 import { useAuth } from "@/lib/contexts/AuthContext"
+import { generateSlug } from "@/lib/utils/slug"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,6 +22,7 @@ export function PaymentMethodSheet({ method, onSave, onCancel }: PaymentMethodSh
   const { accessToken } = useAuth()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
+    code: "",
     name: "",
     description: "",
     isActive: true,
@@ -30,6 +32,7 @@ export function PaymentMethodSheet({ method, onSave, onCancel }: PaymentMethodSh
   useEffect(() => {
     if (method) {
       setFormData({
+        code: method.code,
         name: method.name,
         description: method.description,
         isActive: method.isActive,
@@ -43,6 +46,14 @@ export function PaymentMethodSheet({ method, onSave, onCancel }: PaymentMethodSh
       ...prev,
       [field]: value,
     }))
+
+    // Автоматически генерировать код при изменении названия для нового метода
+    if (field === "name" && !method) {
+      setFormData(prev => ({
+        ...prev,
+        code: generateSlug(value),
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,16 +61,25 @@ export function PaymentMethodSheet({ method, onSave, onCancel }: PaymentMethodSh
     setLoading(true)
 
     try {
+      // Убеждаемся, что sortOrder - это число
+      const dataToSend = {
+        ...formData,
+        sortOrder: Number(formData.sortOrder),
+      }
+
       if (method) {
-        await paymentMethodsApi.update(accessToken!, method.id, formData)
+        // При обновлении не отправляем код
+        const { code, ...updateData } = dataToSend
+        await paymentMethodsApi.update(accessToken!, method.id, updateData)
       } else {
-        await paymentMethodsApi.create(accessToken!, formData as CreatePaymentMethodDto)
+        await paymentMethodsApi.create(accessToken!, dataToSend as CreatePaymentMethodDto)
       }
 
       onSave()
     } catch (error: any) {
       console.error("Failed to save payment method:", error)
-      alert(error.response?.data?.message || "Ошибка при сохранении метода оплаты")
+      const errorMessage = error.response?.data?.message || error.message || "Ошибка при сохранении метода оплаты"
+      alert(Array.isArray(errorMessage) ? errorMessage.join('\n') : errorMessage)
     } finally {
       setLoading(false)
     }
@@ -86,6 +106,23 @@ export function PaymentMethodSheet({ method, onSave, onCancel }: PaymentMethodSh
               required
             />
           </div>
+
+          {/* Code - только для новых методов */}
+          {!method && (
+            <div className="space-y-2">
+              <Label htmlFor="code">Код метода *</Label>
+              <Input
+                id="code"
+                value={formData.code}
+                onChange={e => handleInputChange("code", e.target.value)}
+                placeholder="cash"
+                required
+              />
+              <p className="text-sm text-gray-600">
+                Уникальный код для идентификации метода. Генерируется автоматически из названия.
+              </p>
+            </div>
+          )}
 
           {/* Description */}
           <div className="space-y-2">

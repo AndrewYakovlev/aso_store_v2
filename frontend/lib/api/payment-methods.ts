@@ -6,6 +6,7 @@ import { apiRequestWithAuth } from './client-with-auth';
 // Types
 export interface PaymentMethod {
   id: string;
+  code: string;
   name: string;
   description: string;
   isActive: boolean;
@@ -18,6 +19,7 @@ export interface PaymentMethod {
 }
 
 export interface CreatePaymentMethodDto {
+  code: string;
   name: string;
   description: string;
   isActive?: boolean;

@@ -127,6 +127,25 @@ export function AdminVehicleModelsList() {
     setSheetOpen(true)
   }
 
+  const handleDelete = async (model: VehicleModel) => {
+    if (!confirm(`Удалить модель "${model.name}"? Это действие нельзя отменить.`)) {
+      return
+    }
+
+    try {
+      if (!accessToken) {
+        throw new Error("Не авторизован")
+      }
+
+      await vehicleModelsApi.delete(model.id, accessToken)
+      // Перезагрузить список после удаления
+      await loadModels(search, brandFilter, classFilter, currentPage)
+    } catch (error: any) {
+      console.error("Failed to delete vehicle model:", error)
+      alert(error.message || "Ошибка при удалении модели автомобиля")
+    }
+  }
+
   const handleSheetClose = () => {
     setSheetOpen(false)
     setEditingModel(null)
@@ -223,6 +242,7 @@ export function AdminVehicleModelsList() {
       <DataTable
         columns={createVehicleModelsColumns({
           onEdit: handleEdit,
+          onDelete: handleDelete,
         })}
         data={models}
       />

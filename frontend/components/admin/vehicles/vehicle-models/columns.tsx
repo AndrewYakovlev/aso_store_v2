@@ -3,14 +3,17 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { VehicleModel } from "@/lib/api/vehicles";
 import { Badge } from "@/components/ui/badge";
-import { PencilIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { getImageUrl } from "@/lib/utils/image";
 
 interface VehicleModelsColumnsProps {
   onEdit: (model: VehicleModel) => void;
+  onDelete: (model: VehicleModel) => void;
 }
 
 export const createVehicleModelsColumns = ({
   onEdit,
+  onDelete,
 }: VehicleModelsColumnsProps): ColumnDef<VehicleModel>[] => [
   {
     accessorKey: "image",
@@ -19,7 +22,7 @@ export const createVehicleModelsColumns = ({
       const model = row.original;
       return model.image ? (
         <img
-          src={model.image}
+          src={getImageUrl(model.image)}
           alt={model.name}
           className="h-10 w-16 object-cover rounded"
         />
@@ -111,6 +114,16 @@ export const createVehicleModelsColumns = ({
             title="Редактировать"
           >
             <PencilIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(model);
+            }}
+            className="text-red-600 hover:text-red-900"
+            title="Удалить"
+          >
+            <TrashIcon className="h-4 w-4" />
           </button>
         </div>
       );
