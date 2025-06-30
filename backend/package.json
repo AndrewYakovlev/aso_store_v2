@@ -65,7 +65,7 @@
     "@types/body-parser": "^1.19.6",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.10.7",
+    "@types/node": "^24.0.7",
     "@types/supertest": "^6.0.2",
     "@types/web-push": "^3.6.3",
     "eslint": "^9.18.0",
